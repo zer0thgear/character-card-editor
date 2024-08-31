@@ -2,9 +2,11 @@
  * Utility function to retrieve the 'chara' tEXt chunk from an uploaded PNG
  * 
  * @param {*} file File as read directly from the file input
- * @returns A promise that resolves to the contents of the 'chara' tEXt chunk if found, otherwise resolves to null
+ * @param {string | string[]} keywords Keyword or list of keywords to look for in the tEXt chunk
+ * @returns A promise that resolves to the contents of the specified tEXt chunk if found, otherwise resolves to null
+ * Returned data will be in the format of [{"keyword": keyword, "data": JSON}]
  */
-export async function parsePngChunks (file) {
+export async function parsePngChunks (file, keywords) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
 
@@ -13,6 +15,7 @@ export async function parsePngChunks (file) {
             const data = new DataView(arrayBuffer);
 
             const textChunks = [];
+            const output = [];
             let offset = 8; // Skips the PNG header
 
             while (offset < data.byteLength) {
@@ -32,11 +35,11 @@ export async function parsePngChunks (file) {
                         const keyword = textData.substring(0, separatorIndex);
                         const text = textData.substring(separatorIndex + 1);
 
-                        if (keyword === 'chara') {
+                        if ((Array.isArray(keywords) && keywords.includes(keyword)) || keyword === keywords) {
                             try {
                                 const decodedData = atob(text);
-                                resolve(JSON.parse(decodedData));
-                                return;
+                                output.push({"keyword": keyword, "data": JSON.parse(decodedData)});
+                                //resolve(JSON.parse(decodedData));
                             } catch (error) {
                                 reject(new Error("Failed to decode base64 data."));
                                 return;
@@ -48,7 +51,7 @@ export async function parsePngChunks (file) {
 
                 offset += 8 + length + 4;
             }
-            resolve(null);
+            resolve(output.length === 0 ? null : output);
         };
         reader.onerror = function() {
             reject(new Error("Failed to read the file."));

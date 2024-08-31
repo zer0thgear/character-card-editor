@@ -1,8 +1,8 @@
 /**
- * Utility function to assemble a v2 compliant Character Card PNG
+ * Utility function to assemble a v2 or v3 compliant Character Card PNG
  * 
  * @param {*} png PNG to insert the JSON
- * @param {*} dataJson JSON containing the data to encode and insert into the PNG 
+ * @param {Object | Object[]} dataJson JSON containing the data to encode and insert into the PNG. Should be in the format of {"keyword": keyword, "data": JSON} or as a list of objects in the aforementioned format to encode multiple specs.
  * @returns Promise that resolves to an array buffer containing the newly assembled PNG
  */
 export async function assembleNewPng (png, dataJson) {
@@ -16,32 +16,35 @@ export async function assembleNewPng (png, dataJson) {
 
             let offset = 8; // Skipping the PNG header
 
-            newChunks.push(new Uint8Array(arrayBuffer.slice(0, offest))); // Copying the original header
+            newChunks.push(new Uint8Array(arrayBuffer.slice(0, offset))); // Copying the original header
 
-            // Creating the new tEXt chunk
-            const textChunkData = new TextEncoder().encode(`chara\0${JSON.stringify(dataJson)}`)
-            const textChunkLength = textChunkData.length;
+            const listOfChunks = Array.isArray(dataJson) ? dataJson : [dataJson];
+            
+            listOfChunks.forEach((item) => {
+                // Creating the new tEXt chunk
+                const textChunkData = new TextEncoder().encode(`${item.keyword}\0${JSON.stringify(item.data)}`)
+                const textChunkLength = textChunkData.length;
 
-            const textChunk = new Uint8Array(8 + textChunkLength + 4);
-            const view = new DataView(textChunk.buffer);
+                const textChunk = new Uint8Array(8 + textChunkLength + 4);
+                const view = new DataView(textChunk.buffer);
 
-            // Writing the length of the tEXt chunk
-            view.setUint32(0, textChunkLength);
+                // Writing the length of the tEXt chunk
+                view.setUint32(0, textChunkLength);
 
-            // Write chunk type 'tEXt'
-            textChunk[4] = 't'.charCodeAt(0);
-            textChunk[5] = 'E'.charCodeAt(0);
-            textChunk[6] = 'X'.charCodeAt(0);
-            textChunk[7] = 't'.charCodeAt(0);
+                // Write chunk type 'tEXt'
+                textChunk[4] = 't'.charCodeAt(0);
+                textChunk[5] = 'E'.charCodeAt(0);
+                textChunk[6] = 'X'.charCodeAt(0);
+                textChunk[7] = 't'.charCodeAt(0);
 
-            textChunk.set(textChunkData, 8);
+                textChunk.set(textChunkData, 8);
 
-            const crc = crc32(textChunk.subarray(4, 8 + textChunkLength));
-            view.setUint32(8 + textChunkLength, crc);
+                const crc = crc32(textChunk.subarray(4, 8 + textChunkLength));
+                view.setUint32(8 + textChunkLength, crc);
 
-            // Adds the tEXt chunk after the PNG header
-            newChunks.push(textChunk);
-
+                // Adds the tEXt chunk after the PNG header
+                newChunks.push(textChunk);
+            });
             // Copying the rest of the PNG
             while (offset < data.byteLength) {
                 const length = data.getUint32(offset);
