@@ -2,7 +2,7 @@
  * Helper function to remove tEXt chunks from a given PNG and return a plain PNG
  * 
  * @param {*} file File as read directly from the file input
- * @returns Array buffer containing the newly stripped PNG
+ * @returns Promise that resolves to an array buffer containing the newly stripped PNG
  */
 export async function stripPngChunks (file) {
     return new Promise((resolve, reject) => {
