@@ -1,70 +1,22 @@
-# Getting Started with Create React App
+# zer0gear's Tavern Card Editor
+A tool for editing tavern/character cards with more granularity than most popular AI chatbot frontends.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Who is this for?
+Short answer, no just but me. Popular frontends such as [Chub/Chub Venus](https://chub.ai/) and [SillyTavern](https://sillytavern.app/) offer robust card creation and editing capabilities and will be sufficient for 99% of card creators.
 
-## Available Scripts
+Long answer is anyone who finds themselves having to open the card's JSON in their editor of choice to make changes that are otherwise not possible or feasible in their chosen frontend. This includes features such as being able to arbitrarily reorder greetings, generating cards compliant to both Chub and SillyTavern lorebook specs, and arbitrarily replacing card JSONs while retaining their display picture. If these features do not interest you, you would likely better served by using your frontend as normal. Otherwise, this tool may be for you.
 
-In the project directory, you can run:
+## What can this tool not do?
+First and foremost, ***this is not a frontend for AI chatbots***. You can create, edit, and export character cards, but ***you cannot chat with your cards using this tool***. This tool makes no external API calls and is purely for editing cards. Anything along the lines of using or testing cards is outside of the scope of this tool and its planned features.
 
-### `npm start`
+Additionally, you can export your edited and created cards, but bulk management of your cards also falls outside of the scope of this tool. This tool aims to serve as a *compliment* to your favorite frontend, not as a *replacement*.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Usage
+Clone, npm install, npm start
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Live page and more detailed instructs TBA
 
-### `npm test`
+## Other notes and considerations
+This tool was written in Javascript using [React](https://react.dev/) and heavily utilizes the [Material UI](https://mui.com/) library.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+PNG-related logic was largely written with assistance from ChatGPT because I am but a silly little guy and that stuff is wizardry to me.
