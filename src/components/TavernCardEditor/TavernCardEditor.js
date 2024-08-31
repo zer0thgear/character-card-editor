@@ -28,11 +28,21 @@ const TavernCardEditor = ({toggleTheme}) => {
         setFile(selectedFile);
         if (/.+\.png$/.test(selectedFile.name)){
             const parsedCardData = await parsePngChunks(selectedFile);
-            console.log(parsedCardData.data.name);
-            setCardData(parsedCardData);
+            if (parsedCardData) {
+                //console.log(parsedCardData.data.name);
+                //console.log(parsedCardData.spec);
+                //console.log(parsedCardData.spec_version);
+                //console.log(parsedCardData);
+                setCardData(parsedCardData);
+            } else {
+                console.log("This PNG doesn't have any Card Data!");
+            }
         } else { 
             const parsedJson = JSON.parse(await selectedFile.text());
-            console.log(parsedJson.data.name);
+            //console.log(parsedJson.data.name);
+            //console.log(parsedJson.spec);
+            //console.log(parsedJson.spec_version);
+            //console.log(parsedJson);
             setCardData(parsedJson);
         }
         //console.log(selectedFile.name);
