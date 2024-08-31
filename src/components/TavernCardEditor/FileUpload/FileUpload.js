@@ -11,6 +11,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
  * Component that wraps over the basic HTML file upload component
  * Params should be passed as props to the FileUpload component when utilized
  * 
+ * @param {[string]} acceptedFileTypes A list of accepted filetypes
  * @param {*} file The file being uploaded
  * @param {*} fileChange Callback function to handle a file being chosen
  * @param {*} handleRemoveFile Callback function to handle clearing the chosen file
@@ -19,7 +20,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 const FileUpload = (props) => {
     return(
         <Box style={{display:'flex', alignItems:'center'}}>
-            <input hidden id="file-upload" onChange={props.fileChange} onClick={(event) => {event.target.value = null}} type ="file"/>
+            <input accept={props.acceptedFileTypes} hidden id="file-upload" onChange={props.fileChange} onClick={(event) => {event.target.value = null}} type ="file"/>
             <label htmlFor='file-upload'>
                 <Button component="span" size="small" variant="contained">Select File</Button>
             </label>
