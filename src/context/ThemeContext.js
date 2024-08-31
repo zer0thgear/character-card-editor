@@ -9,6 +9,7 @@ function ThemeContextProvider(props) {
 
     const toggleTheme = () => {
         setTheme((prevTheme) => prevTheme === themeData.defaultTheme ? themeData.secondaryTheme : themeData.defaultTheme);
+        localStorage.setItem("storedTheme", localStorage.getItem("storedTheme") === "light" ? "dark" : "light")
     };
 
     return(
