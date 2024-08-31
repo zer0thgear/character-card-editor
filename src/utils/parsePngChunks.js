@@ -1,3 +1,9 @@
+/**
+ * Utility function to retrieve the 'chara' tEXt chunk from an uploaded PNG
+ * 
+ * @param {*} file File as read directly from the file input
+ * @returns A promise that resolves to the contents of the 'chara' tEXt chunk if found, otherwise resolves to null
+ */
 export async function parsePngChunks (file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -7,7 +13,7 @@ export async function parsePngChunks (file) {
             const data = new DataView(arrayBuffer);
 
             const textChunks = [];
-            let offset = 8;
+            let offset = 8; // Skips the PNG header
 
             while (offset < data.byteLength) {
                 const length = data.getUint32(offset);
@@ -21,7 +27,7 @@ export async function parsePngChunks (file) {
                     const chunkData = new Uint8Array(arrayBuffer, offset + 8, length);
                     const textData = new TextDecoder().decode(chunkData);
                     
-                    const separatorIndex = textData.indexOf('\0');
+                    const separatorIndex = textData.indexOf('\0'); // Looking for null separator between 'chara' keyword and base64 encoded text
                     if (separatorIndex !== -1) {
                         const keyword = textData.substring(0, separatorIndex);
                         const text = textData.substring(separatorIndex + 1);
