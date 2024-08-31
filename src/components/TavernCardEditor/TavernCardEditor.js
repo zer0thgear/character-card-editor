@@ -11,19 +11,30 @@ import {
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 
-import FileUpload from '../FileUpload/FileUpload';
 import default_avatar from '../../assets/default_avatar.png';
+import FileUpload from '../FileUpload/FileUpload';
+import { parsePngChunks } from '../../utils/parsePngChunks';
 import './TavernCardEditor.css';
 
 const TavernCardEditor = ({toggleTheme}) => {
     const theme = useTheme();
 
+    const [cardData, setCardData] = useState();
     const [file, setFile] = useState();
     const [preview, setPreview] = useState();
 
-    function handleFileSelect(event) {
+    async function handleFileSelect(event) {
         const selectedFile = event.target.files[0];
         setFile(selectedFile);
+        if (/.+\.png$/.test(selectedFile.name)){
+            const parsedCardData = await parsePngChunks(selectedFile);
+            console.log(parsedCardData.data.name);
+            setCardData(parsedCardData);
+        } else { 
+            const parsedJson = JSON.parse(await selectedFile.text());
+            console.log(parsedJson.data.name);
+            setCardData(parsedJson);
+        }
         //console.log(selectedFile.name);
         //console.log(pngRegex.test(selectedFile.name));
     }
