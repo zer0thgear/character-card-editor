@@ -11,7 +11,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
  * Component that wraps over the basic HTML file upload component
  * Params should be passed as props to the FileUpload component when utilized
  * 
- * @param {[string]} acceptedFileTypes A list of accepted filetypes
+ * @param {string} acceptedFileTypes A list of accepted filetypes
  * @param {*} file The file being uploaded
  * @param {*} fileChange Callback function to handle a file being chosen
  * @param {*} handleRemoveFile Callback function to handle clearing the chosen file
