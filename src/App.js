@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
+import { CssBaseline } from '@mui/material';
 
 //import logo from './logo.svg';
 import './App.css';
@@ -11,7 +12,10 @@ function App() {
 
   return (
     <ThemeProvider theme={currentTheme}>
-      <TavernCardEditor/>
+      <CssBaseline/>
+      <TavernCardEditor
+        toggleTheme = {toggleTheme}
+      />
     </ThemeProvider>
       /* <div className="App">
       <header className="App-header">
