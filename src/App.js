@@ -1,9 +1,19 @@
-import logo from './logo.svg';
+import React, { useContext } from 'react';
+import { ThemeProvider } from '@mui/material/styles';
+
+//import logo from './logo.svg';
 import './App.css';
+import TavernCardEditor from './components/TavernCardEditor/TavernCardEditor';
+import { ThemeContext } from './context/ThemeContext';
 
 function App() {
+  const { currentTheme, toggleTheme } = useContext(ThemeContext);
+
   return (
-    <div className="App">
+    <ThemeProvider theme={currentTheme}>
+      <TavernCardEditor/>
+    </ThemeProvider>
+      /* <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
@@ -18,7 +28,7 @@ function App() {
           Learn React
         </a>
       </header>
-    </div>
+    </div> */
   );
 }
 
