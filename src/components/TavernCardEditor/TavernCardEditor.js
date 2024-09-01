@@ -12,6 +12,7 @@ import {
 import { useTheme } from '@mui/material/styles'
 
 import CardTextField from '../CardTextField/CardTextField';
+import ConfirmationDialog from '../ConfirmationDialog/ConfirmationDialog';
 import default_avatar from '../../assets/default_avatar.png';
 import FileUpload from '../FileUpload/FileUpload';
 import assembleNewPng from '../../utils/assembleNewPng';
@@ -27,7 +28,10 @@ const TavernCardEditor = ({toggleTheme}) => {
     const previewImageRef = useRef(null);
     const [cardDataV2, setCardDataV2] = useState(v2CardPrototype);
     const [cardDataV3, setCardDataV3] = useState(v3CardPrototype);
+    const [deleteConfirmation, setDeleteConfirmation] = useState(false);
     const [file, setFile] = useState();
+    const [overwriteConfirmation, setOverwriteConfirmation] = useState(false);
+    const [pendingJson, setPendingJson] = useState(null);
     const [preview, setPreview] = useState(default_avatar);
     const [useV3Spec, setUseV3Spec] = useState(false);
 
@@ -39,6 +43,15 @@ const TavernCardEditor = ({toggleTheme}) => {
         {fieldName: "first_mes", label: "First Message", multiline:true, rows:10},
         {fieldName: "mes_example", label: "Example Messages", multiline:true, rows:10}
     ];
+
+    const closeDeleteConfirmation = () => {
+        setDeleteConfirmation(false);
+    };
+
+    const closeOverwriteConfirmation = () => {
+        setOverwriteConfirmation(false);
+        setPendingJson(null);
+    };
 
     async function handleFileSelect(event) {
         const selectedFile = event.target.files[0];
@@ -88,6 +101,10 @@ const TavernCardEditor = ({toggleTheme}) => {
         //console.log(pngRegex.test(selectedFile.name));
     }
 
+    const handleDeleteClick = () => {
+        setDeleteConfirmation(true);
+    };
+
     function handleJsonDownload() {
         const blob = new Blob([JSON.stringify(cardDataV2, null, 4)], { type: 'application/json' });
 
@@ -101,6 +118,27 @@ const TavernCardEditor = ({toggleTheme}) => {
 
         URL.revokeObjectURL(url);
     }
+
+    async function handleOverwriteClick(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const parsedJson = JSON.parse(await file.text());
+            setPendingJson(parsedJson);
+            setOverwriteConfirmation(true);
+        }
+    };
+
+    const handleOverwriteFile = () => {
+        if(pendingJson.spec === "chara_card_v3"){
+            setUseV3Spec(true);
+            setCardDataV3(pendingJson);
+        } else {
+            setUseV3Spec(false);
+            setCardDataV2(pendingJson);
+        }
+        setOverwriteConfirmation(false);
+        setPendingJson(null)
+    };
 
     async function handlePngDownload() {
         try {
@@ -144,6 +182,7 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     function handleRemoveFile() {
         setFile(null);
+        setDeleteConfirmation(false);
         setPreview(default_avatar);
         setCardDataV2(v2CardPrototype);
         setCardDataV3(v3CardPrototype);
@@ -187,8 +226,22 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     return(
         <Container maxWidth={false}>
+            <ConfirmationDialog 
+                open={deleteConfirmation} 
+                handleClose={closeDeleteConfirmation} 
+                dialogTitle="Clear all fields?" 
+                dialogContent="Are you sure you want to clear all fields? This action cannot be undone."
+                handleConfirm={handleRemoveFile}
+            />
+            <ConfirmationDialog
+                open={overwriteConfirmation}
+                handleClose={closeOverwriteConfirmation}
+                dialogTitle="Overwrite with a JSON file?"
+                dialogContent="Are you sure you want to overwrite the current fields with a different JSON file? This action cannot be undone."
+                handleConfirm={handleOverwriteFile}
+            />
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                <FileUpload acceptedFileTypes={".json,.png"} file={file} fileChange={handleFileSelect} handleRemoveFile={handleRemoveFile}/>
+                <FileUpload acceptedFileTypes={".json,.png"} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
                 <Box style={{display:'flex', alignItems:'center'}}>Light <Switch checked={theme.palette.mode === "dark"} onChange={toggleTheme}/> Dark</Box>
             </Container>   
             <Paper elevation={6}>
@@ -204,11 +257,20 @@ const TavernCardEditor = ({toggleTheme}) => {
                         />
                     </Container>
                     <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
+                        {file && 
+                            <div>
+                                <input accept={".json"} hidden id="json-upload" onChange={handleOverwriteClick} onClick={(event) => {event.target.value = null}} type="file"/>
+                                <label htmlFor='json-upload'>
+                                    <Button component="span" variant="contained">Overwrite With JSON File</Button>
+                                </label>
+                            </div>
+                        }
                         {charMetadataFields.map((field, index) => (
-                            <CardTextField 
+                            <CardTextField
+                                key={field.fieldName.concat(index)} 
                                 fieldName={field.fieldName} 
                                 label={Object.hasOwn(field, "label") ? field.label : ""} 
-                                multiline={Object.hasOwn(field, "multiline") ? field.multiline : ""} 
+                                multiline={Object.hasOwn(field, "multiline") ? field.multiline : false} 
                                 rows={Object.hasOwn(field, "rows") ? field.rows : 1}
                                 changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
                             />
