@@ -1,3 +1,5 @@
+import { Base64 } from "js-base64";
+
 /**
  * Utility function to retrieve the 'chara' tEXt chunk from an uploaded PNG
  * 
@@ -6,7 +8,7 @@
  * @returns A promise that resolves to the contents of the specified tEXt chunk if found, otherwise resolves to null
  * Returned data will be in the format of [{"keyword": keyword, "data": JSON}]
  */
-export async function parsePngChunks (file, keywords) {
+export default async function parsePngChunks (file, keywords) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
 
@@ -37,11 +39,12 @@ export async function parsePngChunks (file, keywords) {
 
                         if ((Array.isArray(keywords) && keywords.includes(keyword)) || keyword === keywords) {
                             try {
-                                const decodedData = atob(text);
+                                const decodedData = Base64.decode(text);
                                 output.push({"keyword": keyword, "data": JSON.parse(decodedData)});
                                 //resolve(JSON.parse(decodedData));
                             } catch (error) {
                                 reject(new Error("Failed to decode base64 data."));
+                                console.log(error);
                                 return;
                             }
                         }
