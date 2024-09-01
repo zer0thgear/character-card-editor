@@ -63,6 +63,25 @@ const TavernCardEditor = ({toggleTheme}) => {
         setPendingJson(null);
     };
 
+    const handleAltGreetingChange = (e) => {
+        const {name, value} = e.target;
+        const index = name.match(/altGreetingV[23](\d+)/)[1];
+        setCardDataV2((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                alternate_greetings: prevState.data.alternate_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting)
+            }
+        }))
+        setCardDataV3((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                alternate_greetings: prevState.data.alternate_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting)
+            }
+        }))
+    }
+
     async function handleFileSelect(event) {
         const selectedFile = event.target.files[0];
         setFile(selectedFile);
@@ -86,9 +105,8 @@ const TavernCardEditor = ({toggleTheme}) => {
                 else {
                     console.log("Only V2 card info found");
                     setUseV3Spec(false);
-                    setCardDataV2(JSON.parse(JSON.stringify(parsedCardData[0].data)));
+                    setCardDataV2(parsedCardData[0].data);
                     console.log(parsedCardData[0].data);
-                    console.log(JSON.parse(JSON.stringify(parsedCardData[0].data)).data["alternate_greetings"][2])
                 }
             } else {
                 console.log("This PNG doesn't have any Card Data!");
@@ -206,7 +224,6 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     const handleTextFieldChange = (e) => {
         const {name, value} = e.target;
-        console.log("Name: ", name);
         setCardDataV2((prevState) => ({
             ...prevState,
             data: {
@@ -312,7 +329,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                                         greetingIndex={index}
                                         label={"Alternate Greeting #".concat(index)}
                                         fieldName={"altGreetingV3".concat(index)}
-                                        changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                        changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
                                     />
                                 )) : cardDataV2.data.alternate_greetings.map((text, index) => (
                                     <CardTextField
@@ -321,7 +338,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                                         greetingIndex={index}
                                         label={"Alternate Greeting #".concat(index)}
                                         fieldName={"altGreetingV2".concat(index)}
-                                        changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                        changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
                                     />
                                 ))}
                             </div>
