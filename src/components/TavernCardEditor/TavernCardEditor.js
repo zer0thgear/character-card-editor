@@ -42,6 +42,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [overwriteConfirmation, setOverwriteConfirmation] = useState(false);
     const [pendingJson, setPendingJson] = useState(null);
     const [preview, setPreview] = useState(default_avatar);
+    const [tabValue, setTabValue] = useState(0);
     const [useV3Spec, setUseV3Spec] = useState(false);
 
     const charMetadataFields = [
@@ -85,8 +86,9 @@ const TavernCardEditor = ({toggleTheme}) => {
                 else {
                     console.log("Only V2 card info found");
                     setUseV3Spec(false);
-                    setCardDataV2(parsedCardData[0].data);
+                    setCardDataV2(JSON.parse(JSON.stringify(parsedCardData[0].data)));
                     console.log(parsedCardData[0].data);
+                    console.log(JSON.parse(JSON.stringify(parsedCardData[0].data)).data["alternate_greetings"][2])
                 }
             } else {
                 console.log("This PNG doesn't have any Card Data!");
@@ -198,6 +200,10 @@ const TavernCardEditor = ({toggleTheme}) => {
         setUseV3Spec(false);
     }
 
+    const handleTabChange = (event, newValue) => {
+        setTabValue(newValue);
+    }
+
     const handleTextFieldChange = (e) => {
         const {name, value} = e.target;
         console.log("Name: ", name);
@@ -283,7 +289,11 @@ const TavernCardEditor = ({toggleTheme}) => {
                         />
                     </Container>}
                     <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
-                        {charMetadataFields.map((field, index) => (
+                        <Tabs onChange={handleTabChange} value={tabValue}>
+                            <Tab id={0} label="v1 Spec Fields"/>
+                            <Tab id={1} label="Alt Greetings"/>
+                        </Tabs>
+                        {tabValue === 0 && charMetadataFields.map((field, index) => (
                             <CardTextField
                                 key={field.fieldName.concat(index)} 
                                 fieldName={field.fieldName} 
@@ -293,6 +303,29 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
                             />
                         ))}
+                        {tabValue === 1 &&
+                            <div>
+                                {useV3Spec ? cardDataV3.data.alternate_greetings.map((text, index) => (
+                                    <CardTextField
+                                        key={"altGreetingV3".concat(index)}
+                                        isGreeting={true}
+                                        greetingIndex={index}
+                                        label={"Alternate Greeting #".concat(index)}
+                                        fieldName={"altGreetingV3".concat(index)}
+                                        changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                    />
+                                )) : cardDataV2.data.alternate_greetings.map((text, index) => (
+                                    <CardTextField
+                                        key={"altGreetingV2".concat(index)}
+                                        isGreeting={true}
+                                        greetingIndex={index}
+                                        label={"Alternate Greeting #".concat(index)}
+                                        fieldName={"altGreetingV2".concat(index)}
+                                        changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                    />
+                                ))}
+                            </div>
+                        }
                         <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
                             <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
                             <Button onClick={handlePngDownload} variant="contained">Download as PNG</Button>
