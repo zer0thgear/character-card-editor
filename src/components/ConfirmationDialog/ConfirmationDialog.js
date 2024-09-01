@@ -23,8 +23,8 @@ const ConfirmationDialog = ({open, handleClose, dialogTitle, dialogContent, hand
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose} color="primary">Cancel</Button>
-                    <Button onClick={handleConfirm} color="primary">OK</Button>
+                    <Button onClick={handleClose} color="primary" variant="contained">Cancel</Button>
+                    <Button onClick={handleConfirm} color="primary" variant="contained">Confirm</Button>
                 </DialogActions>
             </Dialog>
         </div>
