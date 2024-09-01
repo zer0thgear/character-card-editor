@@ -17,7 +17,7 @@ const CardTextField = ({label, fieldName, changeCallback, multiline=false, rows=
         <TextField 
             autoComplete="off"
             fullWidth 
-            label={label}
+            label={label ? label : "Character".concat(" ", fieldName.charAt(0).toUpperCase() + fieldName.slice(1))}
             margin="normal"
             multiline={multiline}
             name={fieldName} 
