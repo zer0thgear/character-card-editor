@@ -11,6 +11,10 @@ import {
     Switch,
     //Typography
 } from '@mui/material'
+import { DarkMode } from '@mui/icons-material';
+import { DarkModeOutlined } from '@mui/icons-material';
+import { LightMode } from '@mui/icons-material';
+import { LightModeOutlined } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles'
 
 import CardTextField from '../CardTextField/CardTextField';
@@ -250,7 +254,11 @@ const TavernCardEditor = ({toggleTheme}) => {
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <FileUpload acceptedFileTypes={".json,.png"} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
                 <FormControlLabel control={<Checkbox checked={displayImage} onChange={toggleImageDisplay}/>} label="Display image?"/>
-                <Box style={{display:'flex', alignItems:'center'}}>Light <Switch checked={theme.palette.mode === "dark"} onChange={toggleTheme}/> Dark</Box>
+                <Box style={{display:'flex', alignItems:'center'}}>
+                    {theme.palette.mode === "dark" ? <LightModeOutlined/> : <LightMode/>}
+                    <Switch checked={theme.palette.mode === "dark"} onChange={toggleTheme}/>
+                    {theme.palette.mode === "dark" ? <DarkMode/> : <DarkModeOutlined/>}
+                </Box>
             </Container>   
             <Paper elevation={6}>
                 <Container disableGutters maxWidth={false} style={{display:"flex", height:"95vh"}}>
