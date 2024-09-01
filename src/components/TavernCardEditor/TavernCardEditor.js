@@ -19,6 +19,7 @@ import { LightMode } from '@mui/icons-material';
 import { LightModeOutlined } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles'
 
+import AltGreetingTextField from '../AltGreetingTextField/AltGreetingTextField';
 import CardTextField from '../CardTextField/CardTextField';
 import ConfirmationDialog from '../ConfirmationDialog/ConfirmationDialog';
 import default_avatar from '../../assets/default_avatar.png';
@@ -323,18 +324,16 @@ const TavernCardEditor = ({toggleTheme}) => {
                         {tabValue === 1 &&
                             <div>
                                 {useV3Spec ? cardDataV3.data.alternate_greetings.map((text, index) => (
-                                    <CardTextField
+                                    <AltGreetingTextField
                                         key={"altGreetingV3".concat(index)}
-                                        isGreeting={true}
                                         greetingIndex={index}
                                         label={"Alternate Greeting #".concat(index)}
                                         fieldName={"altGreetingV3".concat(index)}
                                         changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
                                     />
                                 )) : cardDataV2.data.alternate_greetings.map((text, index) => (
-                                    <CardTextField
+                                    <AltGreetingTextField
                                         key={"altGreetingV2".concat(index)}
-                                        isGreeting={true}
                                         greetingIndex={index}
                                         label={"Alternate Greeting #".concat(index)}
                                         fieldName={"altGreetingV2".concat(index)}
