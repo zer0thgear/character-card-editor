@@ -15,7 +15,7 @@ import {
     Tooltip
     //Typography
 } from '@mui/material'
-import { DarkMode, DarkModeOutlined, DeleteOutline, LightMode, LightModeOutlined } from '@mui/icons-material';
+import { DarkMode, DarkModeOutlined, DeleteOutline, KeyboardDoubleArrowUp, LightMode, LightModeOutlined } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles'
 
 import AltGreetingTextField from '../AltGreetingTextField/AltGreetingTextField';
@@ -43,6 +43,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [overwriteConfirmation, setOverwriteConfirmation] = useState(false);
     const [pendingGreeting, setPendingGreeting] = useState(-1);
     const [pendingJson, setPendingJson] = useState(null);
+    const [promoteGreeting, setPromoteGreeting] = useState(false);
     const [preview, setPreview] = useState(default_avatar);
     const [tabValue, setTabValue] = useState(0);
     const [useV3Spec, setUseV3Spec] = useState(false);
@@ -80,6 +81,11 @@ const TavernCardEditor = ({toggleTheme}) => {
     const closeOverwriteConfirmation = () => {
         setOverwriteConfirmation(false);
         setPendingJson(null);
+    };
+
+    const closePromoteGreeting = () => {
+        setPromoteGreeting(false);
+        setPendingGreeting(-1);
     };
 
     const handleAddGreeting = () => {
@@ -286,6 +292,43 @@ const TavernCardEditor = ({toggleTheme}) => {
         }
     };
 
+    const handlePromoteClick = (index) => {
+        setPendingGreeting(index);
+        setPromoteGreeting(true);
+    };
+
+    const handlePromoteGreeting = () => {
+        if (useV3Spec) {
+            const firstMes = cardDataV3.data.first_mes;
+            const altGreetings = cardDataV3.data.alternate_greetings;
+            const toPromote = altGreetings.splice(pendingGreeting, 1)
+            altGreetings.unshift(firstMes);
+            setCardDataV3((prevState) => ({
+                ...prevState,
+                data: {
+                    ...prevState.data,
+                    first_mes: toPromote,
+                    alternate_greetings: altGreetings
+                }
+            }))
+        } else {
+            const firstMes = cardDataV2.data.first_mes;
+            const altGreetings = cardDataV2.data.alternate_greetings;
+            const toPromote = altGreetings.splice(pendingGreeting, 1)
+            altGreetings.unshift(firstMes);
+            setCardDataV2((prevState) => ({
+                ...prevState,
+                data: {
+                    ...prevState.data,
+                    first_mes: toPromote,
+                    alternate_greetings: altGreetings
+                }
+            }))
+        }
+        setPromoteGreeting(false);
+        setPendingGreeting(-1);
+    };
+
     const handleRemoveFile = () => {
         setFile(null);
         setDeleteConfirmation(false);
@@ -360,6 +403,13 @@ const TavernCardEditor = ({toggleTheme}) => {
                 dialogContent={`Are you sure you want to delete Alt Greeting #${pendingGreeting}? This action cannot be undone.`}
                 handleConfirm={handleDeleteAltGreeting}
             />
+            <ConfirmationDialog
+                open={promoteGreeting}
+                handleClose={closePromoteGreeting}
+                dialogTitle="Promote alternate greeting?"
+                dialogContent={`Are you sure you want to promote Alt Greeting #${pendingGreeting} to the first message? The existing first message will be moved to Alternate Greeting #0's spot.`}
+                handleConfirm={handlePromoteGreeting}
+            />
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <FileUpload acceptedFileTypes={".json,.png"} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
                 <FormControlLabel control={<Checkbox checked={displayImage} onChange={toggleImageDisplay}/>} label="Display image?"/>
@@ -419,6 +469,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                                             changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
                                             style={{flex:9}}
                                         />
+                                        <Tooltip title="Promote this greeting to first message"><IconButton onClick={() => handlePromoteClick(index)}><KeyboardDoubleArrowUp/></IconButton></Tooltip>
                                         <Tooltip title="Delete this greeting"><IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton></Tooltip>
                                     </Box>
                                 )) : cardDataV2.data.alternate_greetings.map((text, index) => (
@@ -429,7 +480,9 @@ const TavernCardEditor = ({toggleTheme}) => {
                                             label={"Alternate Greeting #".concat(index)}
                                             fieldName={"altGreetingV2".concat(index)}
                                             changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                            style={{flex:9}}
                                         />
+                                        <Tooltip title="Promote this greeting to first message"><IconButton onClick={() => handlePromoteClick(index)}><KeyboardDoubleArrowUp/></IconButton></Tooltip>
                                         <Tooltip title="Delete this greeting"><IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton></Tooltip>
                                     </Box>
                                 ))}
