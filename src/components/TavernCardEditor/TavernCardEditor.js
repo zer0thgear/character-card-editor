@@ -135,19 +135,19 @@ const TavernCardEditor = ({toggleTheme}) => {
         setDeleteConfirmation(true);
     };
 
-    function handleJsonDownload() {
-        const blob = new Blob([JSON.stringify(cardDataV2, null, 4)], { type: 'application/json' });
+    const handleJsonDownload = () => {
+        const blob = new Blob([JSON.stringify(useV3Spec ? cardDataV3 : cardDataV2, null, 4)], { type: 'application/json' });
 
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${cardDataV2.data.name}.json`
+        a.download = `${useV3Spec ? cardDataV3.data.name : cardDataV2.data.name}.json`
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
 
         URL.revokeObjectURL(url);
-    }
+    };
 
     async function handleOverwriteClick(event) {
         const file = event.target.files[0];
