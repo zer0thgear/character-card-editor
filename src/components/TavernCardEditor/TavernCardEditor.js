@@ -31,6 +31,15 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [preview, setPreview] = useState(default_avatar);
     const [useV3Spec, setUseV3Spec] = useState(false);
 
+    const charMetadataFields = [
+        {fieldName: "name"},
+        {fieldName: "description", multiline:true, rows:10},
+        {fieldName: "personality"},
+        {fieldName: "scenario"},
+        {fieldName: "first_mes", label: "First Message", multiline:true, rows:10},
+        {fieldName: "mes_example", label: "Example Messages", multiline:true, rows:10}
+    ];
+
     async function handleFileSelect(event) {
         const selectedFile = event.target.files[0];
         setFile(selectedFile);
@@ -183,7 +192,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                 <Box style={{display:'flex', alignItems:'center'}}>Light <Switch checked={theme.palette.mode === "dark"} onChange={toggleTheme}/> Dark</Box>
             </Container>   
             <Paper elevation={6}>
-                <Container disableGutters maxWidth={false} style={{display:"flex", height:"90vh"}}>
+                <Container disableGutters maxWidth={false} style={{display:"flex", height:"95vh"}}>
                     <Container disableGutters style={{alignItems:"center", display:"flex", flex:2, overflow:"auto"}} sx={{ml:2}}>
                         <img alt={file ? file.name : "No avatar loaded"} onClick={handlePreviewClick} src={preview} style={{cursor:'pointer', objectFit:'cover'}}/>
                         <input
@@ -195,8 +204,15 @@ const TavernCardEditor = ({toggleTheme}) => {
                         />
                     </Container>
                     <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
-                        <CardTextField label="Character name" fieldName="name" changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}/>
-                        <CardTextField label="Character description" fieldName="description" multiline={true} rows={10} changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}/>
+                        {charMetadataFields.map((field, index) => (
+                            <CardTextField 
+                                fieldName={field.fieldName} 
+                                label={Object.hasOwn(field, "label") ? field.label : ""} 
+                                multiline={Object.hasOwn(field, "multiline") ? field.multiline : ""} 
+                                rows={Object.hasOwn(field, "rows") ? field.rows : 1}
+                                changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                            />
+                        ))}
                         <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
                             <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
                             <Button onClick={handlePngDownload} variant="contained">Download as PNG</Button>
