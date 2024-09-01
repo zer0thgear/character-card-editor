@@ -126,6 +126,11 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleAltGreetingClick = (index) => {
+        if (useV3Spec){
+            if (cardDataV3.data.alternate_greetings.length === 1) return;
+        } else {
+            if (cardDataV2.data.alternate_greetings.length === 1) return;
+        }
         setPendingGreeting(index);
         setDeleteGreetingConfirmation(true);
     };
@@ -352,7 +357,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                 open={deleteGreetingConfirmation}
                 handleClose={closeDeleteGreetingConfirmation}
                 dialogTitle="Delete alternate greeting?"
-                dialogContent={`Are you sure you want to delete Alt Greeting#${pendingGreeting}? This action cannot be undone.`}
+                dialogContent={`Are you sure you want to delete Alt Greeting #${pendingGreeting}? This action cannot be undone.`}
                 handleConfirm={handleDeleteAltGreeting}
             />
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
