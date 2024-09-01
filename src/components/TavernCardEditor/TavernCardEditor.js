@@ -307,7 +307,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                         />
                     </Container>}
                     <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
-                        <Tabs onChange={handleTabChange} value={tabValue}>
+                        <Tabs onChange={handleTabChange} value={tabValue} sx={{mb:2}}>
                             <Tab id={0} label="v1 Spec Fields"/>
                             <Tab id={1} label="Alt Greetings"/>
                         </Tabs>
@@ -322,7 +322,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                             />
                         ))}
                         {tabValue === 1 &&
-                            <div>
+                            <div>                             
                                 {useV3Spec ? cardDataV3.data.alternate_greetings.map((text, index) => (
                                     <AltGreetingTextField
                                         key={"altGreetingV3".concat(index)}
