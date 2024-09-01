@@ -16,13 +16,14 @@ const CardTextField = ({label, fieldName, changeCallback, multiline=false, rows=
     return(
         <TextField 
             autoComplete="off"
-            fullWidth 
-            label={label ? label : "Character".concat(" ", fieldName.charAt(0).toUpperCase() + fieldName.slice(1))}
+            fullWidth
+            label={label && label !== "" ? label : "Character".concat(" ", fieldName.charAt(0).toUpperCase() + fieldName.slice(1))}
             margin="normal"
             multiline={multiline}
             name={fieldName} 
             onChange={changeCallback}
             rows={multiline ? rows : undefined}
+            slotProps = {multiline ? {htmlInput: {style: {resize:'vertical'}}} : {}}
             value={useV3Spec ? cardDataV3.data[fieldName] : cardDataV2.data[fieldName]}
         />
     )
