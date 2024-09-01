@@ -36,13 +36,8 @@ const TavernCardEditor = ({toggleTheme}) => {
         if (/.+\.png$/.test(selectedFile.name)){
             const parsedCardData = await parsePngChunks(selectedFile, ["ccv3", "chara"]);
             if (parsedCardData) {
-                //console.log(parsedCardData.data.name);
-                //console.log(parsedCardData.spec);
-                //console.log(parsedCardData.spec_version);
-                //console.log(parsedCardData);
                 if (parsedCardData.length >= 2) {
                     for (let item = 0; item < parsedCardData.length; item++){
-                        //console.log(parsedCardData[item]);
                         if (parsedCardData[item].keyword === "ccv3"){
                             setCardDataV3(parsedCardData[item].data);
                             console.log("V3 Card info found");
@@ -57,6 +52,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                 }
                 else {
                     console.log("Only V2 card info found");
+                    setUseV3Spec(false);
                     setCardDataV2(parsedCardData[0].data);
                     console.log(parsedCardData[0].data);
                 }
@@ -69,9 +65,14 @@ const TavernCardEditor = ({toggleTheme}) => {
             //console.log(parsedJson.spec);
             //console.log(parsedJson.spec_version);
             console.log(parsedJson);
-            console.log(parsedJson.spec === "chara_card_v3");
-            setUseV3Spec(parsedJson.spec === "chara_card_v3");
-            setCardDataV2(parsedJson);
+            if (parsedJson.spec === "chara_card_v3"){
+                setUseV3Spec(true);
+                setCardDataV3(parsedJson)
+            }
+            else{
+                setCardDataV2(parsedJson);
+                setUseV3Spec(false);
+            }
         }
         //console.log(selectedFile.name);
         //console.log(pngRegex.test(selectedFile.name));
@@ -192,8 +193,8 @@ const TavernCardEditor = ({toggleTheme}) => {
                         />
                     </Container>
                     <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
-                        <TextField fullWidth label="Card name" margin="normal" name="name" onChange={handleTextFieldChange} value={cardDataV3.data.name !== "" ? cardDataV3.data.name : cardDataV2.data.name}/>
-                        <TextField fullWidth label="Card desciption" margin="normal" name="description" multiline rows={10}  onChange={handleTextFieldChange} value={cardDataV3.data.description !== "" ? cardDataV3.data.description : cardDataV2.data.description}/>
+                        <TextField fullWidth label="Card name" margin="normal" name="name" onChange={handleTextFieldChange} value={useV3Spec ? cardDataV3.data.name : cardDataV2.data.name}/>
+                        <TextField fullWidth label="Card desciption" margin="normal" name="description" multiline rows={10}  onChange={handleTextFieldChange} value={useV3Spec ? cardDataV3.data.description : cardDataV2.data.description}/>
                         <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
                             <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
                             <Button onClick={handlePngDownload} variant="contained">Download as PNG</Button>
