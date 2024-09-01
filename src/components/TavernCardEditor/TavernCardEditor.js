@@ -5,12 +5,13 @@ import {
     Box,
     Container,
     Paper,
-    TextField,
+    //TextField,
     Switch,
     //Typography
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 
+import CardTextField from '../CardTextField/CardTextField';
 import default_avatar from '../../assets/default_avatar.png';
 import FileUpload from '../FileUpload/FileUpload';
 import assembleNewPng from '../../utils/assembleNewPng';
@@ -142,6 +143,7 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     const handleTextFieldChange = (e) => {
         const {name, value} = e.target;
+        console.log("Name: ", name);
         setCardDataV2((prevState) => ({
             ...prevState,
             data: {
@@ -193,8 +195,8 @@ const TavernCardEditor = ({toggleTheme}) => {
                         />
                     </Container>
                     <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
-                        <TextField fullWidth label="Card name" margin="normal" name="name" onChange={handleTextFieldChange} value={useV3Spec ? cardDataV3.data.name : cardDataV2.data.name}/>
-                        <TextField fullWidth label="Card desciption" margin="normal" name="description" multiline rows={10}  onChange={handleTextFieldChange} value={useV3Spec ? cardDataV3.data.description : cardDataV2.data.description}/>
+                        <CardTextField label="Character name" fieldName="name" changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}/>
+                        <CardTextField label="Character description" fieldName="description" multiline={true} rows={10} changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}/>
                         <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
                             <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
                             <Button onClick={handlePngDownload} variant="contained">Download as PNG</Button>
