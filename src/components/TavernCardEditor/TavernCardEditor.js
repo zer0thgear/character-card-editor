@@ -187,7 +187,7 @@ const TavernCardEditor = ({toggleTheme}) => {
         }
     };
 
-    function handleRemoveFile() {
+    const handleRemoveFile = () => {
         setFile(null);
         setDeleteConfirmation(false);
         setPreview(default_avatar);
