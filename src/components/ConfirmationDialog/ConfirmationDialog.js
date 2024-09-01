@@ -7,7 +7,7 @@ import {
     DialogTitle 
 } from "@mui/material";
 
-const AlertModal = ({open, handleClose, dialogTitle, dialogContent, handleConfirm}) => {
+const ConfirmationDialog = ({open, handleClose, dialogTitle, dialogContent, handleConfirm}) => {
     return (
         <div>
             <Dialog
@@ -31,4 +31,4 @@ const AlertModal = ({open, handleClose, dialogTitle, dialogContent, handleConfir
     );
 };
 
-export default AlertModal;
+export default ConfirmationDialog;
