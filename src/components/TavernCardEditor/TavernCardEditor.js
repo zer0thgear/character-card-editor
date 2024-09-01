@@ -12,6 +12,7 @@ import {
     Switch,
     Tab,
     Tabs,
+    Tooltip
     //Typography
 } from '@mui/material'
 import { DarkMode, DarkModeOutlined, DeleteOutline, LightMode, LightModeOutlined } from '@mui/icons-material';
@@ -413,7 +414,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                                             changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
                                             style={{flex:9}}
                                         />
-                                        <IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton>
+                                        <Tooltip title="Delete this greeting"><IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton></Tooltip>
                                     </Box>
                                 )) : cardDataV2.data.alternate_greetings.map((text, index) => (
                                     <Box key={"altGreetingV3Container#".concat(index)} style={{display:"flex"}}>
@@ -424,7 +425,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                                             fieldName={"altGreetingV2".concat(index)}
                                             changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
                                         />
-                                        <IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton>
+                                        <Tooltip title="Delete this greeting"><IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton></Tooltip>
                                     </Box>
                                 ))}
                             </div>
