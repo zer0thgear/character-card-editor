@@ -9,6 +9,8 @@ import {
     Paper,
     //TextField,
     Switch,
+    Tab,
+    Tabs,
     //Typography
 } from '@mui/material'
 import { DarkMode } from '@mui/icons-material';
@@ -254,6 +256,14 @@ const TavernCardEditor = ({toggleTheme}) => {
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <FileUpload acceptedFileTypes={".json,.png"} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
                 <FormControlLabel control={<Checkbox checked={displayImage} onChange={toggleImageDisplay}/>} label="Display image?"/>
+                {file && 
+                    <div>
+                        <input accept={".json"} hidden id="json-upload" onChange={handleOverwriteClick} onClick={(event) => {event.target.value = null}} type="file"/>
+                        <label htmlFor='json-upload'>
+                            <Button component="span" variant="contained">Overwrite With JSON File</Button>
+                        </label>
+                    </div>
+                }
                 <Box style={{display:'flex', alignItems:'center'}}>
                     {theme.palette.mode === "dark" ? <LightModeOutlined/> : <LightMode/>}
                     <Switch checked={theme.palette.mode === "dark"} onChange={toggleTheme}/>
@@ -273,14 +283,6 @@ const TavernCardEditor = ({toggleTheme}) => {
                         />
                     </Container>}
                     <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
-                        {file && 
-                            <div>
-                                <input accept={".json"} hidden id="json-upload" onChange={handleOverwriteClick} onClick={(event) => {event.target.value = null}} type="file"/>
-                                <label htmlFor='json-upload'>
-                                    <Button component="span" variant="contained">Overwrite With JSON File</Button>
-                                </label>
-                            </div>
-                        }
                         {charMetadataFields.map((field, index) => (
                             <CardTextField
                                 key={field.fieldName.concat(index)} 
