@@ -23,7 +23,7 @@ const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0
             onChange={changeCallback}
             rows={3}
             slotProps = {{htmlInput: {style: {resize:'vertical'}}}}
-            value={useV3Spec ? cardDataV3.data.alternate_greetings[greetingIndex] : cardDataV2.data.alernate_greetings[greetingIndex]}
+            value={useV3Spec ? cardDataV3.data.alternate_greetings[greetingIndex] : cardDataV2.data.alternate_greetings[greetingIndex]}
         />
     )
 }
