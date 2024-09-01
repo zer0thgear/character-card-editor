@@ -404,7 +404,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                             <div>
                                 <Button onClick={handleAddGreeting} variant="contained">Add new greeting</Button>
                                 {useV3Spec ? cardDataV3.data.alternate_greetings.map((text, index) => (
-                                    <Box style={{display:"flex"}}>
+                                    <Box key={"altGreetingV3Container#".concat(index)} style={{display:"flex"}}>
                                         <AltGreetingTextField
                                             key={"altGreetingV3".concat(index)}
                                             greetingIndex={index}
@@ -416,7 +416,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                                         <IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton>
                                     </Box>
                                 )) : cardDataV2.data.alternate_greetings.map((text, index) => (
-                                    <Box style={{display:"flex"}}>
+                                    <Box key={"altGreetingV3Container#".concat(index)} style={{display:"flex"}}>
                                         <AltGreetingTextField
                                             key={"altGreetingV2".concat(index)}
                                             greetingIndex={index}
