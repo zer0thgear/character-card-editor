@@ -13,10 +13,7 @@ import {
     Tabs,
     //Typography
 } from '@mui/material'
-import { DarkMode } from '@mui/icons-material';
-import { DarkModeOutlined } from '@mui/icons-material';
-import { LightMode } from '@mui/icons-material';
-import { LightModeOutlined } from '@mui/icons-material';
+import { DarkMode, DarkModeOutlined, LightMode, LightModeOutlined } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles'
 
 import AltGreetingTextField from '../AltGreetingTextField/AltGreetingTextField';
