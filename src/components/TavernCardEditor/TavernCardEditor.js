@@ -64,6 +64,30 @@ const TavernCardEditor = ({toggleTheme}) => {
         setPendingJson(null);
     };
 
+    const handleAddGreeting = () => {
+        if (useV3Spec){
+            const altGreetingArray = cardDataV3.data.alternate_greetings;
+            altGreetingArray.push("");
+            setCardDataV3((prevState) => ({
+                ...prevState,
+                data: {
+                    ...prevState.data,
+                    alternate_greetings: altGreetingArray
+                }
+            }));
+        } else {
+            const altGreetingArray = cardDataV2.data.alternate_greetings;
+            altGreetingArray.push("");
+            setCardDataV2((prevState) => ({
+                ...prevState,
+                data: {
+                    ...prevState.data,
+                    alternate_greetings: altGreetingArray
+                }
+            }));
+        }
+    }
+
     const handleAltGreetingChange = (e) => {
         const {name, value} = e.target;
         const index = name.match(/altGreetingV[23](\d+)/)[1];
@@ -322,7 +346,8 @@ const TavernCardEditor = ({toggleTheme}) => {
                             />
                         ))}
                         {tabValue === 1 &&
-                            <div>                             
+                            <div>
+                                <Button onClick={handleAddGreeting} variant="contained">Add new greeting</Button>
                                 {useV3Spec ? cardDataV3.data.alternate_greetings.map((text, index) => (
                                     <AltGreetingTextField
                                         key={"altGreetingV3".concat(index)}
