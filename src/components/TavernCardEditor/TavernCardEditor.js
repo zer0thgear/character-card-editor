@@ -3,7 +3,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
     Button,
     Box,
+    Checkbox,
     Container,
+    FormControlLabel,
     Paper,
     //TextField,
     Switch,
@@ -29,6 +31,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [cardDataV2, setCardDataV2] = useState(v2CardPrototype);
     const [cardDataV3, setCardDataV3] = useState(v3CardPrototype);
     const [deleteConfirmation, setDeleteConfirmation] = useState(false);
+    const [displayImage, setDisplayImage] = useState(true);
     const [file, setFile] = useState();
     const [overwriteConfirmation, setOverwriteConfirmation] = useState(false);
     const [pendingJson, setPendingJson] = useState(null);
@@ -208,6 +211,10 @@ const TavernCardEditor = ({toggleTheme}) => {
         }));
     };
 
+    const toggleImageDisplay = () => {
+        setDisplayImage(!displayImage);
+    }
+
     useEffect(() => {
         const pngRegex = /.+\.png$/;
         if (!file) {
@@ -242,11 +249,12 @@ const TavernCardEditor = ({toggleTheme}) => {
             />
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <FileUpload acceptedFileTypes={".json,.png"} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
+                <FormControlLabel control={<Checkbox checked={displayImage} onChange={toggleImageDisplay}/>} label="Display image?"/>
                 <Box style={{display:'flex', alignItems:'center'}}>Light <Switch checked={theme.palette.mode === "dark"} onChange={toggleTheme}/> Dark</Box>
             </Container>   
             <Paper elevation={6}>
                 <Container disableGutters maxWidth={false} style={{display:"flex", height:"95vh"}}>
-                    <Container disableGutters style={{alignItems:"center", display:"flex", flex:2, overflow:"auto"}} sx={{ml:2}}>
+                    {displayImage && <Container disableGutters style={{alignItems:"center", display:"flex", flex:2, overflow:"auto"}} sx={{ml:2}}>
                         <img alt={file ? file.name : "No avatar loaded"} onClick={handlePreviewClick} src={preview} style={{cursor:'pointer', objectFit:'cover'}}/>
                         <input
                             accept=".png"
@@ -255,7 +263,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                             ref={previewImageRef}
                             type="file"           
                         />
-                    </Container>
+                    </Container>}
                     <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
                         {file && 
                             <div>
