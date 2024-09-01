@@ -34,8 +34,8 @@ const TavernCardEditor = ({toggleTheme}) => {
     const charMetadataFields = [
         {fieldName: "name"},
         {fieldName: "description", multiline:true, rows:10},
-        {fieldName: "personality"},
-        {fieldName: "scenario"},
+        {fieldName: "personality", multiline:true},
+        {fieldName: "scenario", multiline:true},
         {fieldName: "first_mes", label: "First Message", multiline:true, rows:10},
         {fieldName: "mes_example", label: "Example Messages", multiline:true, rows:10}
     ];
