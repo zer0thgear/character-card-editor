@@ -24,7 +24,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [cardDataV2, setCardDataV2] = useState(v2CardPrototype);
     const [cardDataV3, setCardDataV3] = useState(v3CardPrototype);
     const [file, setFile] = useState();
-    const [preview, setPreview] = useState();
+    const [preview, setPreview] = useState(default_avatar);
 
     async function handleFileSelect(event) {
         const selectedFile = event.target.files[0];
@@ -72,12 +72,13 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     function handleRemoveFile() {
         setFile(null);
+        setPreview(default_avatar);
     }
 
     useEffect(() => {
         const pngRegex = /.+\.png$/;
         if (!file) {
-            setPreview(undefined);
+            setPreview(default_avatar);
             return;
         }
         if (!pngRegex.test(file.name)){
@@ -98,7 +99,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             </Container>   
             <Paper elevation={6}>
                 <Container disableGutters maxWidth={false}>
-                    {file && <img alt={file.name} src={preview}/>}
+                    <img alt={file ? file.name : "No avatar loaded"} src={preview}/>
                 </Container>
             </Paper>
         </Container>
