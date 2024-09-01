@@ -55,6 +55,18 @@ const TavernCardEditor = ({toggleTheme}) => {
         {fieldName: "mes_example", label: "Example Messages", multiline:true, rows:10}
     ];
 
+    const creatorMetadataFields = [
+        {fieldName: "creator"},
+        {fieldName: "character_version", label: "Character Version"},
+        {fieldName: "creator_notes", label: "Creator Notes", multiline:true, rows:10},
+        {fieldName: "tags", label: "Tagss (Comma separated, no quotes)"}
+    ];
+
+    const promptFields = [
+        {fieldName: "system_prompt", label: "System Prompt", multiline:true, rows:5},
+        {fieldName: "post_history_instructions", label: "Post History Instructions", multiline:true, rows:5}
+    ]
+
     const closeDeleteConfirmation = () => {
         setDeleteConfirmation(false);
     };
