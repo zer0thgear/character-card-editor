@@ -6,6 +6,7 @@ import {
     Checkbox,
     Container,
     FormControlLabel,
+    IconButton,
     Paper,
     //TextField,
     Switch,
@@ -13,7 +14,7 @@ import {
     Tabs,
     //Typography
 } from '@mui/material'
-import { DarkMode, DarkModeOutlined, LightMode, LightModeOutlined } from '@mui/icons-material';
+import { DarkMode, DarkModeOutlined, DeleteOutline, LightMode, LightModeOutlined } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles'
 
 import AltGreetingTextField from '../AltGreetingTextField/AltGreetingTextField';
@@ -35,9 +36,11 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [cardDataV2, setCardDataV2] = useState(v2CardPrototype);
     const [cardDataV3, setCardDataV3] = useState(v3CardPrototype);
     const [deleteConfirmation, setDeleteConfirmation] = useState(false);
+    const [deleteGreetingConfirmation, setDeleteGreetingConfirmation] = useState(false);
     const [displayImage, setDisplayImage] = useState(true);
     const [file, setFile] = useState();
     const [overwriteConfirmation, setOverwriteConfirmation] = useState(false);
+    const [pendingGreeting, setPendingGreeting] = useState(-1);
     const [pendingJson, setPendingJson] = useState(null);
     const [preview, setPreview] = useState(default_avatar);
     const [tabValue, setTabValue] = useState(0);
@@ -67,6 +70,11 @@ const TavernCardEditor = ({toggleTheme}) => {
     const closeDeleteConfirmation = () => {
         setDeleteConfirmation(false);
     };
+
+    const closeDeleteGreetingConfirmation = () => {
+        setDeleteGreetingConfirmation(false);
+        setPendingGreeting(-1);
+    }
 
     const closeOverwriteConfirmation = () => {
         setOverwriteConfirmation(false);
@@ -114,6 +122,35 @@ const TavernCardEditor = ({toggleTheme}) => {
                 alternate_greetings: prevState.data.alternate_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting)
             }
         }))
+    };
+
+    const handleAltGreetingClick = (index) => {
+        setPendingGreeting(index);
+        setDeleteGreetingConfirmation(true);
+    };
+
+    const handleDeleteAltGreeting = () => {
+        const altGreetings = useV3Spec ? cardDataV3.data.alternate_greetings : cardDataV2.data.alternate_greetings;
+        altGreetings.splice(pendingGreeting, 1);
+        if (useV3Spec) {
+            setCardDataV3((prevState) => ({
+                ...prevState,
+                data: {
+                    ...prevState.data,
+                    alternate_greetings: altGreetings
+                }
+            }));
+        } else {
+            setCardDataV2((prevState) => ({
+                ...prevState,
+                data: {
+                    ...prevState.data,
+                    alternate_greetings: altGreetings
+                }
+            }));
+        }
+        setPendingGreeting(-1);
+        setDeleteGreetingConfirmation(false);
     }
 
     async function handleFileSelect(event) {
@@ -310,6 +347,13 @@ const TavernCardEditor = ({toggleTheme}) => {
                 dialogContent="Are you sure you want to overwrite the current fields with a different JSON file? This action cannot be undone."
                 handleConfirm={handleOverwriteFile}
             />
+            <ConfirmationDialog
+                open={deleteGreetingConfirmation}
+                handleClose={closeDeleteGreetingConfirmation}
+                dialogTitle="Delete alternate greeting?"
+                dialogContent={`Are you sure you want to delete Alt Greeting#${pendingGreeting}? This action cannot be undone.`}
+                handleConfirm={handleDeleteAltGreeting}
+            />
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <FileUpload acceptedFileTypes={".json,.png"} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
                 <FormControlLabel control={<Checkbox checked={displayImage} onChange={toggleImageDisplay}/>} label="Display image?"/>
@@ -360,21 +404,28 @@ const TavernCardEditor = ({toggleTheme}) => {
                             <div>
                                 <Button onClick={handleAddGreeting} variant="contained">Add new greeting</Button>
                                 {useV3Spec ? cardDataV3.data.alternate_greetings.map((text, index) => (
-                                    <AltGreetingTextField
-                                        key={"altGreetingV3".concat(index)}
-                                        greetingIndex={index}
-                                        label={"Alternate Greeting #".concat(index)}
-                                        fieldName={"altGreetingV3".concat(index)}
-                                        changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                                    />
+                                    <Box style={{display:"flex"}}>
+                                        <AltGreetingTextField
+                                            key={"altGreetingV3".concat(index)}
+                                            greetingIndex={index}
+                                            label={"Alternate Greeting #".concat(index)}
+                                            fieldName={"altGreetingV3".concat(index)}
+                                            changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                            style={{flex:9}}
+                                        />
+                                        <IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton>
+                                    </Box>
                                 )) : cardDataV2.data.alternate_greetings.map((text, index) => (
-                                    <AltGreetingTextField
-                                        key={"altGreetingV2".concat(index)}
-                                        greetingIndex={index}
-                                        label={"Alternate Greeting #".concat(index)}
-                                        fieldName={"altGreetingV2".concat(index)}
-                                        changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                                    />
+                                    <Box style={{display:"flex"}}>
+                                        <AltGreetingTextField
+                                            key={"altGreetingV2".concat(index)}
+                                            greetingIndex={index}
+                                            label={"Alternate Greeting #".concat(index)}
+                                            fieldName={"altGreetingV2".concat(index)}
+                                            changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                        />
+                                        <IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton>
+                                    </Box>
                                 ))}
                             </div>
                         }
