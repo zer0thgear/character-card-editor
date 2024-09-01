@@ -14,12 +14,15 @@ import { useTheme } from '@mui/material/styles'
 import default_avatar from '../../assets/default_avatar.png';
 import FileUpload from '../FileUpload/FileUpload';
 import { parsePngChunks } from '../../utils/parsePngChunks';
+import { v2CardPrototype, v2CharacterBookEntryPrototype, v2CharacterBookPrototype } from '../../utils/v2CardPrototype';
+import { v3AssetPrototype, v3CardPrototype, v3CharacterBookEntryPrototype, v3CharacterBookPrototype } from '../../utils/v3CardPrototype';
 import './TavernCardEditor.css';
 
 const TavernCardEditor = ({toggleTheme}) => {
     const theme = useTheme();
 
-    const [cardData, setCardData] = useState();
+    const [cardDataV2, setCardDataV2] = useState(v2CardPrototype);
+    const [cardDataV3, setCardDataV3] = useState(v3CardPrototype);
     const [file, setFile] = useState();
     const [preview, setPreview] = useState();
 
@@ -37,14 +40,19 @@ const TavernCardEditor = ({toggleTheme}) => {
                     for (let item = 0; item < parsedCardData.length; item++){
                         //console.log(parsedCardData[item]);
                         if (parsedCardData[item].keyword === "ccv3"){
-                            setCardData(parsedCardData[item].data);
+                            setCardDataV3(parsedCardData[item].data);
+                            console.log("V3 Card info found");
                             console.log(parsedCardData[item].data);
-                            break;
-                        } 
+                        } else if (parsedCardData[item].keyword === "chara"){
+                            console.log("V2 card info found");
+                            setCardDataV2(parsedCardData[item].data);
+                            console.log(parsedCardData[item].data);
+                        }
                     }
                 }
                 else {
-                    setCardData(parsedCardData[0].data);
+                    console.log("Only V2 card info found")
+                    setCardDataV2(parsedCardData[0].data);
                     console.log(parsedCardData[0].data);
                 }
             } else {
@@ -55,8 +63,8 @@ const TavernCardEditor = ({toggleTheme}) => {
             //console.log(parsedJson.data.name);
             //console.log(parsedJson.spec);
             //console.log(parsedJson.spec_version);
-            //console.log(parsedJson);
-            setCardData(parsedJson);
+            console.log(parsedJson);
+            setCardDataV2(parsedJson);
         }
         //console.log(selectedFile.name);
         //console.log(pngRegex.test(selectedFile.name));
