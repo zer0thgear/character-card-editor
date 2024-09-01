@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
     Button,
@@ -23,6 +23,7 @@ import './TavernCardEditor.css';
 const TavernCardEditor = ({toggleTheme}) => {
     const theme = useTheme();
 
+    const previewImageRef = useRef(null);
     const [cardDataV2, setCardDataV2] = useState(v2CardPrototype);
     const [cardDataV3, setCardDataV3] = useState(v3CardPrototype);
     const [file, setFile] = useState();
@@ -118,11 +119,24 @@ const TavernCardEditor = ({toggleTheme}) => {
         
     }
 
+    const handlePreviewClick = () => {
+        previewImageRef.current.click();
+    };
+
+    const handlePreviewUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const objectUrl = URL.createObjectURL(file);
+            setPreview(objectUrl);
+        }
+    };
+
     function handleRemoveFile() {
         setFile(null);
         setPreview(default_avatar);
         setCardDataV2(v2CardPrototype);
         setCardDataV3(v3CardPrototype);
+        setUseV3Spec(false);
     }
 
     const handleTextFieldChange = (e) => {
@@ -168,7 +182,14 @@ const TavernCardEditor = ({toggleTheme}) => {
             <Paper elevation={6}>
                 <Container disableGutters maxWidth={false} style={{display:"flex", height:"90vh"}}>
                     <Container disableGutters style={{alignItems:"center", display:"flex", flex:2, overflow:"auto"}} sx={{ml:2}}>
-                        <img alt={file ? file.name : "No avatar loaded"} src={preview}/>
+                        <img alt={file ? file.name : "No avatar loaded"} onClick={handlePreviewClick} src={preview} style={{cursor:'pointer', objectFit:'cover'}}/>
+                        <input
+                            accept=".png"
+                            hidden
+                            onChange={handlePreviewUpload}
+                            ref={previewImageRef}
+                            type="file"           
+                        />
                     </Container>
                     <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
                         <TextField fullWidth label="Card name" margin="normal" name="name" onChange={handleTextFieldChange} value={cardDataV3.data.name !== "" ? cardDataV3.data.name : cardDataV2.data.name}/>
