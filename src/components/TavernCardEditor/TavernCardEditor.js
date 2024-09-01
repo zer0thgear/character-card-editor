@@ -17,6 +17,7 @@ import {
 } from '@mui/material'
 import { DarkMode, DarkModeOutlined, DeleteOutline, KeyboardDoubleArrowUp, LightMode, LightModeOutlined } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles'
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 import AltGreetingTextField from '../AltGreetingTextField/AltGreetingTextField';
 import CardTextField from '../CardTextField/CardTextField';
@@ -164,6 +165,32 @@ const TavernCardEditor = ({toggleTheme}) => {
         setPendingGreeting(-1);
         setDeleteGreetingConfirmation(false);
     }
+
+    const handleDragEnd = (result) => {
+        if (!result.destination) return;
+
+        const items = useV3Spec ? cardDataV3.data.alternate_greetings : cardDataV2.data.alternate_greetings;
+        const [reorderedItem] = items.splice(result.source.index, 1);
+        items.splice(result.destination.index, 0 , reorderedItem);
+
+        if (useV3Spec){
+            setCardDataV3((prevState) => ({
+                ...prevState,
+                data: {
+                    ...prevState.data,
+                    alternate_greetings: items
+                }
+            }))
+        } else {
+            setCardDataV2((prevState) => ({
+                ...prevState,
+                data: {
+                    ...prevState.data,
+                    alternate_greetings: items
+                }
+            }))
+        }
+    };
 
     async function handleFileSelect(event) {
         const selectedFile = event.target.files[0];
@@ -459,33 +486,41 @@ const TavernCardEditor = ({toggleTheme}) => {
                         {tabValue === 1 &&
                             <div>
                                 <Button onClick={handleAddGreeting} variant="contained">Add new greeting</Button>
-                                {useV3Spec ? cardDataV3.data.alternate_greetings.map((text, index) => (
-                                    <Box key={"altGreetingV3Container#".concat(index)} style={{display:"flex"}}>
-                                        <AltGreetingTextField
-                                            key={"altGreetingV3".concat(index)}
-                                            greetingIndex={index}
-                                            label={"Alternate Greeting #".concat(index)}
-                                            fieldName={"altGreetingV3".concat(index)}
-                                            changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                                            style={{flex:9}}
-                                        />
-                                        <Tooltip title="Promote this greeting to first message"><IconButton onClick={() => handlePromoteClick(index)}><KeyboardDoubleArrowUp/></IconButton></Tooltip>
-                                        <Tooltip title="Delete this greeting"><IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton></Tooltip>
-                                    </Box>
-                                )) : cardDataV2.data.alternate_greetings.map((text, index) => (
-                                    <Box key={"altGreetingV3Container#".concat(index)} style={{display:"flex"}}>
-                                        <AltGreetingTextField
-                                            key={"altGreetingV2".concat(index)}
-                                            greetingIndex={index}
-                                            label={"Alternate Greeting #".concat(index)}
-                                            fieldName={"altGreetingV2".concat(index)}
-                                            changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                                            style={{flex:9}}
-                                        />
-                                        <Tooltip title="Promote this greeting to first message"><IconButton onClick={() => handlePromoteClick(index)}><KeyboardDoubleArrowUp/></IconButton></Tooltip>
-                                        <Tooltip title="Delete this greeting"><IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton></Tooltip>
-                                    </Box>
-                                ))}
+                                <DragDropContext onDragEnd={handleDragEnd}>
+                                    <Droppable droppableId="droppable">
+                                        {(provided) => (
+                                            <Box
+                                                {...provided.droppableProps}
+                                                ref={provided.innerRef}
+                                            >
+                                                {(useV3Spec ? cardDataV3 :cardDataV2).data.alternate_greetings.map((text, index) => (
+                                                    <Draggable key={`draggableGreeting#${index}`} draggableId={`draggableGreeting#${index}`} index={index}>
+                                                        {(provided) => (
+                                                            <Box 
+                                                                ref={provided.innerRef}
+                                                                {...provided.draggableProps}
+                                                                {...provided.dragHandleProps}
+                                                                style={{display:"flex"}}
+                                                            >
+                                                                <AltGreetingTextField
+                                                                    key={(useV3Spec ? "altGreetingV3" : "altGreetingV2").concat(index)}
+                                                                    greetingIndex={index}
+                                                                    label={"Alternate Greeting #".concat(index)}
+                                                                    fieldName={(useV3Spec ? "altGreetingV3" : "altGreetingV2").concat(index)}
+                                                                    changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                                                    style={{flex:9}}
+                                                                />
+                                                                <Tooltip title="Promote this greeting to first message"><IconButton onClick={() => handlePromoteClick(index)}><KeyboardDoubleArrowUp/></IconButton></Tooltip>
+                                                                <Tooltip title="Delete this greeting"><IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton></Tooltip>
+                                                            </Box>
+                                                        )}  
+                                                    </Draggable>
+                                                ))}
+                                                {provided.placeholder}
+                                            </Box>
+                                        )}
+                                    </Droppable>
+                                </DragDropContext>
                             </div>
                         }
                         {tabValue === 2 && creatorMetadataFields.map((field, index) => (
