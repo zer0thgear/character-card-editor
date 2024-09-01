@@ -346,6 +346,8 @@ const TavernCardEditor = ({toggleTheme}) => {
                         <Tabs onChange={handleTabChange} value={tabValue} sx={{mb:2}}>
                             <Tab id={0} label="v1 Spec Fields"/>
                             <Tab id={1} label="Alt Greetings"/>
+                            <Tab id={2} label="Creator Metadata"/>
+                            <Tab id={3} label="Prompts"/>
                         </Tabs>
                         {tabValue === 0 && charMetadataFields.map((field, index) => (
                             <CardTextField
@@ -379,6 +381,26 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 ))}
                             </div>
                         }
+                        {tabValue === 2 && creatorMetadataFields.map((field, index) => (
+                            <CardTextField
+                                key={field.fieldName.concat(index)}
+                                fieldName={field.fieldName}
+                                label={Object.hasOwn(field, "label") ? field.label : ""}
+                                multiline={Object.hasOwn(field, "multiline") ? field.multiline : false}
+                                rows={Object.hasOwn(field, "rows") ? field.rows : 1}
+                                changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                            />
+                        ))}
+                        {tabValue === 3 && promptFields.map((field, index) => (
+                            <CardTextField
+                                key={field.fieldName.concat(index)}
+                                fieldName={field.fieldName}
+                                label={Object.hasOwn(field, "label") ? field.label : ""}
+                                multiline={Object.hasOwn(field, "multiline") ? field.multiline : false}
+                                rows={Object.hasOwn(field, "rows") ? field.rows : 1}
+                                changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                            />
+                        ))}
                         <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
                             <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
                             <Button onClick={handlePngDownload} variant="contained">Download as PNG</Button>
