@@ -22,7 +22,7 @@ export const v3CardPrototype = {
         character_book: null,//{},
         
         // New V3 fields
-        assets: null,
+        assets: undefined,
         nickname: null,
         creator_notes_multilingual: null,
         source: null,
