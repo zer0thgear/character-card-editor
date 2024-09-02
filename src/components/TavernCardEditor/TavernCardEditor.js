@@ -20,13 +20,14 @@ import { useTheme } from '@mui/material/styles'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 import AltGreetingTextField from '../AltGreetingTextField/AltGreetingTextField';
-import CardTextField from '../CardTextField/CardTextField';
+//import CardTextField from '../CardTextField/CardTextField';
 import ConfirmationDialog from '../ConfirmationDialog/ConfirmationDialog';
 import default_avatar from '../../assets/default_avatar.png';
 import FileUpload from '../FileUpload/FileUpload';
 import assembleNewPng from '../../utils/assembleNewPng';
 import parsePngChunks from '../../utils/parsePngChunks';
 import stripPngChunks from '../../utils/stripPngChunks';
+import { BasicFieldTabPanel } from '../TabPanels/TabPanels';
 import { v2CardPrototype, /*v2CharacterBookEntryPrototype, v2CharacterBookPrototype*/ } from '../../utils/v2CardPrototype';
 import { /*v3AssetPrototype,*/ v3CardPrototype, /*v3CharacterBookEntryPrototype, v3CharacterBookPrototype*/ } from '../../utils/v3CardPrototype';
 import './TavernCardEditor.css';
@@ -369,24 +370,6 @@ const TavernCardEditor = ({toggleTheme}) => {
         setTabValue(newValue);
     }
 
-    const handleTextFieldChange = (e) => {
-        const {name, value} = e.target;
-        setCardDataV2((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                [name]: value,
-            }
-        }));
-        setCardDataV3((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                [name]: value,
-            }
-        }));
-    };
-
     const toggleImageDisplay = () => {
         setDisplayImage(!displayImage);
     }
@@ -473,16 +456,13 @@ const TavernCardEditor = ({toggleTheme}) => {
                             <Tab id={2} label="Creator Metadata"/>
                             <Tab id={3} label="Prompts"/>
                         </Tabs>
-                        {tabValue === 0 && charMetadataFields.map((field, index) => (
-                            <CardTextField
-                                key={field.fieldName.concat(index)} 
-                                fieldName={field.fieldName} 
-                                label={Object.hasOwn(field, "label") ? field.label : ""} 
-                                multiline={Object.hasOwn(field, "multiline") ? field.multiline : false} 
-                                rows={Object.hasOwn(field, "rows") ? field.rows : 1}
-                                changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                            />
-                        ))}
+                        <BasicFieldTabPanel
+                            curTab={tabValue}
+                            index={0}
+                            arrayToIterate={charMetadataFields}
+                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                            setCardDataV2={setCardDataV2} setCardDataV3={setCardDataV3}
+                        />
                         {tabValue === 1 &&
                             <div>
                                 <Button onClick={handleAddGreeting} variant="contained">Add new greeting</Button>
@@ -525,26 +505,20 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 </DragDropContext>
                             </div>
                         }
-                        {tabValue === 2 && creatorMetadataFields.map((field, index) => (
-                            <CardTextField
-                                key={field.fieldName.concat(index)}
-                                fieldName={field.fieldName}
-                                label={Object.hasOwn(field, "label") ? field.label : ""}
-                                multiline={Object.hasOwn(field, "multiline") ? field.multiline : false}
-                                rows={Object.hasOwn(field, "rows") ? field.rows : 1}
-                                changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                            />
-                        ))}
-                        {tabValue === 3 && promptFields.map((field, index) => (
-                            <CardTextField
-                                key={field.fieldName.concat(index)}
-                                fieldName={field.fieldName}
-                                label={Object.hasOwn(field, "label") ? field.label : ""}
-                                multiline={Object.hasOwn(field, "multiline") ? field.multiline : false}
-                                rows={Object.hasOwn(field, "rows") ? field.rows : 1}
-                                changeCallback={handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                            />
-                        ))}
+                        <BasicFieldTabPanel
+                            curTab={tabValue}
+                            index={2}
+                            arrayToIterate={creatorMetadataFields}
+                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3} 
+                            setCardDataV2={setCardDataV2} setCardDataV3={setCardDataV3}
+                        />
+                        <BasicFieldTabPanel
+                            curTab={tabValue}
+                            index={3}
+                            arrayToIterate={promptFields}
+                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                            setCardDataV2={setCardDataV2} setCardDataV3={setCardDataV3}
+                        />
                         <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
                             <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
                             <Button onClick={handlePngDownload} variant="contained">Download as PNG</Button>
