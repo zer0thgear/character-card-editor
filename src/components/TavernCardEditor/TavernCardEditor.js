@@ -15,9 +15,9 @@ import {
     Tooltip
     //Typography
 } from '@mui/material'
-import { DarkMode, DarkModeOutlined, DeleteOutline, KeyboardDoubleArrowUp, LightMode, LightModeOutlined } from '@mui/icons-material';
+import { DarkMode, DarkModeOutlined, DeleteOutline, DragHandle, KeyboardDoubleArrowUp, LightMode, LightModeOutlined } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles'
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 import AltGreetingTextField from '../AltGreetingTextField/AltGreetingTextField';
 import CardTextField from '../CardTextField/CardTextField';
@@ -499,9 +499,11 @@ const TavernCardEditor = ({toggleTheme}) => {
                                                             <Box 
                                                                 ref={provided.innerRef}
                                                                 {...provided.draggableProps}
-                                                                {...provided.dragHandleProps}
-                                                                style={{display:"flex"}}
+                                                                style={{display:"flex", ...provided.draggableProps.style}}
                                                             >
+                                                                <Tooltip title="Drag to reorder">
+                                                                    <IconButton {...provided.dragHandleProps}><DragHandle/></IconButton>
+                                                                </Tooltip>
                                                                 <AltGreetingTextField
                                                                     key={(useV3Spec ? "altGreetingV3" : "altGreetingV2").concat(index)}
                                                                     greetingIndex={index}
