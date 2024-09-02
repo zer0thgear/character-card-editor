@@ -162,10 +162,16 @@ const TavernCardEditor = ({toggleTheme}) => {
                     }
                 }
                 else {
-                    console.log("Only V2 card info found");
-                    setUseV3Spec(false);
-                    setCardDataV2(parsedCardData[0].data);
-                    console.log(parsedCardData[0].data);
+                    if (parsedCardData[0].keyword === "ccv3"){
+                        setCardDataV3(parsedCardData[0].data);
+                        console.log("Only V3 Card info found");
+                        console.log(parsedCardData[0].data);
+                        setUseV3Spec(true);
+                    } else if (parsedCardData[0].keyword === "chara"){
+                        console.log("Only V2 card info found");
+                        setCardDataV2(parsedCardData[0].data);
+                        console.log(parsedCardData[0].data);
+                    }
                 }
             } else {
                 console.log("This PNG doesn't have any Card Data!");
@@ -245,7 +251,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${cardDataV2.data.name}.png`
+            a.download = `${outgoingJson.data.name}.png`
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
