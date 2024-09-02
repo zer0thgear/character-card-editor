@@ -69,6 +69,25 @@ const TavernCardEditor = ({toggleTheme}) => {
         {fieldName: "post_history_instructions", label: "Post History Instructions", multiline:true, rows:5}
     ]
 
+    const backfillV2Data = (inJson) => {
+        if (inJson.spec === "chara_card_v2" && inJson.spec_version === "2.0") return inJson;
+        const outJson = inJson;
+        outJson.spec = 'chara_card_v2';
+        outJson.spec_version = '2.0';
+        return outJson;
+    };
+
+    const populateV3Fields = (inJson) => {
+        if (inJson.spec === "chara_card_v3" && inJson.spec_version === "3.0") return inJson;
+        const outJson = inJson;
+        outJson.spec = 'chara_card_v3';
+        outJson.spec_version = '3.0';
+        const currTime = Math.floor(Date.now() / 1000);
+        if (!Object.hasOwn(outJson.data, "creation_date") || typeof outJson.data.creation_date === "undefined") outJson.data.creation_date = currTime;
+        outJson.data.modification_date = currTime;
+        return outJson;
+    }
+
     const closeDeleteConfirmation = () => {
         setDeleteConfirmation(false);
     };
@@ -175,14 +194,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleJsonDownload = () => {
-        const outgoingJson = useV3Spec ? cardDataV3 : cardDataV2;
-        outgoingJson.spec = saveAsV3Spec ? 'chara_card_v3' : 'chara_card_v2';
-        outgoingJson.spec_version = saveAsV3Spec ? '3.0' : '2.0'
-        if (saveAsV3Spec) {
-            const currTime = Math.floor(Date.now() / 1000);
-            if (!Object.hasOwn(outgoingJson.data, "creation_date") || typeof outgoingJson.data.creation_date === "undefined") outgoingJson.data.creation_date = currTime;
-            outgoingJson.data.modification_date = currTime;
-        }
+        const outgoingJson = (saveAsV3Spec ? populateV3Fields : backfillV2Data)(useV3Spec ? cardDataV3 : cardDataV2);
         const blob = new Blob([JSON.stringify(outgoingJson, null, 4)], { type: 'application/json' });
 
         const url = URL.createObjectURL(blob);
@@ -226,14 +238,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             const respBlob = await response.blob();
             const arrayBuffer = await respBlob.arrayBuffer();
             const strippedPng = await stripPngChunks(arrayBuffer);
-            const outgoingJson = useV3Spec ? cardDataV3 : cardDataV2;
-            outgoingJson.spec = saveAsV3Spec ? 'chara_card_v3' : 'chara_card_v2';
-            outgoingJson.spec_version = saveAsV3Spec ? '3.0' : '2.0'
-            if (saveAsV3Spec) {
-                const currTime = Math.floor(Date.now() / 1000);
-                if (!Object.hasOwn(outgoingJson.data, "creation_date") || typeof outgoingJson.data.creation_date === "undefined") outgoingJson.data.creation_date = currTime;
-                outgoingJson.data.modification_date = currTime;
-            }
+            const outgoingJson = (saveAsV3Spec ? populateV3Fields : backfillV2Data)(useV3Spec ? cardDataV3 : cardDataV2);
             const assembledPng = await assembleNewPng(strippedPng, saveAsV3Spec ? [{keyword:"ccv3", data:outgoingJson}] : {keyword:"chara", data:outgoingJson});
             const blob = new Blob([assembledPng], { type: 'image/png' });
 
