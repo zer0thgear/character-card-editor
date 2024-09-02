@@ -62,7 +62,7 @@ const TavernCardEditor = ({toggleTheme}) => {
         {fieldName: "creator"},
         {fieldName: "character_version", label: "Character Version"},
         {fieldName: "creator_notes", label: "Creator Notes", multiline:true, rows:10},
-        {fieldName: "tags", label: "Tagss (Comma separated, no quotes)"}
+        {fieldName: "tags", label: "Tags (Comma separated, no quotes)"}
     ];
 
     const promptFields = [
