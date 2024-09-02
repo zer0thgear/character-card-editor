@@ -12,23 +12,24 @@ import DeleteIcon from '@mui/icons-material/Delete';
  * Params should be passed as props to the FileUpload component when utilized
  * 
  * @param {string} acceptedFileTypes A list of accepted filetypes
+ * @param {boolean} displayDeleteButton Optional boolean to arbitrarily display delete button without file being present
  * @param {*} file The file being uploaded
  * @param {*} fileChange Callback function to handle a file being chosen
  * @param {*} handleRemoveFile Callback function to handle clearing the chosen file
  * @returns The FileUpload component
  */
-const FileUpload = (props) => {
+const FileUpload = ({acceptedFileTypes, displayDeleteButton=false, file, fileChange, handleRemoveFile}) => {
     return(
         <Box style={{display:'flex', alignItems:'center'}}>
-            <input accept={props.acceptedFileTypes} hidden id="file-upload" onChange={props.fileChange} onClick={(event) => {event.target.value = null}} type ="file"/>
+            <input accept={acceptedFileTypes} hidden id="file-upload" onChange={fileChange} onClick={(event) => {event.target.value = null}} type ="file"/>
             <label htmlFor='file-upload'>
                 <Button component="span" size="small" variant="contained">Select File</Button>
             </label>
             <Typography sx={{ml:2}} variant="body2">
-                {props.file ? `${props.file.name}` : 'No file selected'}
+                {file ? `${file.name}` : 'No file selected'}
             </Typography>
-            {props.file && (
-                <IconButton aria-label="delete" color="error" onClick={props.handleRemoveFile} size="small">
+            {(file || displayDeleteButton) && (
+                <IconButton aria-label="delete" color="error" onClick={handleRemoveFile} size="small">
                     <DeleteIcon/>
                 </IconButton>
             )}
