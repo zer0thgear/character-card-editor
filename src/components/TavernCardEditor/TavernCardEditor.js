@@ -417,6 +417,8 @@ const TavernCardEditor = ({toggleTheme}) => {
                             <Tab id={1} label="Alt Greetings"/>
                             <Tab id={2} label="Creator Metadata"/>
                             <Tab id={3} label="Prompts"/>
+                            <Tab id={4} label="Lorebook"/>
+                            <Tab id={5} label="Group Greetings"/>
                         </Tabs>
                         <BasicFieldTabPanel
                             curTab={tabValue}
