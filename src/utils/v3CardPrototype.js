@@ -19,25 +19,25 @@ export const v3CardPrototype = {
         scenario: "",
 
         creator_notes: "",
-        character_book: null,//{},
+        character_book: undefined,//{},
         
         // New V3 fields
         assets: undefined,
-        nickname: null,
-        creator_notes_multilingual: null,
-        source: null,
+        nickname: undefined,
+        creator_notes_multilingual: undefined,
+        source: undefined,
         group_only_greetings: [],
-        creation_date: null,
-        modification_date: null
+        creation_date: undefined,
+        modification_date: undefined
     }
 };
 
 export const v3CharacterBookPrototype = {
-    name: null,//"",
-    description: null,//"",
-    scan_depth: null,//0,
-    token_budget: null,//0,
-    recursive_scanning: null,//false,
+    name: undefined,//"",
+    description: undefined,//"",
+    scan_depth: undefined,//0,
+    token_budget: undefined,//0,
+    recursive_scanning: undefined,//false,
     extensions: {},
     entries: [{}]
 };
@@ -48,22 +48,22 @@ export const v3CharacterBookEntryPrototype = {
     extensions: {},
     enabled: true,
     insertion_order: 0,
-    case_sensitive: null,//false,
+    case_sensitive: undefined,//false,
 
     // V3 addition
     use_regex: false,
     // Now required in V3
-    constant: false, 
+    constant: undefined, // Boolean 
     
     // Optional fields
-    name: null, // Used for name in Chub, can be copied from comment or vice versa
-    priority: null,//0,
-    id: null,//0,
-    comment: null, // Used for name in SillyTavern, can be copied from name or vice versa
+    name: undefined, // Used for name in Chub, can be copied from comment or vice versa
+    priority: undefined,//0,
+    id: undefined,//0,
+    comment: undefined, // Used for name in SillyTavern, can be copied from name or vice versa
 
-    selective: null,//true,
-    secondary_keys: null,//[""],
-    position: null,//"before_char" or "after_char"
+    selective: undefined,//true,
+    secondary_keys: undefined,//[""],
+    position: undefined,//"before_char" or "after_char"
 };
 
 export const v3AssetPrototype = {

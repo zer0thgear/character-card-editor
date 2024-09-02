@@ -15,7 +15,7 @@ export const v2CardPrototype = {
         system_prompt: "",
         post_history_instructions: "",
         alternate_greetings: [""],
-        character_book: null,//{},
+        character_book: undefined,//{},
 
         tags: [""],
         creator: "",
@@ -25,11 +25,11 @@ export const v2CardPrototype = {
 };
 
 export const v2CharacterBookPrototype = {
-    name: null,//"",
-    description: null,//"",
-    scan_depth: null,//0,
-    token_budget: null,//0,
-    recursive_scanning: null,//false,
+    name: undefined,//"",
+    description: undefined,//"",
+    scan_depth: undefined,//0,
+    token_budget: undefined,//0,
+    recursive_scanning: undefined,//false,
     extensions: {},
     entries: [{}]
 };
@@ -40,17 +40,17 @@ export const v2CharacterBookEntryPrototype = {
     extensions: {},
     enabled: true,
     insertion_order: 0,
-    case_sensitive: null,//false,
+    case_sensitive: undefined,//false,
 
     // Not used in SillyTavern
-    name: null, // Used for name in Chub, can be copied from comment or vice versa
-    priority: null, // Used in Chub
+    name: undefined, // Used for name in Chub, can be copied from comment or vice versa
+    priority: undefined, // Used in Chub
 
     // Not used in AgnAI
-    id: null,//0,
-    comment: null, // Used for name in SillyTavern, can be copied from name or vice versa
-    selective: null,//true,
-    secondary_keys: null,//[""],
-    constant: null,//false,
-    position: null,//"before_char" or "after_char"
+    id: undefined,//0,
+    comment: undefined, // Used for name in SillyTavern, can be copied from name or vice versa
+    selective: undefined,//true,
+    secondary_keys: undefined,//[""],
+    constant: undefined,//false,
+    position: undefined,//"before_char" or "after_char"
 };
