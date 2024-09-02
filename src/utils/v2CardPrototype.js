@@ -31,7 +31,7 @@ export const v2CharacterBookPrototype = {
     token_budget: undefined,//0,
     recursive_scanning: undefined,//false,
     extensions: {},
-    entries: [{}]
+    entries: []
 };
 
 export const v2CharacterBookEntryPrototype = {

@@ -39,7 +39,7 @@ export const v3CharacterBookPrototype = {
     token_budget: undefined,//0,
     recursive_scanning: undefined,//false,
     extensions: {},
-    entries: [{}]
+    entries: []
 };
 
 export const v3CharacterBookEntryPrototype = {
