@@ -44,6 +44,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [pendingJson, setPendingJson] = useState(null);
     const [promoteGreeting, setPromoteGreeting] = useState(false);
     const [preview, setPreview] = useState(default_avatar);
+    const [saveAsV3Spec, setSaveAsV3Spec] = useState(false)
     const [tabValue, setTabValue] = useState(0);
     const [useV3Spec, setUseV3Spec] = useState(false);
 
@@ -174,12 +175,20 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleJsonDownload = () => {
-        const blob = new Blob([JSON.stringify(useV3Spec ? cardDataV3 : cardDataV2, null, 4)], { type: 'application/json' });
+        const outgoingJson = useV3Spec ? cardDataV3 : cardDataV2;
+        outgoingJson.spec = saveAsV3Spec ? 'chara_card_v3' : 'chara_card_v2';
+        outgoingJson.spec_version = saveAsV3Spec ? '3.0' : '2.0'
+        if (saveAsV3Spec) {
+            const currTime = Math.floor(Date.now() / 1000);
+            if (!Object.hasOwn(outgoingJson.data, "creation_date") || typeof outgoingJson.data.creation_date === "undefined") outgoingJson.data.creation_date = currTime;
+            outgoingJson.data.modification_date = currTime;
+        }
+        const blob = new Blob([JSON.stringify(outgoingJson, null, 4)], { type: 'application/json' });
 
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${useV3Spec ? cardDataV3.data.name : cardDataV2.data.name}.json`
+        a.download = `${outgoingJson.data.name}.json`
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -217,8 +226,15 @@ const TavernCardEditor = ({toggleTheme}) => {
             const respBlob = await response.blob();
             const arrayBuffer = await respBlob.arrayBuffer();
             const strippedPng = await stripPngChunks(arrayBuffer);
-            const assembledPng = await assembleNewPng(strippedPng, useV3Spec ? [{keyword:"chara", data:cardDataV2}, {keyword:"ccv3", data:cardDataV3}] : {keyword:"chara", data:cardDataV2});
-            console.log("Saving as V3: ", useV3Spec);
+            const outgoingJson = useV3Spec ? cardDataV3 : cardDataV2;
+            outgoingJson.spec = saveAsV3Spec ? 'chara_card_v3' : 'chara_card_v2';
+            outgoingJson.spec_version = saveAsV3Spec ? '3.0' : '2.0'
+            if (saveAsV3Spec) {
+                const currTime = Math.floor(Date.now() / 1000);
+                if (!Object.hasOwn(outgoingJson.data, "creation_date") || typeof outgoingJson.data.creation_date === "undefined") outgoingJson.data.creation_date = currTime;
+                outgoingJson.data.modification_date = currTime;
+            }
+            const assembledPng = await assembleNewPng(strippedPng, saveAsV3Spec ? [{keyword:"ccv3", data:outgoingJson}] : {keyword:"chara", data:outgoingJson});
             const blob = new Blob([assembledPng], { type: 'image/png' });
 
             const url = URL.createObjectURL(blob);
@@ -292,15 +308,19 @@ const TavernCardEditor = ({toggleTheme}) => {
         setCardDataV2(v2CardPrototype);
         setCardDataV3(v3CardPrototype);
         setUseV3Spec(false);
-    }
+    };
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
-    }
+    };
 
     const toggleImageDisplay = () => {
         setDisplayImage(!displayImage);
-    }
+    };
+
+    const toggleSaveAsV3 = () => {
+        setSaveAsV3Spec(!saveAsV3Spec);
+    };
 
     useEffect(() => {
         const pngRegex = /.+\.png$/;
@@ -349,7 +369,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                 handleConfirm={handlePromoteGreeting}
             />
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                <FileUpload acceptedFileTypes={".json,.png"} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
+                <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={cardDataV2 !== v2CardPrototype || cardDataV3 !== v3CardPrototype} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
                 <FormControlLabel control={<Checkbox checked={displayImage} onChange={toggleImageDisplay}/>} label="Display image?"/>
                 {file && 
                     <div>
@@ -359,6 +379,9 @@ const TavernCardEditor = ({toggleTheme}) => {
                         </label>
                     </div>
                 }
+                <Box style={{display:'flex', alignItems:'center'}}>
+                    Save as V2 spec <Switch checked={saveAsV3Spec} onChange={toggleSaveAsV3}/> Save as V3 spec
+                </Box>
                 <Box style={{display:'flex', alignItems:'center'}}>
                     {theme.palette.mode === "dark" ? <LightModeOutlined/> : <LightMode/>}
                     <Switch checked={theme.palette.mode === "dark"} onChange={toggleTheme}/>
