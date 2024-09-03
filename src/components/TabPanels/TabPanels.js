@@ -12,7 +12,7 @@ import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 
 import AltGreetingTextField, { GroupGreetingTextField } from "../AltGreetingTextField/AltGreetingTextField";
 import CardTextField from "../CardTextField/CardTextField";
-import { LorebookEntryBool, LorebookEntryString, LorebookMetaBool, LorebookMetaInt, LorebookMetaString } from "../LorebookTextFields/LorebookTextFields";
+import { LorebookEntryBool, LorebookEntryInt, LorebookEntryString, LorebookMetaBool, LorebookMetaInt, LorebookMetaString } from "../LorebookTextFields/LorebookTextFields";
 import { v2CharacterBookEntryPrototype, v2CharacterBookPrototype } from "../../utils/v2CardPrototype";
 import { v3CharacterBookPrototype, v3CharacterBookEntryPrototype } from "../../utils/v3CardPrototype";
 
@@ -357,6 +357,36 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
                                                                             fieldName="secondary_keys"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryKeysChange}
+                                                                            cardToEdit={cardToEdit}
+                                                                        />
+                                                                    </Box>
+                                                                    <Box style={{display:"flex", flexDirection:'row', alignItems:'baseline', justifyContent:'space-between'}}>
+                                                                        <LorebookEntryInt
+                                                                            label={`Entry #${index} Insertion Order`}
+                                                                            fieldName="insertion_order"
+                                                                            entryIndex={index}
+                                                                            changeCallback={handleEntryChange}
+                                                                            cardToEdit={cardToEdit}
+                                                                        />
+                                                                        <LorebookEntryBool
+                                                                            label="Case Sensitive?"
+                                                                            fieldName="case_sensitive"
+                                                                            entryIndex={index}
+                                                                            changeCallback={handleEntryChange}
+                                                                            cardToEdit={cardToEdit}
+                                                                        />
+                                                                        <LorebookEntryInt
+                                                                            label={`Entry #${index} Priority`}
+                                                                            fieldName="priority"
+                                                                            entryIndex={index}
+                                                                            changeCallback={handleEntryChange}
+                                                                            cardToEdit={cardToEdit}
+                                                                        />
+                                                                        <LorebookEntryBool
+                                                                            label="Is this entry always active?"
+                                                                            fieldName="constant"
+                                                                            entryIndex={index}
+                                                                            changeCallback={handleEntryChange}
                                                                             cardToEdit={cardToEdit}
                                                                         />
                                                                     </Box>
