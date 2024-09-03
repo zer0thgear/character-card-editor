@@ -145,11 +145,6 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleAltGreetingClick = (index) => {
-        if (useV3Spec){
-            if (cardDataV3.data.alternate_greetings.length === 1) return;
-        } else {
-            if (cardDataV2.data.alternate_greetings.length === 1) return;
-        }
         setPendingGreeting(index);
         setDeleteGreetingConfirmation(true);
     };
@@ -284,7 +279,6 @@ const TavernCardEditor = ({toggleTheme}) => {
     }
 
     const handleGroupGreetingClick = (index) => {
-        if ((useV3Spec ? cardDataV3 : cardDataV2).data.group_only_greetings.length === 1) return;
         setPendingGroupGreeting(index);
         setDeleteGroupGreetingConfirmation(true);
     };
