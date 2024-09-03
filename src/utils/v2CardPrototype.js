@@ -1,6 +1,6 @@
 // Note: Any fields defaulted to null are optional
 
-export const v2CardPrototype = {
+export const v2CardPrototype = () => {return({
     spec: "chara_card_v2",
     spec_version: "2.0",
     data: {
@@ -22,9 +22,9 @@ export const v2CardPrototype = {
         character_version: "",
         extensions: {}
     }
-};
+})};
 
-export const v2CharacterBookPrototype = {
+export const v2CharacterBookPrototype = () => {return({
     name: undefined,//"",
     description: undefined,//"",
     scan_depth: undefined,//0,
@@ -32,9 +32,9 @@ export const v2CharacterBookPrototype = {
     recursive_scanning: undefined,//false,
     extensions: {},
     entries: []
-};
+})};
 
-export const v2CharacterBookEntryPrototype = {
+export const v2CharacterBookEntryPrototype = () => {return ({
     keys: [""],
     content: "",
     extensions: {},
@@ -53,4 +53,4 @@ export const v2CharacterBookEntryPrototype = {
     secondary_keys: undefined,//[""],
     constant: undefined,//false,
     position: undefined,//"before_char" or "after_char"
-};
+})};

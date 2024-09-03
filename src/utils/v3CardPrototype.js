@@ -1,6 +1,6 @@
 // Note: Any fields defaulted to null are optional
 
-export const v3CardPrototype = {
+export const v3CardPrototype = () => {return({
     spec: "chara_card_v3",
     spec_version: "3.0",
     data: {
@@ -30,9 +30,9 @@ export const v3CardPrototype = {
         creation_date: undefined,
         modification_date: undefined
     }
-};
+})};
 
-export const v3CharacterBookPrototype = {
+export const v3CharacterBookPrototype = () => {return({
     name: undefined,//"",
     description: undefined,//"",
     scan_depth: undefined,//0,
@@ -40,35 +40,37 @@ export const v3CharacterBookPrototype = {
     recursive_scanning: undefined,//false,
     extensions: {},
     entries: []
+})};
+
+export const v3CharacterBookEntryPrototype = () => {return( 
+    {
+        keys: [""],
+        content: "",
+        extensions: {},
+        enabled: true,
+        insertion_order: 0,
+        case_sensitive: undefined,//false,
+
+        // V3 addition
+        use_regex: false,
+        // Now required in V3
+        constant: undefined, // Boolean 
+        
+        // Optional fields
+        name: undefined, // Used for name in Chub, can be copied from comment or vice versa
+        priority: undefined,//0,
+        id: undefined,//0,
+        comment: undefined, // Used for name in SillyTavern, can be copied from name or vice versa
+
+        selective: undefined,//true,
+        secondary_keys: undefined,//[""],
+        position: undefined,//"before_char" or "after_char"
+    });
 };
 
-export const v3CharacterBookEntryPrototype = {
-    keys: [""],
-    content: "",
-    extensions: {},
-    enabled: true,
-    insertion_order: 0,
-    case_sensitive: undefined,//false,
-
-    // V3 addition
-    use_regex: false,
-    // Now required in V3
-    constant: undefined, // Boolean 
-    
-    // Optional fields
-    name: undefined, // Used for name in Chub, can be copied from comment or vice versa
-    priority: undefined,//0,
-    id: undefined,//0,
-    comment: undefined, // Used for name in SillyTavern, can be copied from name or vice versa
-
-    selective: undefined,//true,
-    secondary_keys: undefined,//[""],
-    position: undefined,//"before_char" or "after_char"
-};
-
-export const v3AssetPrototype = {
+export const v3AssetPrototype = () => {return({
     type: "",
     uri: "",
     name: "",
     ext: "",
-};
+})};
