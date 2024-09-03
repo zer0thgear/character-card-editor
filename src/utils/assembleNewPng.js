@@ -13,42 +13,61 @@ export default async function assembleNewPng (arrayBuffer, dataJson) {
         const newChunks = [];
 
         let offset = 8; // Skipping the PNG header
+        let ihdrFound = false;
+        let idatFound = false;
 
         newChunks.push(new Uint8Array(arrayBuffer.slice(0, offset))); // Copying the original header
 
         const listOfChunks = Array.isArray(dataJson) ? dataJson : [dataJson];
         
-        listOfChunks.forEach((item) => {
-            // Creating the new tEXt chunk
-            const textChunkData = new TextEncoder().encode(`${item.keyword}\0${Base64.encode(JSON.stringify(item.data))}`)
-            const textChunkLength = textChunkData.length;
-
-            const textChunk = new Uint8Array(8 + textChunkLength + 4);
-            const view = new DataView(textChunk.buffer);
-
-            // Writing the length of the tEXt chunk
-            view.setUint32(0, textChunkLength);
-
-            // Write chunk type 'tEXt'
-            textChunk[4] = 't'.charCodeAt(0);
-            textChunk[5] = 'E'.charCodeAt(0);
-            textChunk[6] = 'X'.charCodeAt(0);
-            textChunk[7] = 't'.charCodeAt(0);
-
-            textChunk.set(textChunkData, 8);
-
-            const crc = crc32(textChunk.subarray(4, 8 + textChunkLength));
-            view.setUint32(8 + textChunkLength, crc);
-
-            // Adds the tEXt chunk after the PNG header
-            newChunks.push(textChunk);
-        });
+        
         // Copying the rest of the PNG
         while (offset < data.byteLength) {
             const length = data.getUint32(offset);
+            const type = String.fromCharCode(
+                data.getUint8(offset + 4),
+                data.getUint8(offset + 5),
+                data.getUint8(offset + 6),
+                data.getUint8(offset + 7)
+            );
             const chunk = new Uint8Array(arrayBuffer.slice(offset, offset + 8 + length + 4));
             newChunks.push(chunk);
-            
+            if (type === "IHDR") {
+                ihdrFound = true;
+            } else if (type === "IDAT" && ihdrFound){
+                idatFound = true;
+            }
+
+            if (idatFound){
+                listOfChunks.forEach((item) => {
+                    // Creating the new tEXt chunk
+                    const textChunkData = new TextEncoder().encode(`${item.keyword}\0${Base64.encode(JSON.stringify(item.data))}`)
+                    const textChunkLength = textChunkData.length;
+
+                    const textChunk = new Uint8Array(8 + textChunkLength + 4);
+                    const view = new DataView(textChunk.buffer);
+
+                    // Writing the length of the tEXt chunk
+                    view.setUint32(0, textChunkLength);
+
+                    // Write chunk type 'tEXt'
+                    textChunk[4] = 't'.charCodeAt(0);
+                    textChunk[5] = 'E'.charCodeAt(0);
+                    textChunk[6] = 'X'.charCodeAt(0);
+                    textChunk[7] = 't'.charCodeAt(0);
+
+                    textChunk.set(textChunkData, 8);
+
+                    const crc = crc32(textChunk.subarray(4, 8 + textChunkLength));
+                    view.setUint32(8 + textChunkLength, crc);
+
+                    // Adds the tEXt chunk after the IDAT chunk
+                    newChunks.push(textChunk);
+                    
+                });
+                idatFound = false;
+            }
+            // Moving to next chunk
             offset += 8 + length + 4
         }
 
