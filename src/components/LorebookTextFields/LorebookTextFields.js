@@ -61,7 +61,7 @@ export function LorebookEntryString({label="", fieldName, entryIndex, changeCall
             name={`${fieldName}#${entryIndex}`}
             onChange={changeCallback}
             rows={rows}
-            slotProps={{htmlInput: {style: {resize:'vertical'}}}}
+            slotProps={{htmlInput: {style: {resize:'vertical'}}, inputLabel: {shrink:true}}}
             value={(useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries[entryIndex][fieldName]}
         />
     );
