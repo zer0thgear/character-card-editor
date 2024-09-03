@@ -248,70 +248,34 @@ const TavernCardEditor = ({toggleTheme}) => {
                     }
                 }
                 else {
-                    if (readCardData[0].keyword === "ccv3"){
-                        const parsedCardData = readCardData[0].data;
-                        if (importLorebook){
-                            handleLorebookImportLogic(parsedCardData.data.character_book);
-                            return;
-                        }
-                        if (!Object.hasOwn(parsedCardData.data, "group_only_greetings")) parsedCardData.data.group_only_greetings = [];
-                        setCardDataV3(parsedCardData);
-                        console.log("Only V3 Card info found");
-                        console.log(parsedCardData);
-                        setUseV3Spec(true);
-                        if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0)
-                            scanLorebookEntryNames(parsedCardData.data.character_book.entries);
-                    } else if (readCardData[0].keyword === "chara"){
-                        const parsedCardData = readCardData[0].data;
-                        if (importLorebook){
-                            handleLorebookImportLogic(parsedCardData.data.character_book);
-                            return;
-                        }
-                        if (!Object.hasOwn(parsedCardData.data, "group_only_greetings")) parsedCardData.data.group_only_greetings = [];
-                        console.log("Only V2 card info found");
-                        setCardDataV2(parsedCardData);
-                        if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0)
-                            scanLorebookEntryNames(parsedCardData.data.character_book.entries);
-                        console.log(parsedCardData);
+                    const parsedCardData = readCardData[0].data;
+                    if (!Object.hasOwn(parsedCardData.data, "group_only_greetings")) parsedCardData.data.group_only_greetings = [];
+                    if (importLorebook){
+                        handleLorebookImportLogic(parsedCardData.data.character_book);
+                        return;
                     }
+                    console.log(`Only ${readCardData[0].keyword === "ccv3" ? "V3" : "V2"} Card info found`);
+                    setUseV3Spec(readCardData[0].keyword === "ccv3");
+                    console.log(parsedCardData);
+                    (readCardData[0].keyword === "ccv3" ? setCardDataV3 : setCardDataV2)(parsedCardData);
+                    if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0)
+                        scanLorebookEntryNames(parsedCardData.data.character_book.entries);
                 }
             } else {
                 console.log("This PNG doesn't have any Card Data!");
             }
         } else { 
             const parsedJson = JSON.parse(await selectedFile.text());
-            //console.log(parsedJson.data.name);
-            //console.log(parsedJson.spec);
-            //console.log(parsedJson.spec_version);
             console.log(parsedJson);
-            if (parsedJson.spec === "chara_card_v3"){
-                if (importLorebook){
-                    handleLorebookImportLogic(parsedJson.data.character_book);
-                    return;
-                }
-                setUseV3Spec(true);
-                setCardDataV3(parsedJson)
-                if (typeof parsedJson.data.character_book !== "undefined" && parsedJson.data.character_book.entries.length > 0)
-                    scanLorebookEntryNames(parsedJson.data.character_book.entries);
+            if (importLorebook){
+                handleLorebookImportLogic(parsedJson.data.character_book);
+                return;
             }
-            else if (parsedJson.spec === "chara_card_v2"){
-                if (importLorebook){
-                    handleLorebookImportLogic(parsedJson.data.character_book);
-                    return;
-                }
-                setCardDataV2(parsedJson);
-                setUseV3Spec(false);
-                if (typeof parsedJson.data.character_book !== "undefined" && parsedJson.data.character_book.entries.length > 0)
-                    scanLorebookEntryNames(parsedJson.data.character_book.entries);
-            } else {
-                if (importLorebook){
-                    handleLorebookImportLogic(parsedJson.data.character_book);
-                    return;
-                }
-            }
+            setUseV3Spec(parsedJson.spec === "chara_card_v3");
+            (parsedJson.spec === "chara_card_v3" ? setCardDataV3 : setCardDataV2)(parsedJson);
+            if (typeof parsedJson.data.character_book !== "undefined" && parsedJson.data.character_book.entries.length > 0)
+                scanLorebookEntryNames(parsedJson.data.character_book.entries);
         }
-        //console.log(selectedFile.name);
-        //console.log(pngRegex.test(selectedFile.name));
     }
 
     const handleGroupGreetingClick = (index) => {
