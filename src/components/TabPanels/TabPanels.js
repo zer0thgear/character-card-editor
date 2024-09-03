@@ -339,7 +339,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
                                                                             cardToEdit={cardToEdit}
                                                                         />
                                                                         <LorebookEntryBool
-                                                                            label={`Entry #${index} Selective`}
+                                                                            label={`Must Also Match Secondary Keys?`}
                                                                             fieldName="selective"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}

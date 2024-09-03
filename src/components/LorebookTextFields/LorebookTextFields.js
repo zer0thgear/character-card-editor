@@ -90,7 +90,7 @@ export function LorebookEntryBool({label="", fieldName, entryIndex, changeCallba
             name={`${fieldName}#${entryIndex}`}
             onChange={changeCallback}
             select
-            sx={{width:"24em"}}
+            sx={{width:"32em"}}
             value={cardToEdit.data.character_book.entries[entryIndex][fieldName]}
         >
                 <MenuItem value={false}>False</MenuItem>
