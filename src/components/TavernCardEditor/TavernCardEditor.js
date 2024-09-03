@@ -213,7 +213,7 @@ const TavernCardEditor = ({toggleTheme}) => {
         setDeleteGroupGreetingConfirmation(false);
     };
 
-    async function handleFileSelect(event) {
+    async function handleFileSelect(event, importLorebook=false) {
         const selectedFile = event.target.files[0];
         setFile(selectedFile);
         if (/.+\.png$/.test(selectedFile.name)){
@@ -224,6 +224,10 @@ const TavernCardEditor = ({toggleTheme}) => {
                         const parsedCardData = readCardData[item].data;
                         if (!Object.hasOwn(parsedCardData.data, "group_only_greetings")) parsedCardData.data.group_only_greetings = [];
                         if (readCardData[item].keyword === "ccv3"){
+                            if (importLorebook){
+                                handleLorebookImportLogic(parsedCardData.data.character_book);
+                                return;
+                            }
                             setCardDataV3(parsedCardData);
                             console.log("V3 Card info found");
                             console.log(parsedCardData);
@@ -231,6 +235,10 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 scanLorebookEntryNames(parsedCardData.data.character_book.entries);
                             setUseV3Spec(true);
                         } else if (readCardData[item].keyword === "chara"){
+                            if (importLorebook && item === readCardData.length - 1 && !useV3Spec){
+                                handleLorebookImportLogic(parsedCardData.data.character_book);
+                                return;
+                            }
                             console.log("V2 card info found");
                             setCardDataV2(parsedCardData);
                             if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0 && item === readCardData.length - 1 && !useV3Spec)
@@ -242,6 +250,10 @@ const TavernCardEditor = ({toggleTheme}) => {
                 else {
                     if (readCardData[0].keyword === "ccv3"){
                         const parsedCardData = readCardData[0].data;
+                        if (importLorebook){
+                            handleLorebookImportLogic(parsedCardData.data.character_book);
+                            return;
+                        }
                         if (!Object.hasOwn(parsedCardData.data, "group_only_greetings")) parsedCardData.data.group_only_greetings = [];
                         setCardDataV3(parsedCardData);
                         console.log("Only V3 Card info found");
@@ -251,6 +263,10 @@ const TavernCardEditor = ({toggleTheme}) => {
                             scanLorebookEntryNames(parsedCardData.data.character_book.entries);
                     } else if (readCardData[0].keyword === "chara"){
                         const parsedCardData = readCardData[0].data;
+                        if (importLorebook){
+                            handleLorebookImportLogic(parsedCardData.data.character_book);
+                            return;
+                        }
                         if (!Object.hasOwn(parsedCardData.data, "group_only_greetings")) parsedCardData.data.group_only_greetings = [];
                         console.log("Only V2 card info found");
                         setCardDataV2(parsedCardData);
@@ -269,14 +285,29 @@ const TavernCardEditor = ({toggleTheme}) => {
             //console.log(parsedJson.spec_version);
             console.log(parsedJson);
             if (parsedJson.spec === "chara_card_v3"){
+                if (importLorebook){
+                    handleLorebookImportLogic(parsedJson.data.character_book);
+                    return;
+                }
                 setUseV3Spec(true);
                 setCardDataV3(parsedJson)
-                scanLorebookEntryNames(parsedJson.data.character_book.entries);
+                if (typeof parsedJson.data.character_book !== "undefined" && parsedJson.data.character_book.entries.length > 0)
+                    scanLorebookEntryNames(parsedJson.data.character_book.entries);
             }
-            else{
+            else if (parsedJson.spec === "chara_card_v2"){
+                if (importLorebook){
+                    handleLorebookImportLogic(parsedJson.data.character_book);
+                    return;
+                }
                 setCardDataV2(parsedJson);
                 setUseV3Spec(false);
-                scanLorebookEntryNames(parsedJson.data.character_book.entries);
+                if (typeof parsedJson.data.character_book !== "undefined" && parsedJson.data.character_book.entries.length > 0)
+                    scanLorebookEntryNames(parsedJson.data.character_book.entries);
+            } else {
+                if (importLorebook){
+                    handleLorebookImportLogic(parsedJson.data.character_book);
+                    return;
+                }
             }
         }
         //console.log(selectedFile.name);
@@ -302,6 +333,22 @@ const TavernCardEditor = ({toggleTheme}) => {
 
         URL.revokeObjectURL(url);
     };
+
+    const handleLorebookImport = (event) => {
+        handleFileSelect(event, true);
+    }
+
+    const handleLorebookImportLogic = (newLorebook) => {
+        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                character_book: newLorebook
+            }
+        }))
+        if (typeof newLorebook !== "undefined" && newLorebook.entries.length > 0)
+            scanLorebookEntryNames(newLorebook.entries);
+    }
 
     async function handleOverwriteClick(event) {
         const file = event.target.files[0];
@@ -579,7 +626,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                             handleDeleteEntryClick={handleDeleteEntryClick}
                             cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
                             cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
-                            useV3Spec={useV3Spec}
+                            useV3Spec={useV3Spec} handleImport={handleLorebookImport}
                         />
                         <GroupGreetingPanel
                             curTab={tabValue}

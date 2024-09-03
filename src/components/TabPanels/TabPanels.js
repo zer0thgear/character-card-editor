@@ -148,7 +148,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     );
 }
 
-export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec, cardToEdit, cardSetter}){
+export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec, cardToEdit, cardSetter, handleImport}){
     const addLorebook = () => {
         cardSetter((prevState) => ({
             ...prevState,
@@ -262,7 +262,14 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
         <div hidden={curTab !== index}>
             {typeof cardToEdit.data.character_book === "undefined" ?
                 <Box sx={{mb:2}}>
-                    <Button variant="contained" onClick={addLorebook}>Attach new lorebook to card</Button>
+                    
+                    <Button variant="contained" onClick={addLorebook} sx={{mr:2}}>Attach new lorebook to card</Button>
+                    <input accept=".json,.png" hidden id="import-lorebook" onChange={handleImport} onClick={(event) => {event.target.value = null}} type="file"/>
+                    <Tooltip title="You can import from a card or standalone lorebook">
+                        <label htmlFor="import-lorebook">
+                            <Button component="span" variant="contained">Import Existing Lorebook</Button>
+                        </label>
+                    </Tooltip>
                 </Box> :
                 <Box sx={{mb:2}}>
                     <LorebookMetaString
