@@ -10,7 +10,7 @@ import {
 import { ArrowDropDown, DeleteOutline, DragHandle, KeyboardDoubleArrowUp } from "@mui/icons-material";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 
-import AltGreetingTextField from "../AltGreetingTextField/AltGreetingTextField";
+import AltGreetingTextField, { GroupGreetingTextField } from "../AltGreetingTextField/AltGreetingTextField";
 import CardTextField from "../CardTextField/CardTextField";
 import { LorebookEntryBool, LorebookEntryString, LorebookMetaBool, LorebookMetaInt, LorebookMetaString } from "../LorebookTextFields/LorebookTextFields";
 import { v2CharacterBookEntryPrototype, v2CharacterBookPrototype } from "../../utils/v2CardPrototype";
@@ -381,4 +381,96 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
             }
         </div>
     )
+}
+
+export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick, useV3Spec, cardToEdit, cardSetter}){
+    const handleAddGroupGreeting = () => {
+        const groupGreetingArray = cardToEdit.data.group_only_greetings;
+        groupGreetingArray.push("");
+        cardSetter((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                group_only_greetings: groupGreetingArray
+            }
+        }));
+    }
+
+    const handleGroupGreetingChange = (e) => {
+        const {name, value} = e.target;
+        const index = name.match(/groupGreetingV[23](\d+)/)[1];
+        cardSetter((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                group_only_greetings: prevState.data.group_only_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting)
+            }
+        }))
+    };
+
+    const handleDragEnd = (result) => {
+        if (!result.destination) return;
+
+        const items = cardToEdit.data.group_only_greetings;
+        const [reorderedItem] = items.splice(result.source.index, 1);
+        items.splice(result.destination.index, 0 , reorderedItem);
+
+        cardSetter((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                group_only_greetings: items
+            }
+        }))
+    };
+
+    return(
+        <div hidden={curTab !== index}>
+            <Button onClick={handleAddGroupGreeting} variant="contained" sx={{mb:1}}>Add new greeting</Button>
+            <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="droppableGroupGreeting">
+                    {(provided) => (
+                        <Box
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            sx={{mb:1}}
+                        >
+                            {cardToEdit.data.group_only_greetings.map((text, index) => (
+                                <Draggable key={`draggableGroupGreeting#${index}`} draggableId={`draggableGroupGreeting#${index}`} index={index}>
+                                    {(provided) => (
+                                        <Box 
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            style={{display:"flex", ...provided.draggableProps.style}}
+                                        >
+                                            <Tooltip title="Drag to reorder">
+                                                <IconButton {...provided.dragHandleProps}><DragHandle/></IconButton>
+                                            </Tooltip>
+                                            <Accordion style={{width:'100%'}} sx={{mb:2, mt:2}}>
+                                                <AccordionSummary expandIcon={<ArrowDropDown/>}>
+                                                    {"Alternate Greeting #".concat(index)}
+                                                </AccordionSummary>
+                                                <AccordionDetails>
+                                                    <GroupGreetingTextField
+                                                        key={(useV3Spec ? "groupGreetingV3" : "groupGreetingV2").concat(index)}
+                                                        greetingIndex={index}
+                                                        label={"Group Only Greeting #".concat(index)}
+                                                        fieldName={(useV3Spec ? "groupGreetingV3" : "groupGreetingV2").concat(index)}
+                                                        changeCallback={handleGroupGreetingChange} useV3Spec={useV3Spec} cardToEdit={cardToEdit}
+                                                        style={{flex:9}}
+                                                    />
+                                                </AccordionDetails>
+                                            </Accordion>
+                                            <Tooltip title="Delete this greeting"><IconButton aria-label="delete" color="error" onClick={() => handleGroupGreetingClick(index)}><DeleteOutline/></IconButton></Tooltip>
+                                        </Box>
+                                    )}  
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </Box>
+                    )}
+                </Droppable>
+            </DragDropContext>
+        </div>
+    );
 }

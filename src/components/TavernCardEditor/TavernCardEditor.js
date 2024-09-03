@@ -24,7 +24,7 @@ import FileUpload from '../FileUpload/FileUpload';
 import assembleNewPng from '../../utils/assembleNewPng';
 import parsePngChunks from '../../utils/parsePngChunks';
 import stripPngChunks from '../../utils/stripPngChunks';
-import { AltGreetingTabPanel, BasicFieldTabPanel, LorebookPanel } from '../TabPanels/TabPanels';
+import { AltGreetingTabPanel, BasicFieldTabPanel, GroupGreetingPanel, LorebookPanel } from '../TabPanels/TabPanels';
 import { v2CardPrototype, } from '../../utils/v2CardPrototype';
 import { v3CardPrototype } from '../../utils/v3CardPrototype';
 import './TavernCardEditor.css';
@@ -39,11 +39,13 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [deleteConfirmation, setDeleteConfirmation] = useState(false);
     const [deleteEntryConfirmation, setDeleteEntryConfirmation] = useState(false);
     const [deleteGreetingConfirmation, setDeleteGreetingConfirmation] = useState(false);
+    const [deleteGroupGreetingConfirmation, setDeleteGroupGreetingConfirmation] = useState(false);
     const [displayImage, setDisplayImage] = useState(true);
     const [file, setFile] = useState();
     const [overwriteConfirmation, setOverwriteConfirmation] = useState(false);
     const [pendingEntry, setPendingEntry] = useState(-1);
     const [pendingGreeting, setPendingGreeting] = useState(-1);
+    const [pendingGroupGreeting, setPendingGroupGreeting] = useState(-1)
     const [pendingJson, setPendingJson] = useState(null);
     const [promoteGreeting, setPromoteGreeting] = useState(false);
     const [preview, setPreview] = useState(default_avatar);
@@ -98,7 +100,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             }
         }))
         setBackfillEntriesConfirmation(false);
-    }
+    };
 
     const populateV3Fields = (inJson) => {
         if (inJson.spec === "chara_card_v3" && inJson.spec_version === "3.0") return inJson;
@@ -109,11 +111,11 @@ const TavernCardEditor = ({toggleTheme}) => {
         if (!Object.hasOwn(outJson.data, "creation_date") || typeof outJson.data.creation_date === "undefined") outJson.data.creation_date = currTime;
         outJson.data.modification_date = currTime;
         return outJson;
-    }
+    };
 
     const closeBackfillConfirmation = () => {
         setBackfillEntriesConfirmation(false);
-    }
+    };
 
     const closeDeleteConfirmation = () => {
         setDeleteConfirmation(false);
@@ -121,12 +123,16 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     const closeDeleteEntryConfirmation = () => {
         setDeleteEntryConfirmation(false);
-    }
+    };
 
     const closeDeleteGreetingConfirmation = () => {
         setDeleteGreetingConfirmation(false);
         setPendingGreeting(-1);
-    }
+    };
+
+    const closeGroupGreetingConfirmation = () => {
+        setDeleteGroupGreetingConfirmation(false);
+    };
 
     const closeOverwriteConfirmation = () => {
         setOverwriteConfirmation(false);
@@ -188,6 +194,29 @@ const TavernCardEditor = ({toggleTheme}) => {
         setPendingEntry(-1);
         setDeleteEntryConfirmation(false);
     }
+
+    const handleDeleteClick = () => {
+        setDeleteConfirmation(true);
+    };
+
+    const handleDeleteEntryClick = (index) => {
+        setPendingEntry(index);
+        setDeleteEntryConfirmation(true);
+    }
+
+    const handleDeleteGroupGreeting = () => {
+        const groupGreetings = (useV3Spec ? cardDataV3 : cardDataV2).data.group_only_greetings;
+        groupGreetings.splice(pendingGroupGreeting, 1);
+        (useV3Spec ? setCardDataV3 : setCardDataV3)((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                group_only_greetings: groupGreetings
+            }
+        }));
+        setPendingGroupGreeting(-1);
+        setDeleteGroupGreetingConfirmation(false);
+    };
 
     async function handleFileSelect(event) {
         const selectedFile = event.target.files[0];
@@ -254,14 +283,11 @@ const TavernCardEditor = ({toggleTheme}) => {
         //console.log(pngRegex.test(selectedFile.name));
     }
 
-    const handleDeleteClick = () => {
-        setDeleteConfirmation(true);
+    const handleGroupGreetingClick = (index) => {
+        if ((useV3Spec ? cardDataV3 : cardDataV2).data.group_only_greetings.length === 1) return;
+        setPendingGroupGreeting(index);
+        setDeleteGroupGreetingConfirmation(true);
     };
-
-    const handleDeleteEntryClick = (index) => {
-        setPendingEntry(index);
-        setDeleteEntryConfirmation(true);
-    }
 
     const handleJsonDownload = () => {
         const outgoingJson = (saveAsV3Spec ? populateV3Fields : backfillV2Data)(useV3Spec ? cardDataV3 : cardDataV2);
@@ -397,7 +423,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                 return;
             }
         }
-    }
+    };
 
     const toggleImageDisplay = () => {
         setDisplayImage(!displayImage);
@@ -466,6 +492,13 @@ const TavernCardEditor = ({toggleTheme}) => {
                 dialogTitle="Backfill lorebook entry names and comments?"
                 dialogContent={"The names and comments in your lorebook entries are mismatched. Would you like to backfill empty entries? Only the names and comments will be altered."}
                 handleConfirm={backfillLorebookNames}
+            />
+            <ConfirmationDialog
+                open={deleteGroupGreetingConfirmation}
+                handleClose={closeGroupGreetingConfirmation}
+                dialogTitle="Delete this group only greeting?"
+                dialogContent={`Are you sure you want to delete Group Only Greeting #${pendingGroupGreeting}? This action cannot be undone.`}
+                handleConfirm={handleDeleteGroupGreeting}
             />
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
@@ -545,6 +578,14 @@ const TavernCardEditor = ({toggleTheme}) => {
                             curTab={tabValue}
                             index={4}
                             handleDeleteEntryClick={handleDeleteEntryClick}
+                            cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
+                            cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
+                            useV3Spec={useV3Spec}
+                        />
+                        <GroupGreetingPanel
+                            curTab={tabValue}
+                            index={5}
+                            handleGroupGreetingClick={handleGroupGreetingClick}
                             cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
                             cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
                             useV3Spec={useV3Spec}

@@ -28,4 +28,21 @@ const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0
     )
 }
 
+export const GroupGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0, cardToEdit}) => {
+    return(
+        <TextField 
+            autoComplete="off"
+            fullWidth
+            label={label}
+            margin="normal"
+            multiline
+            name={fieldName} 
+            onChange={changeCallback}
+            rows={3}
+            slotProps = {{htmlInput: {style: {resize:'vertical'}}}}
+            value={cardToEdit.data.group_only_greetings[greetingIndex]}
+        />
+    )
+}
+
 export default AltGreetingTextField;
