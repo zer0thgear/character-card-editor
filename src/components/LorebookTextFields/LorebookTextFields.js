@@ -37,13 +37,14 @@ export function LorebookMetaInt({label="", fieldName, changeCallback, cardToEdit
 export function LorebookMetaBool({label="", fieldName, changeCallback, cardToEdit}){
     return(
         <TextField
-            defaultValue={false}
+            defaultValue={undefined}
             label={label}
             onChange={changeCallback}
             select
-            sx={{width:"12em"}}
+            sx={{width:"20em"}}
             value={cardToEdit.data.character_book[fieldName]}
         >
+                <MenuItem value={undefined}>N/A</MenuItem>
                 <MenuItem value={false}>False</MenuItem>
                 <MenuItem value={true}>True</MenuItem>
         </TextField>
@@ -85,7 +86,7 @@ export function LorebookEntryInt({label="", fieldName, entryIndex, changeCallbac
 export function LorebookEntryBool({label="", fieldName, entryIndex, changeCallback, cardToEdit}){
     return(
         <TextField
-            defaultValue={false}
+            defaultValue={undefined}
             label={label}
             name={`${fieldName}#${entryIndex}`}
             onChange={changeCallback}
@@ -93,6 +94,7 @@ export function LorebookEntryBool({label="", fieldName, entryIndex, changeCallba
             sx={{width:"32em"}}
             value={cardToEdit.data.character_book.entries[entryIndex][fieldName]}
         >
+                <MenuItem value={undefined}>N/A</MenuItem>
                 <MenuItem value={false}>False</MenuItem>
                 <MenuItem value={true}>True</MenuItem>
         </TextField>
