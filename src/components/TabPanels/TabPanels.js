@@ -16,17 +16,10 @@ import { LorebookEntryBool, LorebookEntryString, LorebookMetaBool, LorebookMetaI
 import { v2CharacterBookEntryPrototype, v2CharacterBookPrototype } from "../../utils/v2CardPrototype";
 import { v3CharacterBookPrototype, v3CharacterBookEntryPrototype } from "../../utils/v3CardPrototype";
 
-export function BasicFieldTabPanel ({curTab, index, arrayToIterate, useV3Spec, cardDataV2, cardDataV3, setCardDataV2, setCardDataV3}) {
+export function BasicFieldTabPanel ({curTab, index, arrayToIterate, useV3Spec, cardToEdit, cardSetter}) {
     const handleTextFieldChange = (e) => {
         const {name, value} = e.target;
-        setCardDataV2((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                [name]: value
-            }
-        }));
-        setCardDataV3((prevState) => ({
+        cardSetter((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -37,14 +30,7 @@ export function BasicFieldTabPanel ({curTab, index, arrayToIterate, useV3Spec, c
 
     const handleTagChange = (e) => {
         const {name, value} = e.target;
-        setCardDataV2((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                [name]: value.split(",")
-            }
-        }));
-        setCardDataV3((prevState) => ({
+        cardSetter((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -57,54 +43,35 @@ export function BasicFieldTabPanel ({curTab, index, arrayToIterate, useV3Spec, c
         <div hidden={curTab !== index}>
             {arrayToIterate.map((field, index) => (
                 <CardTextField
-                key={field.fieldName.concat(index)} 
-                fieldName={field.fieldName} 
-                label={Object.hasOwn(field, "label") ? field.label : ""} 
-                multiline={Object.hasOwn(field, "multiline") ? field.multiline : false} 
-                rows={Object.hasOwn(field, "rows") ? field.rows : 1}
-                changeCallback={field.fieldName === "tags" ? handleTagChange : handleTextFieldChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-            />
+                    key={field.fieldName.concat(index)} 
+                    fieldName={field.fieldName} 
+                    label={Object.hasOwn(field, "label") ? field.label : ""} 
+                    multiline={Object.hasOwn(field, "multiline") ? field.multiline : false} 
+                    rows={Object.hasOwn(field, "rows") ? field.rows : 1}
+                    changeCallback={field.fieldName === "tags" ? handleTagChange : handleTextFieldChange} cardToEdit={cardToEdit}
+                />
             ))}
         </div>
     );
 }
 
-export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, handlePromoteClick, useV3Spec, cardDataV2, cardDataV3, setCardDataV2, setCardDataV3}) {
+export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, handlePromoteClick, useV3Spec, cardToEdit, cardSetter}) {
     const handleAddGreeting = () => {
-        if (useV3Spec){
-            const altGreetingArray = cardDataV3.data.alternate_greetings;
-            altGreetingArray.push("");
-            setCardDataV3((prevState) => ({
-                ...prevState,
-                data: {
-                    ...prevState.data,
-                    alternate_greetings: altGreetingArray
-                }
-            }));
-        } else {
-            const altGreetingArray = cardDataV2.data.alternate_greetings;
-            altGreetingArray.push("");
-            setCardDataV2((prevState) => ({
-                ...prevState,
-                data: {
-                    ...prevState.data,
-                    alternate_greetings: altGreetingArray
-                }
-            }));
-        }
+        const altGreetingArray = cardToEdit.data.alternate_greetings;
+        altGreetingArray.push("");
+        cardSetter((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                alternate_greetings: altGreetingArray
+            }
+        }));
     }
 
     const handleAltGreetingChange = (e) => {
         const {name, value} = e.target;
         const index = name.match(/altGreetingV[23](\d+)/)[1];
-        setCardDataV2((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                alternate_greetings: prevState.data.alternate_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting)
-            }
-        }))
-        setCardDataV3((prevState) => ({
+        cardSetter((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -116,27 +83,17 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     const handleDragEnd = (result) => {
         if (!result.destination) return;
 
-        const items = useV3Spec ? cardDataV3.data.alternate_greetings : cardDataV2.data.alternate_greetings;
+        const items = cardToEdit.data.alternate_greetings;
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0 , reorderedItem);
 
-        if (useV3Spec){
-            setCardDataV3((prevState) => ({
-                ...prevState,
-                data: {
-                    ...prevState.data,
-                    alternate_greetings: items
-                }
-            }))
-        } else {
-            setCardDataV2((prevState) => ({
-                ...prevState,
-                data: {
-                    ...prevState.data,
-                    alternate_greetings: items
-                }
-            }))
-        }
+        cardSetter((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                alternate_greetings: items
+            }
+        }))
     };
 
     return(
@@ -150,7 +107,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
                             ref={provided.innerRef}
                             sx={{mb:1}}
                         >
-                            {(useV3Spec ? cardDataV3 :cardDataV2).data.alternate_greetings.map((text, index) => (
+                            {cardToEdit.data.alternate_greetings.map((text, index) => (
                                 <Draggable key={`draggableGreeting#${index}`} draggableId={`draggableGreeting#${index}`} index={index}>
                                     {(provided) => (
                                         <Box 
@@ -171,7 +128,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
                                                         greetingIndex={index}
                                                         label={"Alternate Greeting #".concat(index)}
                                                         fieldName={(useV3Spec ? "altGreetingV3" : "altGreetingV2").concat(index)}
-                                                        changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                                        changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardToEdit={cardToEdit}
                                                         style={{flex:9}}
                                                     />
                                                 </AccordionDetails>
@@ -191,9 +148,9 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     );
 }
 
-export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec, cardDataV2, cardDataV3, setCardDataV2, setCardDataV3}){
+export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec, cardToEdit, cardSetter}){
     const addLorebook = () => {
-        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+        cardSetter((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -204,9 +161,9 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
 
     const addLoreBookEntry = () => {
         const blankEntry = useV3Spec ? v3CharacterBookEntryPrototype() : v2CharacterBookEntryPrototype();
-        const lorebookEntryArray = (useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries;
+        const lorebookEntryArray = cardToEdit.data.character_book.entries;
         lorebookEntryArray.push(blankEntry);
-        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+        cardSetter((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -221,11 +178,11 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
     const handleDragEnd = (result) => {
         if (!result.destination) return;
 
-        const items = (useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries;
+        const items = cardToEdit.data.character_book.entries;
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0, reorderedItem);
 
-        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+        cardSetter((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -242,7 +199,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
         const regexMatches = name.match(/^([^\d]+)#([\d]+)/);
         const fieldName = regexMatches[1];
         const index = parseInt(regexMatches[2], 10);
-        const items = (useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries;
+        const items = cardToEdit.data.character_book.entries;
         const [alteredItem] = items.splice(index, 1);
         if (fieldName === "name") {
             alteredItem.name = value;
@@ -252,7 +209,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
         }
         items.splice(index, 0, alteredItem);
 
-        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+        cardSetter((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -270,12 +227,12 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
         const regexMatches = name.match(/^([^\d]+)#([\d]+)/);
         const fieldName = regexMatches[1];
         const index = parseInt(regexMatches[2], 10);
-        const items = (useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries;
+        const items = cardToEdit.data.character_book.entries;
         const [alteredItem] = items.splice(index, 1);
         alteredItem[fieldName] = keys;
         items.splice(index, 0, alteredItem);
 
-        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+        cardSetter((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -289,7 +246,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
 
     const handleMetaFieldChange = (e) => {
         const {name, value} = e.target;
-        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+        cardSetter((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -303,7 +260,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
 
     return(
         <div hidden={curTab !== index}>
-            {typeof (useV3Spec ? cardDataV3 : cardDataV2).data.character_book === "undefined" ?
+            {typeof cardToEdit.data.character_book === "undefined" ?
                 <Box sx={{mb:2}}>
                     <Button variant="contained" onClick={addLorebook}>Attach new lorebook to card</Button>
                 </Box> :
@@ -311,35 +268,35 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
                     <LorebookMetaString
                         fieldName="name"
                         changeCallback={handleMetaFieldChange}
-                        useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                        useV3Spec={useV3Spec} cardToEdit={cardToEdit} cardSetter={cardSetter}
                     />
                     <LorebookMetaString
                         fieldName="description"
                         changeCallback={handleMetaFieldChange}
-                        useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                        cardToEdit={cardToEdit}
                     />
                     <Box style={{alignItems:'baseline', display:'flex'}} sx={{gap:2}}>
                         <LorebookMetaInt
                             label="Lorebook Scan Depth"
                             fieldName="scan_depth"
                             changeCallback={handleMetaFieldChange}
-                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                            cardToEdit={cardToEdit}
                         />
                         <LorebookMetaInt
                             label="Lorebook Token Budget"
                             fieldName="token_budget"
                             changeCallback={handleMetaFieldChange}
-                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                            cardToEdit={cardToEdit}
                         />
                         <LorebookMetaBool
                             label="Lorebook Recursive Scanning"
                             fieldName="recursive_scanning"
                             changeCallback={handleMetaFieldChange}
-                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                            cardToEdit={cardToEdit}
                         />
                     </Box>
                     <Button variant="contained" onClick={addLoreBookEntry} sx={{mb:1}}>Add new lorebook entry</Button>
-                    {(useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries.length === 0 ? <div></div>:
+                    {cardToEdit.data.character_book.entries.length === 0 ? <div></div>:
                         <DragDropContext onDragEnd={handleDragEnd}>
                             <Droppable droppableId="droppableLorebook">
                                 {(provided) => (
@@ -347,7 +304,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
                                         {...provided.droppableProps}
                                         ref={provided.innerRef}
                                     >
-                                        {(useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries.map((text, index) => (
+                                        {cardToEdit.data.character_book.entries.map((text, index) => (
                                             <Draggable key={`draggableLorebookEntry#${index}`} draggableId={`draggableLorebookEntry#${index}`} index={index}>
                                                 {(provided) => (
                                                     <Box
@@ -370,7 +327,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
                                                                             fieldName="name"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
-                                                                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                                                            cardToEdit={cardToEdit}
                                                                         />
                                                                     </Box>
                                                                     <Box style={{display:"flex", flexDirection:'row', alignItems:'baseline'}}>
@@ -379,21 +336,21 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
                                                                             fieldName="keys"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryKeysChange}
-                                                                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                                                            cardToEdit={cardToEdit}
                                                                         />
                                                                         <LorebookEntryBool
                                                                             label={`Entry #${index} Selective`}
                                                                             fieldName="selective"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
-                                                                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                                                            cardToEdit={cardToEdit}
                                                                         />
                                                                         <LorebookEntryString
                                                                             label={`Entry #${index} Secondary Keys`}
                                                                             fieldName="secondary_keys"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
-                                                                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                                                            cardToEdit={cardToEdit}
                                                                         />
                                                                     </Box>
                                                                     <LorebookEntryString
@@ -402,7 +359,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
                                                                         entryIndex={index}
                                                                         changeCallback={handleEntryChange}
                                                                         rows={3}
-                                                                        useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                                                        cardToEdit={cardToEdit}
                                                                     />
                                                                 </Box>
                                                             </AccordionDetails>

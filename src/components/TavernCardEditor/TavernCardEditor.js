@@ -512,37 +512,42 @@ const TavernCardEditor = ({toggleTheme}) => {
                             curTab={tabValue}
                             index={0}
                             arrayToIterate={charMetadataFields}
-                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                            setCardDataV2={setCardDataV2} setCardDataV3={setCardDataV3}
+                            cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
+                            cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
+                            useV3Spec={useV3Spec}
                         />
                         <AltGreetingTabPanel
                             curTab={tabValue}
                             index={1}
                             handleAltGreetingClick={handleAltGreetingClick}
                             handlePromoteClick={handlePromoteClick}
-                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                            setCardDataV2={setCardDataV2} setCardDataV3={setCardDataV3}
+                            cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
+                            cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
+                            useV3Spec={useV3Spec}
                         />
                         <BasicFieldTabPanel
                             curTab={tabValue}
                             index={2}
                             arrayToIterate={creatorMetadataFields}
-                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3} 
-                            setCardDataV2={setCardDataV2} setCardDataV3={setCardDataV3}
+                            cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
+                            cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
+                            useV3Spec={useV3Spec}
                         />
                         <BasicFieldTabPanel
                             curTab={tabValue}
                             index={3}
                             arrayToIterate={promptFields}
-                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                            setCardDataV2={setCardDataV2} setCardDataV3={setCardDataV3}
+                            cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
+                            cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
+                            useV3Spec={useV3Spec}
                         />
                         <LorebookPanel
                             curTab={tabValue}
                             index={4}
                             handleDeleteEntryClick={handleDeleteEntryClick}
-                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                            setCardDataV2={setCardDataV2} setCardDataV3={setCardDataV3}
+                            cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
+                            cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
+                            useV3Spec={useV3Spec}
                         />
                         <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
                             <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>

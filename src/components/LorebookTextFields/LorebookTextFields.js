@@ -3,7 +3,7 @@ import {
     TextField 
 } from "@mui/material";
 
-export function LorebookMetaString({label="", fieldName, changeCallback, useV3Spec, cardDataV2, cardDataV3}){
+export function LorebookMetaString({label="", fieldName, changeCallback, cardToEdit}){
     return(
         <TextField
             autoComplete="off"
@@ -14,12 +14,12 @@ export function LorebookMetaString({label="", fieldName, changeCallback, useV3Sp
             name={fieldName}
             onChange={changeCallback}
             slotProps={{htmlInput: {style: {resize:'vertical'}}}}
-            value={(useV3Spec ? cardDataV3 : cardDataV2).data.character_book[fieldName]}
+            value={cardToEdit.data.character_book[fieldName]}
         />
     );
 }
 
-export function LorebookMetaInt({label="", fieldName, changeCallback, useV3Spec, cardDataV2, cardDataV3}){
+export function LorebookMetaInt({label="", fieldName, changeCallback, cardToEdit}){
     return(
         <TextField
             autoComplete="off"
@@ -29,12 +29,12 @@ export function LorebookMetaInt({label="", fieldName, changeCallback, useV3Spec,
             onChange={changeCallback}
             slotProps={{htmlInput: {inputMode: "numeric", style: {resize:'vertical'}}}}
             type="number"
-            value={(useV3Spec ? cardDataV3 : cardDataV2).data.character_book[fieldName]}
+            value={cardToEdit.data.character_book[fieldName]}
         />
     );
 }
 
-export function LorebookMetaBool({label="", fieldName, changeCallback, useV3Spec, cardDataV2, cardDataV3}){
+export function LorebookMetaBool({label="", fieldName, changeCallback, cardToEdit}){
     return(
         <TextField
             defaultValue={false}
@@ -42,7 +42,7 @@ export function LorebookMetaBool({label="", fieldName, changeCallback, useV3Spec
             onChange={changeCallback}
             select
             sx={{width:"12em"}}
-            value={(useV3Spec ? cardDataV3 : cardDataV2).data.character_book[fieldName]}
+            value={cardToEdit.data.character_book[fieldName]}
         >
                 <MenuItem value={false}>False</MenuItem>
                 <MenuItem value={true}>True</MenuItem>
@@ -50,7 +50,7 @@ export function LorebookMetaBool({label="", fieldName, changeCallback, useV3Spec
     );
 }
 
-export function LorebookEntryString({label="", fieldName, entryIndex, changeCallback, rows=1, useV3Spec, cardDataV2, cardDataV3}){
+export function LorebookEntryString({label="", fieldName, entryIndex, changeCallback, rows=1, cardToEdit}){
     return(
         <TextField
             autoComplete="off"
@@ -62,12 +62,12 @@ export function LorebookEntryString({label="", fieldName, entryIndex, changeCall
             onChange={changeCallback}
             rows={rows}
             slotProps={{htmlInput: {style: {resize:'vertical'}}, inputLabel: {shrink:true}}}
-            value={(useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries[entryIndex][fieldName]}
+            value={cardToEdit.data.character_book.entries[entryIndex][fieldName]}
         />
     );
 }
 
-export function LorebookEntryInt({label="", fieldName, entryIndex, changeCallback, useV3Spec, cardDataV2, cardDataV3}){
+export function LorebookEntryInt({label="", fieldName, entryIndex, changeCallback, cardToEdit}){
     return(
         <TextField
             autoComplete="off"
@@ -77,12 +77,12 @@ export function LorebookEntryInt({label="", fieldName, entryIndex, changeCallbac
             onChange={changeCallback}
             slotProps={{htmlInput: {inputMode: "numeric", style: {resize:'vertical'}}}}
             type="number"
-            value={(useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries[entryIndex][fieldName]}
+            value={cardToEdit.data.character_book.entries[entryIndex][fieldName]}
         />
     );
 }
 
-export function LorebookEntryBool({label="", fieldName, entryIndex, changeCallback, useV3Spec, cardDataV2, cardDataV3}){
+export function LorebookEntryBool({label="", fieldName, entryIndex, changeCallback, cardToEdit}){
     return(
         <TextField
             defaultValue={false}
@@ -91,7 +91,7 @@ export function LorebookEntryBool({label="", fieldName, entryIndex, changeCallba
             onChange={changeCallback}
             select
             sx={{width:"24em"}}
-            value={(useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries[entryIndex][fieldName]}
+            value={cardToEdit.data.character_book.entries[entryIndex][fieldName]}
         >
                 <MenuItem value={false}>False</MenuItem>
                 <MenuItem value={true}>True</MenuItem>

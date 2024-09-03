@@ -11,7 +11,7 @@ import { TextField } from "@mui/material";
  * @param {*} cardDataV3 State of the same name
  * @returns 
  */
-const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0, useV3Spec, cardDataV2, cardDataV3}) => {
+const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0, cardToEdit}) => {
     return(
         <TextField 
             autoComplete="off"
@@ -23,7 +23,7 @@ const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0
             onChange={changeCallback}
             rows={3}
             slotProps = {{htmlInput: {style: {resize:'vertical'}}}}
-            value={useV3Spec ? cardDataV3.data.alternate_greetings[greetingIndex] : cardDataV2.data.alternate_greetings[greetingIndex]}
+            value={cardToEdit.data.alternate_greetings[greetingIndex]}
         />
     )
 }
