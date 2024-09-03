@@ -24,22 +24,24 @@ import FileUpload from '../FileUpload/FileUpload';
 import assembleNewPng from '../../utils/assembleNewPng';
 import parsePngChunks from '../../utils/parsePngChunks';
 import stripPngChunks from '../../utils/stripPngChunks';
-import { AltGreetingTabPanel, BasicFieldTabPanel } from '../TabPanels/TabPanels';
-import { v2CardPrototype, /*v2CharacterBookEntryPrototype, v2CharacterBookPrototype*/ } from '../../utils/v2CardPrototype';
-import { /*v3AssetPrototype,*/ v3CardPrototype, /*v3CharacterBookEntryPrototype, v3CharacterBookPrototype*/ } from '../../utils/v3CardPrototype';
+import { AltGreetingTabPanel, BasicFieldTabPanel, LorebookPanel } from '../TabPanels/TabPanels';
+import { v2CardPrototype, } from '../../utils/v2CardPrototype';
+import { v3CardPrototype } from '../../utils/v3CardPrototype';
 import './TavernCardEditor.css';
 
 const TavernCardEditor = ({toggleTheme}) => {
     const theme = useTheme();
 
     const previewImageRef = useRef(null);
-    const [cardDataV2, setCardDataV2] = useState(v2CardPrototype);
-    const [cardDataV3, setCardDataV3] = useState(v3CardPrototype);
+    const [cardDataV2, setCardDataV2] = useState(v2CardPrototype());
+    const [cardDataV3, setCardDataV3] = useState(v3CardPrototype());
     const [deleteConfirmation, setDeleteConfirmation] = useState(false);
+    const [deleteEntryConfirmation, setDeleteEntryConfirmation] = useState(false);
     const [deleteGreetingConfirmation, setDeleteGreetingConfirmation] = useState(false);
     const [displayImage, setDisplayImage] = useState(true);
     const [file, setFile] = useState();
     const [overwriteConfirmation, setOverwriteConfirmation] = useState(false);
+    const [pendingEntry, setPendingEntry] = useState(-1);
     const [pendingGreeting, setPendingGreeting] = useState(-1);
     const [pendingJson, setPendingJson] = useState(null);
     const [promoteGreeting, setPromoteGreeting] = useState(false);
@@ -92,6 +94,10 @@ const TavernCardEditor = ({toggleTheme}) => {
         setDeleteConfirmation(false);
     };
 
+    const closeDeleteEntryConfirmation = () => {
+        setDeleteEntryConfirmation(false);
+    }
+
     const closeDeleteGreetingConfirmation = () => {
         setDeleteGreetingConfirmation(false);
         setPendingGreeting(-1);
@@ -139,6 +145,23 @@ const TavernCardEditor = ({toggleTheme}) => {
         }
         setPendingGreeting(-1);
         setDeleteGreetingConfirmation(false);
+    }
+
+    const handleDeleteEntry = () => {
+        const lorebookEntries = (useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries;
+        lorebookEntries.splice(pendingEntry, 1);
+        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                character_book: {
+                    ...prevState.data.character_book,
+                    entries: lorebookEntries
+                }
+            }
+        }));
+        setPendingEntry(-1);
+        setDeleteEntryConfirmation(false);
     }
 
     async function handleFileSelect(event) {
@@ -198,6 +221,11 @@ const TavernCardEditor = ({toggleTheme}) => {
     const handleDeleteClick = () => {
         setDeleteConfirmation(true);
     };
+
+    const handleDeleteEntryClick = (index) => {
+        setPendingEntry(index);
+        setDeleteEntryConfirmation(true);
+    }
 
     const handleJsonDownload = () => {
         const outgoingJson = (saveAsV3Spec ? populateV3Fields : backfillV2Data)(useV3Spec ? cardDataV3 : cardDataV2);
@@ -316,8 +344,8 @@ const TavernCardEditor = ({toggleTheme}) => {
         setFile(null);
         setDeleteConfirmation(false);
         setPreview(default_avatar);
-        setCardDataV2(v2CardPrototype);
-        setCardDataV3(v3CardPrototype);
+        setCardDataV2(v2CardPrototype());
+        setCardDataV3(v3CardPrototype());
         setUseV3Spec(false);
     };
 
@@ -379,8 +407,15 @@ const TavernCardEditor = ({toggleTheme}) => {
                 dialogContent={`Are you sure you want to promote Alt Greeting #${pendingGreeting} to the first message? The existing first message will be moved to Alternate Greeting #0's spot.`}
                 handleConfirm={handlePromoteGreeting}
             />
+            <ConfirmationDialog
+                open={deleteEntryConfirmation}
+                handleClose={closeDeleteEntryConfirmation}
+                dialogTitle="Delete lorebook entry?"
+                dialogContent={`Are you sure you want to delete Lorebook Entry #${pendingEntry}? This action cannot be undone.`}
+                handleConfirm={handleDeleteEntry}
+            />
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={cardDataV2 !== v2CardPrototype || cardDataV3 !== v3CardPrototype} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
+                <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
                 <FormControlLabel control={<Checkbox checked={displayImage} onChange={toggleImageDisplay}/>} label="Display image?"/>
                 {file && 
                     <div>
@@ -446,6 +481,13 @@ const TavernCardEditor = ({toggleTheme}) => {
                             curTab={tabValue}
                             index={3}
                             arrayToIterate={promptFields}
+                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                            setCardDataV2={setCardDataV2} setCardDataV3={setCardDataV3}
+                        />
+                        <LorebookPanel
+                            curTab={tabValue}
+                            index={4}
+                            handleDeleteEntryClick={handleDeleteEntryClick}
                             useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
                             setCardDataV2={setCardDataV2} setCardDataV3={setCardDataV3}
                         />
