@@ -86,7 +86,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const backfillLorebookNames = () => {
         const lorebookEntries = (useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries.map((entry) => {
             const newEntry = entry;
-            if (newEntry.name === "" || !Object.hasOwn(newEntry, "name")) newEntry.name = newEntry.comment;
+            if (newEntry.name === "" || !Object.hasOwn(newEntry, "name") || typeof newEntry.name === "undefined") newEntry.name = newEntry.comment;
             else newEntry.comment = newEntry.name;
             return newEntry
         });
@@ -382,7 +382,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             const arrayBuffer = await respBlob.arrayBuffer();
             const strippedPng = await stripPngChunks(arrayBuffer);
             const outgoingJson = (saveAsV3Spec ? populateV3Fields : backfillV2Data)(useV3Spec ? cardDataV3 : cardDataV2);
-            const assembledPng = await assembleNewPng(strippedPng, saveAsV3Spec ? [{keyword:"ccv3", data:outgoingJson}] : {keyword:"chara", data:outgoingJson});
+            const assembledPng = await assembleNewPng(strippedPng, saveAsV3Spec ? [{keyword:"ccv3", data:outgoingJson}, {keyword: "chara", data:outgoingJson}] : {keyword:"chara", data:outgoingJson});
             const blob = new Blob([assembledPng], { type: 'image/png' });
 
             const url = URL.createObjectURL(blob);
