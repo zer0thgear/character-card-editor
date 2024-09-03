@@ -235,7 +235,7 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     async function handleFileSelect(event, importLorebook=false) {
         const selectedFile = event.target.files[0];
-        setFile(selectedFile);
+        if(!importLorebook) setFile(selectedFile);
         if (/.+\.png$/.test(selectedFile.name)){
             const readCardData = await parsePngChunks(selectedFile, ["ccv3", "chara"]);
             if (readCardData) {
