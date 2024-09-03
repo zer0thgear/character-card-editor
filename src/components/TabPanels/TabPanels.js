@@ -1,10 +1,13 @@
 import { 
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
     Box,
     Button,
     IconButton,
     Tooltip 
 } from "@mui/material";
-import { DeleteOutline, DragHandle, KeyboardDoubleArrowUp } from "@mui/icons-material";
+import { ArrowDropDown, DeleteOutline, DragHandle, KeyboardDoubleArrowUp } from "@mui/icons-material";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 
 import AltGreetingTextField from "../AltGreetingTextField/AltGreetingTextField";
@@ -120,13 +123,14 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
 
     return(
         <div hidden={curTab !== index}>
-            <Button onClick={handleAddGreeting} variant="contained">Add new greeting</Button>
+            <Button onClick={handleAddGreeting} variant="contained" sx={{mb:1}}>Add new greeting</Button>
             <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId="droppable">
                     {(provided) => (
                         <Box
                             {...provided.droppableProps}
                             ref={provided.innerRef}
+                            sx={{mb:1}}
                         >
                             {(useV3Spec ? cardDataV3 :cardDataV2).data.alternate_greetings.map((text, index) => (
                                 <Draggable key={`draggableGreeting#${index}`} draggableId={`draggableGreeting#${index}`} index={index}>
@@ -139,14 +143,21 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
                                             <Tooltip title="Drag to reorder">
                                                 <IconButton {...provided.dragHandleProps}><DragHandle/></IconButton>
                                             </Tooltip>
-                                            <AltGreetingTextField
-                                                key={(useV3Spec ? "altGreetingV3" : "altGreetingV2").concat(index)}
-                                                greetingIndex={index}
-                                                label={"Alternate Greeting #".concat(index)}
-                                                fieldName={(useV3Spec ? "altGreetingV3" : "altGreetingV2").concat(index)}
-                                                changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                                                style={{flex:9}}
-                                            />
+                                            <Accordion style={{width:'100%'}} sx={{mb:2, mt:2}}>
+                                                <AccordionSummary expandIcon={<ArrowDropDown/>}>
+                                                    {"Alternate Greeting #".concat(index)}
+                                                </AccordionSummary>
+                                                <AccordionDetails>
+                                                    <AltGreetingTextField
+                                                        key={(useV3Spec ? "altGreetingV3" : "altGreetingV2").concat(index)}
+                                                        greetingIndex={index}
+                                                        label={"Alternate Greeting #".concat(index)}
+                                                        fieldName={(useV3Spec ? "altGreetingV3" : "altGreetingV2").concat(index)}
+                                                        changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                                        style={{flex:9}}
+                                                    />
+                                                </AccordionDetails>
+                                            </Accordion>
                                             <Tooltip title="Promote this greeting to first message"><IconButton onClick={() => handlePromoteClick(index)}><KeyboardDoubleArrowUp/></IconButton></Tooltip>
                                             <Tooltip title="Delete this greeting"><IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton></Tooltip>
                                         </Box>
@@ -309,7 +320,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
                             useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
                         />
                     </Box>
-                    <Button variant="contained" onClick={addLoreBookEntry}>Add new lorebook entry</Button>
+                    <Button variant="contained" onClick={addLoreBookEntry} sx={{mb:1}}>Add new lorebook entry</Button>
                     {(useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries.length === 0 ? <div></div>:
                         <DragDropContext onDragEnd={handleDragEnd}>
                             <Droppable droppableId="droppableLorebook">
@@ -329,48 +340,55 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
                                                         <Tooltip title="Drag to reorder">
                                                             <IconButton {...provided.dragHandleProps}><DragHandle/></IconButton>
                                                         </Tooltip>
-                                                        <Box style={{width:'100%'}}>
-                                                            <Box>
-                                                                <LorebookEntryString
-                                                                    label={`Entry #${index} Name/Comment`}
-                                                                    fieldName="name"
-                                                                    entryIndex={index}
-                                                                    changeCallback={handleEntryChange}
-                                                                    useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                                                                />
-                                                            </Box>
-                                                            <Box style={{display:"flex", flexDirection:'row', alignItems:'baseline'}}>
-                                                                <LorebookEntryString
-                                                                    label={`Entry #${index} Keys`}
-                                                                    fieldName="keys"
-                                                                    entryIndex={index}
-                                                                    changeCallback={handleEntryKeysChange}
-                                                                    useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                                                                />
-                                                                <LorebookEntryBool
-                                                                    label={`Entry #${index} Selective`}
-                                                                    fieldName="selective"
-                                                                    entryIndex={index}
-                                                                    changeCallback={handleEntryChange}
-                                                                    useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                                                                />
-                                                                <LorebookEntryString
-                                                                    label={`Entry #${index} Secondary Keys`}
-                                                                    fieldName="secondary_keys"
-                                                                    entryIndex={index}
-                                                                    changeCallback={handleEntryChange}
-                                                                    useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                                                                />
-                                                            </Box>
-                                                            <LorebookEntryString
-                                                                label={`Entry #${index} Content`}
-                                                                fieldName="content"
-                                                                entryIndex={index}
-                                                                changeCallback={handleEntryChange}
-                                                                rows={3}
-                                                                useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
-                                                            />
-                                                        </Box>
+                                                        <Accordion style={{width:'100%'}} sx={{mb:2, mt:2}}>
+                                                            <AccordionSummary expandIcon={<ArrowDropDown/>}>
+                                                                {`Entry #${index}`}
+                                                            </AccordionSummary>
+                                                            <AccordionDetails>
+                                                                <Box style={{width:'100%'}}>
+                                                                    <Box>
+                                                                        <LorebookEntryString
+                                                                            label={`Entry #${index} Name/Comment`}
+                                                                            fieldName="name"
+                                                                            entryIndex={index}
+                                                                            changeCallback={handleEntryChange}
+                                                                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                                                        />
+                                                                    </Box>
+                                                                    <Box style={{display:"flex", flexDirection:'row', alignItems:'baseline'}}>
+                                                                        <LorebookEntryString
+                                                                            label={`Entry #${index} Keys`}
+                                                                            fieldName="keys"
+                                                                            entryIndex={index}
+                                                                            changeCallback={handleEntryKeysChange}
+                                                                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                                                        />
+                                                                        <LorebookEntryBool
+                                                                            label={`Entry #${index} Selective`}
+                                                                            fieldName="selective"
+                                                                            entryIndex={index}
+                                                                            changeCallback={handleEntryChange}
+                                                                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                                                        />
+                                                                        <LorebookEntryString
+                                                                            label={`Entry #${index} Secondary Keys`}
+                                                                            fieldName="secondary_keys"
+                                                                            entryIndex={index}
+                                                                            changeCallback={handleEntryChange}
+                                                                            useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                                                        />
+                                                                    </Box>
+                                                                    <LorebookEntryString
+                                                                        label={`Entry #${index} Content`}
+                                                                        fieldName="content"
+                                                                        entryIndex={index}
+                                                                        changeCallback={handleEntryChange}
+                                                                        rows={3}
+                                                                        useV3Spec={useV3Spec} cardDataV2={cardDataV2} cardDataV3={cardDataV3}
+                                                                    />
+                                                                </Box>
+                                                            </AccordionDetails>
+                                                        </Accordion>
                                                         <Tooltip title="Delete this lorebook entry">
                                                             <IconButton aria-label="delete" color="error" onClick={() => handleDeleteEntryClick(index)}><DeleteOutline/></IconButton>
                                                         </Tooltip>
