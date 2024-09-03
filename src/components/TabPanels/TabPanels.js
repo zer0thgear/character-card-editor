@@ -321,10 +321,17 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
                                                             </AccordionSummary>
                                                             <AccordionDetails>
                                                                 <Box style={{width:'100%'}}>
-                                                                    <Box>
+                                                                    <Box style={{display:'flex', flexDirection:'row', alignItems:'baseline'}}>
                                                                         <LorebookEntryString
                                                                             label={`Entry #${index} Name/Comment`}
                                                                             fieldName="name"
+                                                                            entryIndex={index}
+                                                                            changeCallback={handleEntryChange}
+                                                                            cardToEdit={cardToEdit}
+                                                                        />
+                                                                        <LorebookEntryBool
+                                                                            label={`Entry #${index} Enabled`}
+                                                                            fieldName="enabled"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
                                                                             cardToEdit={cardToEdit}
@@ -349,7 +356,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
                                                                             label={`Entry #${index} Secondary Keys`}
                                                                             fieldName="secondary_keys"
                                                                             entryIndex={index}
-                                                                            changeCallback={handleEntryChange}
+                                                                            changeCallback={handleEntryKeysChange}
                                                                             cardToEdit={cardToEdit}
                                                                         />
                                                                     </Box>
