@@ -35,6 +35,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const previewImageRef = useRef(null);
     const [cardDataV2, setCardDataV2] = useState(v2CardPrototype());
     const [cardDataV3, setCardDataV3] = useState(v3CardPrototype());
+    const [backfillEntriesConfirmation, setBackfillEntriesConfirmation] = useState(false)
     const [deleteConfirmation, setDeleteConfirmation] = useState(false);
     const [deleteEntryConfirmation, setDeleteEntryConfirmation] = useState(false);
     const [deleteGreetingConfirmation, setDeleteGreetingConfirmation] = useState(false);
@@ -79,6 +80,26 @@ const TavernCardEditor = ({toggleTheme}) => {
         return outJson;
     };
 
+    const backfillLorebookNames = () => {
+        const lorebookEntries = (useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries.map((entry) => {
+            const newEntry = entry;
+            if (newEntry.name === "" || !Object.hasOwn(newEntry, "name")) newEntry.name = newEntry.comment;
+            else newEntry.comment = newEntry.name;
+            return newEntry
+        });
+        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                character_book: {
+                    ...prevState.data.character_book,
+                    entries: lorebookEntries
+                }
+            }
+        }))
+        setBackfillEntriesConfirmation(false);
+    }
+
     const populateV3Fields = (inJson) => {
         if (inJson.spec === "chara_card_v3" && inJson.spec_version === "3.0") return inJson;
         const outJson = inJson;
@@ -88,6 +109,10 @@ const TavernCardEditor = ({toggleTheme}) => {
         if (!Object.hasOwn(outJson.data, "creation_date") || typeof outJson.data.creation_date === "undefined") outJson.data.creation_date = currTime;
         outJson.data.modification_date = currTime;
         return outJson;
+    }
+
+    const closeBackfillConfirmation = () => {
+        setBackfillEntriesConfirmation(false);
     }
 
     const closeDeleteConfirmation = () => {
@@ -176,10 +201,14 @@ const TavernCardEditor = ({toggleTheme}) => {
                             setCardDataV3(parsedCardData[item].data);
                             console.log("V3 Card info found");
                             console.log(parsedCardData[item].data);
+                            if (typeof parsedCardData[item].data.data.character_book !== "undefined" && parsedCardData[item].data.data.character_book.entries.length > 0)
+                                scanLorebookEntryNames(parsedCardData[item].data.data.character_book.entries);
                             setUseV3Spec(true);
                         } else if (parsedCardData[item].keyword === "chara"){
                             console.log("V2 card info found");
                             setCardDataV2(parsedCardData[item].data);
+                            if (typeof parsedCardData[0].data.data.character_book !== "undefined" && parsedCardData[0].data.data.character_book.entries.length > 0 && item === parsedCardData.length - 1 && !useV3Spec)
+                                scanLorebookEntryNames(parsedCardData[0].data.data.character_book.entries);
                             console.log(parsedCardData[item].data);
                         }
                     }
@@ -190,9 +219,14 @@ const TavernCardEditor = ({toggleTheme}) => {
                         console.log("Only V3 Card info found");
                         console.log(parsedCardData[0].data);
                         setUseV3Spec(true);
+                        if (typeof parsedCardData[0].data.data.character_book !== "undefined" && parsedCardData[0].data.data.character_book.entries.length > 0)
+                            scanLorebookEntryNames(parsedCardData[0].data.data.character_book.entries);
                     } else if (parsedCardData[0].keyword === "chara"){
                         console.log("Only V2 card info found");
                         setCardDataV2(parsedCardData[0].data);
+                        console.log(parsedCardData[0].data.data.character_book.entries)
+                        if (typeof parsedCardData[0].data.data.character_book !== "undefined" && parsedCardData[0].data.data.character_book.entries.length > 0)
+                            scanLorebookEntryNames(parsedCardData[0].data.data.character_book.entries);
                         console.log(parsedCardData[0].data);
                     }
                 }
@@ -208,10 +242,12 @@ const TavernCardEditor = ({toggleTheme}) => {
             if (parsedJson.spec === "chara_card_v3"){
                 setUseV3Spec(true);
                 setCardDataV3(parsedJson)
+                scanLorebookEntryNames(parsedJson.data.character_book.entries);
             }
             else{
                 setCardDataV2(parsedJson);
                 setUseV3Spec(false);
+                scanLorebookEntryNames(parsedJson.data.character_book.entries);
             }
         }
         //console.log(selectedFile.name);
@@ -259,6 +295,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             setUseV3Spec(false);
             setCardDataV2(pendingJson);
         }
+        scanLorebookEntryNames(pendingJson.data.character_book.entries);
         setOverwriteConfirmation(false);
         setPendingJson(null)
     };
@@ -353,6 +390,15 @@ const TavernCardEditor = ({toggleTheme}) => {
         setTabValue(newValue);
     };
 
+    const scanLorebookEntryNames = (lorebook) => {
+        for (let i = 0; i < lorebook.length; i++){
+            if (lorebook[i].name !== lorebook[i].comment && (lorebook[i].name === "" || lorebook[i].comment === "" || !Object.hasOwn(lorebook[i], "name") || !Object.hasOwn(lorebook[i], "comment"))){
+                setBackfillEntriesConfirmation(true);
+                return;
+            }
+        }
+    }
+
     const toggleImageDisplay = () => {
         setDisplayImage(!displayImage);
     };
@@ -413,6 +459,13 @@ const TavernCardEditor = ({toggleTheme}) => {
                 dialogTitle="Delete lorebook entry?"
                 dialogContent={`Are you sure you want to delete Lorebook Entry #${pendingEntry}? This action cannot be undone.`}
                 handleConfirm={handleDeleteEntry}
+            />
+            <ConfirmationDialog
+                open={backfillEntriesConfirmation}
+                handleClose={closeBackfillConfirmation}
+                dialogTitle="Backfill lorebook entry names and comments?"
+                dialogContent={"The names and comments in your lorebook entries are mismatched. Would you like to backfill empty entries? Only the names and comments will be altered."}
+                handleConfirm={backfillLorebookNames}
             />
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
