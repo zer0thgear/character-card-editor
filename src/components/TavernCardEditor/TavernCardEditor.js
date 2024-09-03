@@ -40,6 +40,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [deleteEntryConfirmation, setDeleteEntryConfirmation] = useState(false);
     const [deleteGreetingConfirmation, setDeleteGreetingConfirmation] = useState(false);
     const [deleteGroupGreetingConfirmation, setDeleteGroupGreetingConfirmation] = useState(false);
+    const [deleteLorebookConfirmation, setDeleteLorebookConfirmation] = useState(false);
     const [displayImage, setDisplayImage] = useState(true);
     const [file, setFile] = useState();
     const [overwriteConfirmation, setOverwriteConfirmation] = useState(false);
@@ -130,6 +131,10 @@ const TavernCardEditor = ({toggleTheme}) => {
         setPendingGreeting(-1);
     };
 
+    const closeDeleteLorebookConfirmation = () => {
+        setDeleteLorebookConfirmation(false);
+    };
+
     const closeGroupGreetingConfirmation = () => {
         setDeleteGroupGreetingConfirmation(false);
     };
@@ -199,6 +204,10 @@ const TavernCardEditor = ({toggleTheme}) => {
         setDeleteEntryConfirmation(true);
     }
 
+    const handleDeleteLorebookClick = () => {
+        setDeleteLorebookConfirmation(true);
+    }
+
     const handleDeleteGroupGreeting = () => {
         const groupGreetings = (useV3Spec ? cardDataV3 : cardDataV2).data.group_only_greetings;
         groupGreetings.splice(pendingGroupGreeting, 1);
@@ -212,6 +221,17 @@ const TavernCardEditor = ({toggleTheme}) => {
         setPendingGroupGreeting(-1);
         setDeleteGroupGreetingConfirmation(false);
     };
+
+    const handleDeleteLorebook = () => {
+        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                character_book: undefined
+            }
+        }))
+        setDeleteLorebookConfirmation(false);
+    }
 
     async function handleFileSelect(event, importLorebook=false) {
         const selectedFile = event.target.files[0];
@@ -510,6 +530,13 @@ const TavernCardEditor = ({toggleTheme}) => {
                 dialogContent={`Are you sure you want to delete Group Only Greeting #${pendingGroupGreeting}? This action cannot be undone.`}
                 handleConfirm={handleDeleteGroupGreeting}
             />
+            <ConfirmationDialog 
+                open={deleteLorebookConfirmation}
+                handleClose={closeDeleteLorebookConfirmation}
+                dialogTitle="Delete this lorebook"
+                dialogContent={"Are you sure you want to delete this lorebook? This action cannot be undone."}
+                handleConfirm={handleDeleteLorebook}
+            />
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
                 <FormControlLabel control={<Checkbox checked={displayImage} onChange={toggleImageDisplay}/>} label="Display image?"/>
@@ -588,6 +615,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                             curTab={tabValue}
                             index={4}
                             handleDeleteEntryClick={handleDeleteEntryClick}
+                            handleDeleteLorebookClick={handleDeleteLorebookClick}
                             cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
                             cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
                             useV3Spec={useV3Spec} handleImport={handleLorebookImport}

@@ -148,7 +148,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     );
 }
 
-export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec, cardToEdit, cardSetter, handleImport}){
+export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDeleteLorebookClick, useV3Spec, cardToEdit, cardSetter, handleImport}){
     const addLorebook = () => {
         cardSetter((prevState) => ({
             ...prevState,
@@ -272,11 +272,16 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, useV3Spec,
                     </Tooltip>
                 </Box> :
                 <Box sx={{mb:2}}>
-                    <LorebookMetaString
-                        fieldName="name"
-                        changeCallback={handleMetaFieldChange}
-                        useV3Spec={useV3Spec} cardToEdit={cardToEdit} cardSetter={cardSetter}
-                    />
+                    <Box style={{display:'flex'}} sx={{gap:2}}>
+                        <LorebookMetaString
+                            fieldName="name"
+                            changeCallback={handleMetaFieldChange}
+                            useV3Spec={useV3Spec} cardToEdit={cardToEdit} cardSetter={cardSetter}
+                        />
+                        <Tooltip title="Delete this lorebook">
+                            <IconButton aria-label="delete" color="error" onClick={handleDeleteLorebookClick}><DeleteOutline/></IconButton>
+                        </Tooltip>
+                    </Box>
                     <LorebookMetaString
                         fieldName="description"
                         changeCallback={handleMetaFieldChange}
