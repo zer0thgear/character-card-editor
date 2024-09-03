@@ -1,5 +1,6 @@
 {
   "name": "tavern-card-editor",
+  "homepage": "https://zer0thgear.github.io/character-card-editor",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

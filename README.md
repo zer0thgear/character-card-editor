@@ -14,7 +14,7 @@ Additionally, you can export your edited and created cards, but bulk management 
 ## Usage
 Clone, npm install, npm start
 
-Live page and more detailed instructs TBA
+A live version of this tool can be found [here](https://zer0thgear.github.io/character-card-editor).
 
 ## Other notes and considerations
 This tool was written in Javascript using [React](https://react.dev/) and heavily utilizes the [Material UI](https://mui.com/) library.
