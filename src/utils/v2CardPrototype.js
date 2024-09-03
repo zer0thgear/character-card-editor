@@ -20,7 +20,10 @@ export const v2CardPrototype = () => {return({
         tags: [""],
         creator: "",
         character_version: "",
-        extensions: {}
+        extensions: {},
+
+        // V3 spec field being added for compatibility
+        group_only_greetings: []
     }
 })};
 
