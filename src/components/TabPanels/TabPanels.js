@@ -148,7 +148,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     );
 }
 
-export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDeleteLorebookClick, useV3Spec, cardToEdit, cardSetter, handleImport}){
+export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDeleteLorebookClick, handleLorebookDownload, useV3Spec, cardToEdit, cardSetter, handleImport}){
     const addLorebook = () => {
         cardSetter((prevState) => ({
             ...prevState,
@@ -306,6 +306,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                             changeCallback={handleMetaFieldChange}
                             cardToEdit={cardToEdit}
                         />
+                        <Button onClick={handleLorebookDownload} variant="contained">Download Lorebook</Button>
                     </Box>
                     <Button variant="contained" onClick={addLoreBookEntry} sx={{mb:1}}>Add new lorebook entry</Button>
                     {cardToEdit.data.character_book.entries.length === 0 ? <div></div>:

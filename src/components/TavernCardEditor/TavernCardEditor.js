@@ -288,7 +288,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             const parsedJson = JSON.parse(await selectedFile.text());
             console.log(parsedJson);
             if (importLorebook){
-                handleLorebookImportLogic(parsedJson.data.character_book);
+                handleLorebookImportLogic(parsedJson.spec==="lorebook_v3" ? parsedJson.data : parsedJson.data.character_book);
                 return;
             }
             setUseV3Spec(parsedJson.spec === "chara_card_v3");
@@ -318,9 +318,25 @@ const TavernCardEditor = ({toggleTheme}) => {
         URL.revokeObjectURL(url);
     };
 
+    const handleLorebookDownload = () =>{
+        const outgoingBook = (useV3Spec ? cardDataV3 : cardDataV2).data.character_book;
+        const outgoingJson = {spec: "lorebook_v3", data: outgoingBook};
+        const blob = new Blob([JSON.stringify(outgoingJson, null, 4)], { type: 'application/json' });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${outgoingJson.data.name}.json`
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        URL.revokeObjectURL(url);
+    };
+
     const handleLorebookImport = (event) => {
         handleFileSelect(event, true);
-    }
+    };
 
     const handleLorebookImportLogic = (newLorebook) => {
         (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
@@ -332,7 +348,7 @@ const TavernCardEditor = ({toggleTheme}) => {
         }))
         if (typeof newLorebook !== "undefined" && newLorebook.entries.length > 0)
             scanLorebookEntryNames(newLorebook.entries);
-    }
+    };
 
     async function handleOverwriteClick(event) {
         const file = event.target.files[0];
@@ -616,6 +632,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                             index={4}
                             handleDeleteEntryClick={handleDeleteEntryClick}
                             handleDeleteLorebookClick={handleDeleteLorebookClick}
+                            handleLorebookDownload={handleLorebookDownload}
                             cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
                             cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
                             useV3Spec={useV3Spec} handleImport={handleLorebookImport}
