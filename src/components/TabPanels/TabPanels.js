@@ -448,7 +448,7 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick, use
                                             </Tooltip>
                                             <Accordion style={{width:'100%'}} sx={{mb:2, mt:2}}>
                                                 <AccordionSummary expandIcon={<ArrowDropDown/>}>
-                                                    {"Alternate Greeting #".concat(index)}
+                                                    {"Group Greeting #".concat(index)}
                                                 </AccordionSummary>
                                                 <AccordionDetails>
                                                     <GroupGreetingTextField
