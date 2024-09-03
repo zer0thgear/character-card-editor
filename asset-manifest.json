@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/character-card-editor/static/css/main.f855e6bc.css",
+    "main.js": "/character-card-editor/static/js/main.cff0605e.js",
+    "static/js/453.21948328.chunk.js": "/character-card-editor/static/js/453.21948328.chunk.js",
+    "index.html": "/character-card-editor/index.html",
+    "main.f855e6bc.css.map": "/character-card-editor/static/css/main.f855e6bc.css.map",
+    "main.cff0605e.js.map": "/character-card-editor/static/js/main.cff0605e.js.map",
+    "453.21948328.chunk.js.map": "/character-card-editor/static/js/453.21948328.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.f855e6bc.css",
+    "static/js/main.cff0605e.js"
+  ]
+}
