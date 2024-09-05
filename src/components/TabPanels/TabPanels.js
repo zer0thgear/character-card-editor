@@ -63,28 +63,29 @@ export function BasicFieldTabPanel ({curTab, index, arrayToIterate}) {
 export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, handlePromoteClick}) {
     const { cardData, setCardData } = useCard();
 
+    const debouncedSetCardData = useCallback(
+        debounce((value) => {
+            setCardData((prevState) => ({
+                ...prevState,
+                data: {
+                    ...prevState.data,
+                    alternate_greetings: value
+                }
+            }));
+        }, 300),
+        [setCardData]
+    )
+
     const handleAddGreeting = () => {
         const altGreetingArray = cardData.data.alternate_greetings;
         altGreetingArray.push("");
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                alternate_greetings: altGreetingArray
-            }
-        }));
+        debouncedSetCardData(altGreetingArray);
     }
 
     const handleAltGreetingChange = (e) => {
         const {name, value} = e.target;
         const index = name.match(/altGreeting(\d+)/)[1];
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                alternate_greetings: prevState.data.alternate_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting)
-            }
-        }))
+        debouncedSetCardData(cardData.data.alternate_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting))
     };
 
     const handleDragEnd = (result) => {
@@ -94,13 +95,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0 , reorderedItem);
 
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                alternate_greetings: items
-            }
-        }))
+        debouncedSetCardData(items);
     };
 
     return(
@@ -430,28 +425,29 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
 export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
     const { cardData, setCardData } = useCard();
 
+    const debouncedSetCardData = useCallback(
+        debounce((value) => {
+            setCardData((prevState) => ({
+                ...prevState,
+                data: {
+                    ...prevState.data,
+                    group_only_greetings: value
+                }
+            }));
+        }, 300), 
+        [setCardData]
+    );
+
     const handleAddGroupGreeting = () => {
         const groupGreetingArray = cardData.data.group_only_greetings;
         groupGreetingArray.push("");
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                group_only_greetings: groupGreetingArray
-            }
-        }));
+        debouncedSetCardData(groupGreetingArray);
     }
 
     const handleGroupGreetingChange = (e) => {
         const {name, value} = e.target;
         const index = name.match(/groupGreeting(\d+)/)[1];
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                group_only_greetings: prevState.data.group_only_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting)
-            }
-        }))
+        debouncedSetCardData(cardData.data.group_only_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting));
     };
 
     const handleDragEnd = (result) => {
@@ -461,13 +457,7 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0 , reorderedItem);
 
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                group_only_greetings: items
-            }
-        }))
+        debouncedSetCardData(items)
     };
 
     return(

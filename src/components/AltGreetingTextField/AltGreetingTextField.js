@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import { TextField } from "@mui/material";
 
 import { useCard } from "../../context/CardContext";
@@ -12,6 +14,18 @@ import { useCard } from "../../context/CardContext";
  */
 const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0}) => {
     const { cardData } = useCard();
+    const [localValue, setLocalValue] = useState(cardData.data[fieldName]);
+
+    useEffect(() => {
+        setLocalValue(cardData.data.alternate_greetings[greetingIndex]);
+    }, [cardData.data.alternate_greetings[greetingIndex]]);
+
+    const handleChange = (e) => {
+        const { value } = e.target;
+        setLocalValue(value);
+        changeCallback(e);
+    }
+
     return(
         <TextField 
             autoComplete="off"
@@ -20,16 +34,28 @@ const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0
             margin="normal"
             multiline
             name={fieldName} 
-            onChange={changeCallback}
+            onChange={handleChange}
             rows={3}
             slotProps = {{htmlInput: {style: {resize:'vertical'}}}}
-            value={cardData.data.alternate_greetings[greetingIndex]}
+            value={localValue}
         />
     )
 }
 
 export const GroupGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0}) => {
     const { cardData } = useCard();
+    const [localValue, setLocalValue] = useState(cardData.data[fieldName]);
+
+    useEffect(() => {
+        setLocalValue(cardData.data.group_only_greetings[greetingIndex]);
+    }, [cardData.data.group_only_greetings[greetingIndex]]);
+
+    const handleChange = (e) => {
+        const { value } = e.target;
+        setLocalValue(value);
+        changeCallback(e);
+    }
+
     return(
         <TextField 
             autoComplete="off"
@@ -38,10 +64,10 @@ export const GroupGreetingTextField = ({label, fieldName, changeCallback, greeti
             margin="normal"
             multiline
             name={fieldName} 
-            onChange={changeCallback}
+            onChange={handleChange}
             rows={3}
             slotProps = {{htmlInput: {style: {resize:'vertical'}}}}
-            value={cardData.data.group_only_greetings[greetingIndex]}
+            value={localValue}
         />
     )
 }
