@@ -50,9 +50,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [pendingJson, setPendingJson] = useState(null);
     const [promoteGreeting, setPromoteGreeting] = useState(false);
     const [preview, setPreview] = useState(default_avatar);
-    const [saveAsV3Spec, setSaveAsV3Spec] = useState(false)
     const [tabValue, setTabValue] = useState(0);
-    const [useV3Spec, setUseV3Spec] = useState(false);
 
     const charMetadataFields = [
         {fieldName: "name"},
@@ -104,10 +102,11 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const populateV3Fields = (inJson) => {
-        if (inJson.spec === "chara_card_v3" && inJson.spec_version === "3.0") return inJson;
         const outJson = inJson;
-        outJson.spec = 'chara_card_v3';
+        if (!inJson.spec === "chara_card_v3" && !inJson.spec_version === "3.0"){
+            outJson.spec = 'chara_card_v3';
         outJson.spec_version = '3.0';
+        }
         const currTime = Math.floor(Date.now() / 1000);
         if (!Object.hasOwn(outJson.data, "creation_date") || typeof outJson.data.creation_date === "undefined") outJson.data.creation_date = currTime;
         outJson.data.modification_date = currTime;
@@ -229,7 +228,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 scanLorebookEntryNames(parsedCardData.data.character_book.entries);
                             return;
                         } else if (readCardData[item].keyword === "chara"){
-                            if (importLorebook && item === readCardData.length - 1 && !useV3Spec){
+                            if (importLorebook && item === readCardData.length - 1 && item === readCardData.length - 1){
                                 handleLorebookImportLogic(parsedCardData.data.character_book);
                                 return;
                             }
@@ -277,7 +276,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleJsonDownload = () => {
-        const outgoingJson = (saveAsV3Spec ? populateV3Fields : backfillV2Data)(cardData);
+        const outgoingJson = populateV3Fields(cardData);
         const blob = new Blob([JSON.stringify(outgoingJson, null, 4)], { type: 'application/json' });
 
         const url = URL.createObjectURL(blob);
@@ -348,14 +347,15 @@ const TavernCardEditor = ({toggleTheme}) => {
             const respBlob = await response.blob();
             const arrayBuffer = await respBlob.arrayBuffer();
             const strippedPng = await stripPngChunks(arrayBuffer);
-            const outgoingJson = (saveAsV3Spec ? populateV3Fields : backfillV2Data)(cardData);
-            const assembledPng = await assembleNewPng(strippedPng, saveAsV3Spec ? [{keyword:"ccv3", data:outgoingJson}, {keyword: "chara", data:outgoingJson}] : {keyword:"chara", data:outgoingJson});
+            const outgoingV3 = populateV3Fields(cardData);
+            const outgoingV2 = backfillV2Data(cardData);
+            const assembledPng = await assembleNewPng(strippedPng, [{keyword:"ccv3", data:outgoingV3}, {keyword: "chara", data:outgoingV2}]);
             const blob = new Blob([assembledPng], { type: 'image/png' });
 
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${outgoingJson.data.name}.png`
+            a.download = `${outgoingV3.data.name}.png`
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -397,9 +397,9 @@ const TavernCardEditor = ({toggleTheme}) => {
                 alternate_greetings: altGreetings
             }
         }))
-    setPromoteGreeting(false);
-    setPendingGreeting(-1);
-};
+        setPromoteGreeting(false);
+        setPendingGreeting(-1);
+    };
 
     const handleRemoveFile = () => {
         setFile(null);
@@ -423,10 +423,6 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     const toggleImageDisplay = () => {
         setDisplayImage(!displayImage);
-    };
-
-    const toggleSaveAsV3 = () => {
-        setSaveAsV3Spec(!saveAsV3Spec);
     };
 
     useEffect(() => {
@@ -514,9 +510,6 @@ const TavernCardEditor = ({toggleTheme}) => {
                         </label>
                     </div>
                 }
-                <Box style={{display:'flex', alignItems:'center'}}>
-                    Save as V2 spec <Switch checked={saveAsV3Spec} onChange={toggleSaveAsV3}/> Save as V3 spec
-                </Box>
                 <Box style={{display:'flex', alignItems:'center'}}>
                     {theme.palette.mode === "dark" ? <LightModeOutlined/> : <LightMode/>}
                     <Switch checked={theme.palette.mode === "dark"} onChange={toggleTheme}/>
