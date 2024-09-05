@@ -41,13 +41,7 @@ export function BasicFieldTabPanel ({curTab, index, arrayToIterate}) {
 
     const handleTagChange = (e) => {
         const {name, value} = e.target;
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                [name]: value.split(",")
-            }
-        }));
+        debouncedSetCardData(name, value.split(","));
     }
 
     return(
