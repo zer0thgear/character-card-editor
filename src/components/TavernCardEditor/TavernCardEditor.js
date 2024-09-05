@@ -114,25 +114,9 @@ const TavernCardEditor = ({toggleTheme}) => {
         return outJson;
     };
 
-    const closeBackfillConfirmation = () => {
-        setBackfillEntriesConfirmation(false);
-    };
-
-    const closeDeleteConfirmation = () => {
-        setDeleteConfirmation(false);
-    };
-
-    const closeDeleteEntryConfirmation = () => {
-        setDeleteEntryConfirmation(false);
-    };
-
     const closeDeleteGreetingConfirmation = () => {
         setDeleteGreetingConfirmation(false);
         setPendingGreeting(-1);
-    };
-
-    const closeDeleteLorebookConfirmation = () => {
-        setDeleteLorebookConfirmation(false);
     };
 
     const closeGroupGreetingConfirmation = () => {
@@ -499,7 +483,7 @@ const TavernCardEditor = ({toggleTheme}) => {
         <Container maxWidth={false}>
             <ConfirmationDialog 
                 open={deleteConfirmation} 
-                handleClose={closeDeleteConfirmation} 
+                handleClose={() => setDeleteConfirmation(false)} 
                 dialogTitle="Clear all fields?" 
                 dialogContent="Are you sure you want to clear all fields? This action cannot be undone."
                 handleConfirm={handleRemoveFile}
@@ -527,14 +511,14 @@ const TavernCardEditor = ({toggleTheme}) => {
             />
             <ConfirmationDialog
                 open={deleteEntryConfirmation}
-                handleClose={closeDeleteEntryConfirmation}
+                handleClose={() => setDeleteEntryConfirmation(false)}
                 dialogTitle="Delete lorebook entry?"
                 dialogContent={`Are you sure you want to delete Lorebook Entry #${pendingEntry}? This action cannot be undone.`}
                 handleConfirm={handleDeleteEntry}
             />
             <ConfirmationDialog
                 open={backfillEntriesConfirmation}
-                handleClose={closeBackfillConfirmation}
+                handleClose={() => setBackfillEntriesConfirmation(false)}
                 dialogTitle="Backfill lorebook entry names and comments?"
                 dialogContent={"The names and comments in your lorebook entries are mismatched. Would you like to backfill empty entries? Only the names and comments will be altered."}
                 handleConfirm={backfillLorebookNames}
@@ -548,7 +532,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             />
             <ConfirmationDialog 
                 open={deleteLorebookConfirmation}
-                handleClose={closeDeleteLorebookConfirmation}
+                handleClose={() => setDeleteLorebookConfirmation(false)}
                 dialogTitle="Delete this lorebook"
                 dialogContent={"Are you sure you want to delete this lorebook? This action cannot be undone."}
                 handleConfirm={handleDeleteLorebook}
