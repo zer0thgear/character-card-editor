@@ -1,3 +1,5 @@
+import { useCallback } from "react";
+import debounce from "lodash.debounce";
 import { 
     Accordion,
     AccordionDetails,
@@ -19,15 +21,22 @@ import { v3CharacterBookPrototype, v3CharacterBookEntryPrototype } from "../../u
 export function BasicFieldTabPanel ({curTab, index, arrayToIterate}) {
     const { setCardData } = useCard();
 
+    const debouncedSetCardData = useCallback(
+        debounce((name, value) => {
+            setCardData((prevState) => ({
+                ...prevState,
+                data: {
+                    ...prevState.data,
+                    [name]: value,
+                }
+            }));
+        }, 300),
+        [setCardData]
+    );
+
     const handleTextFieldChange = (e) => {
         const {name, value} = e.target;
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                [name]: value
-            }
-        }));
+        debouncedSetCardData(name, value);
     };
 
     const handleTagChange = (e) => {
