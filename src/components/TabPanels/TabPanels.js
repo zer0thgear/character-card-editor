@@ -83,7 +83,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
 
     const handleAltGreetingChange = (e) => {
         const {name, value} = e.target;
-        const index = name.match(/altGreetingV[23](\d+)/)[1];
+        const index = name.match(/altGreeting(\d+)/)[1];
         setCardData((prevState) => ({
             ...prevState,
             data: {
@@ -450,7 +450,7 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
 
     const handleGroupGreetingChange = (e) => {
         const {name, value} = e.target;
-        const index = name.match(/groupGreetingV[23](\d+)/)[1];
+        const index = name.match(/groupGreeting(\d+)/)[1];
         setCardData((prevState) => ({
             ...prevState,
             data: {
