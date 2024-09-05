@@ -3,7 +3,10 @@ import {
     TextField 
 } from "@mui/material";
 
-export function LorebookMetaString({label="", fieldName, changeCallback, cardToEdit}){
+import { useCard } from "../../context/CardContext";
+
+export function LorebookMetaString({label="", fieldName, changeCallback}){
+    const { cardData } = useCard();
     return(
         <TextField
             autoComplete="off"
@@ -14,12 +17,13 @@ export function LorebookMetaString({label="", fieldName, changeCallback, cardToE
             name={fieldName}
             onChange={changeCallback}
             slotProps={{htmlInput: {style: {resize:'vertical'}}}}
-            value={cardToEdit.data.character_book[fieldName]}
+            value={cardData.data.character_book[fieldName]}
         />
     );
 }
 
-export function LorebookMetaInt({label="", fieldName, changeCallback, cardToEdit}){
+export function LorebookMetaInt({label="", fieldName, changeCallback}){
+    const { cardData } = useCard();
     return(
         <TextField
             autoComplete="off"
@@ -29,12 +33,13 @@ export function LorebookMetaInt({label="", fieldName, changeCallback, cardToEdit
             onChange={changeCallback}
             slotProps={{htmlInput: {inputMode: "numeric", style: {resize:'vertical'}}}}
             type="number"
-            value={cardToEdit.data.character_book[fieldName]}
+            value={cardData.data.character_book[fieldName]}
         />
     );
 }
 
-export function LorebookMetaBool({label="", fieldName, changeCallback, cardToEdit}){
+export function LorebookMetaBool({label="", fieldName, changeCallback}){
+    const { cardData } = useCard();
     return(
         <TextField
             defaultValue={undefined}
@@ -42,7 +47,7 @@ export function LorebookMetaBool({label="", fieldName, changeCallback, cardToEdi
             onChange={changeCallback}
             select
             sx={{width:"20em"}}
-            value={cardToEdit.data.character_book[fieldName]}
+            value={cardData.data.character_book[fieldName]}
         >
                 <MenuItem value={undefined}>N/A</MenuItem>
                 <MenuItem value={false}>False</MenuItem>
@@ -51,7 +56,8 @@ export function LorebookMetaBool({label="", fieldName, changeCallback, cardToEdi
     );
 }
 
-export function LorebookEntryString({label="", fieldName, entryIndex, changeCallback, rows=1, cardToEdit}){
+export function LorebookEntryString({label="", fieldName, entryIndex, changeCallback, rows=1}){
+    const { cardData } = useCard();
     return(
         <TextField
             autoComplete="off"
@@ -63,12 +69,13 @@ export function LorebookEntryString({label="", fieldName, entryIndex, changeCall
             onChange={changeCallback}
             rows={rows}
             slotProps={{htmlInput: {style: {resize:'vertical'}}, inputLabel: {shrink:true}}}
-            value={cardToEdit.data.character_book.entries[entryIndex][fieldName]}
+            value={cardData.data.character_book.entries[entryIndex][fieldName]}
         />
     );
 }
 
-export function LorebookEntryInt({label="", fieldName, entryIndex, changeCallback, cardToEdit}){
+export function LorebookEntryInt({label="", fieldName, entryIndex, changeCallback}){
+    const { cardData } = useCard();
     return(
         <TextField
             autoComplete="off"
@@ -78,12 +85,13 @@ export function LorebookEntryInt({label="", fieldName, entryIndex, changeCallbac
             onChange={changeCallback}
             slotProps={{htmlInput: {inputMode: "numeric", style: {resize:'vertical'}}}}
             type="number"
-            value={cardToEdit.data.character_book.entries[entryIndex][fieldName]}
+            value={cardData.data.character_book.entries[entryIndex][fieldName]}
         />
     );
 }
 
-export function LorebookEntryBool({label="", fieldName, entryIndex, changeCallback, cardToEdit}){
+export function LorebookEntryBool({label="", fieldName, entryIndex, changeCallback}){
+    const { cardData } = useCard();
     return(
         <TextField
             defaultValue={undefined}
@@ -92,7 +100,7 @@ export function LorebookEntryBool({label="", fieldName, entryIndex, changeCallba
             onChange={changeCallback}
             select
             sx={{width:"32em"}}
-            value={cardToEdit.data.character_book.entries[entryIndex][fieldName]}
+            value={cardData.data.character_book.entries[entryIndex][fieldName]}
         >
                 <MenuItem value={undefined}>N/A</MenuItem>
                 <MenuItem value={false}>False</MenuItem>

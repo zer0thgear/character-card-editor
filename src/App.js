@@ -6,16 +6,19 @@ import { CssBaseline } from '@mui/material';
 import './App.css';
 import TavernCardEditor from './components/TavernCardEditor/TavernCardEditor';
 import { ThemeContext } from './context/ThemeContext';
+import { CardProvider } from './context/CardContext';
 
 function App() {
   const { currentTheme, toggleTheme } = useContext(ThemeContext);
 
   return (
     <ThemeProvider theme={currentTheme}>
+      <CardProvider>
       <CssBaseline/>
-      <TavernCardEditor
-        toggleTheme = {toggleTheme}
-      />
+        <TavernCardEditor
+          toggleTheme = {toggleTheme}
+        />
+      </CardProvider>
     </ThemeProvider>
       /* <div className="App">
       <header className="App-header">

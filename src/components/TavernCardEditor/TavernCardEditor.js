@@ -25,16 +25,16 @@ import assembleNewPng from '../../utils/assembleNewPng';
 import parsePngChunks from '../../utils/parsePngChunks';
 import stripPngChunks from '../../utils/stripPngChunks';
 import { AltGreetingTabPanel, BasicFieldTabPanel, GroupGreetingPanel, LorebookPanel } from '../TabPanels/TabPanels';
-import { v2CardPrototype, } from '../../utils/v2CardPrototype';
+import { useCard } from '../../context/CardContext';
 import { v3CardPrototype } from '../../utils/v3CardPrototype';
 import './TavernCardEditor.css';
 
 const TavernCardEditor = ({toggleTheme}) => {
     const theme = useTheme();
 
+    const { cardData, setCardData } = useCard();
+
     const previewImageRef = useRef(null);
-    const [cardDataV2, setCardDataV2] = useState(v2CardPrototype());
-    const [cardDataV3, setCardDataV3] = useState(v3CardPrototype());
     const [backfillEntriesConfirmation, setBackfillEntriesConfirmation] = useState(false)
     const [deleteConfirmation, setDeleteConfirmation] = useState(false);
     const [deleteEntryConfirmation, setDeleteEntryConfirmation] = useState(false);
@@ -84,13 +84,13 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const backfillLorebookNames = () => {
-        const lorebookEntries = (useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries.map((entry) => {
+        const lorebookEntries = cardData.data.character_book.entries.map((entry) => {
             const newEntry = entry;
             if (newEntry.name === "" || !Object.hasOwn(newEntry, "name") || typeof newEntry.name === "undefined") newEntry.name = newEntry.comment;
             else newEntry.comment = newEntry.name;
             return newEntry
         });
-        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -139,33 +139,23 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleDeleteAltGreeting = () => {
-        const altGreetings = useV3Spec ? cardDataV3.data.alternate_greetings : cardDataV2.data.alternate_greetings;
+        const altGreetings = cardData.data.alternate_greetings;
         altGreetings.splice(pendingGreeting, 1);
-        if (useV3Spec) {
-            setCardDataV3((prevState) => ({
-                ...prevState,
-                data: {
-                    ...prevState.data,
-                    alternate_greetings: altGreetings
-                }
-            }));
-        } else {
-            setCardDataV2((prevState) => ({
-                ...prevState,
-                data: {
-                    ...prevState.data,
-                    alternate_greetings: altGreetings
-                }
-            }));
-        }
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                alternate_greetings: altGreetings
+            }
+        }));
         setPendingGreeting(-1);
         setDeleteGreetingConfirmation(false);
     }
 
     const handleDeleteEntry = () => {
-        const lorebookEntries = (useV3Spec ? cardDataV3 : cardDataV2).data.character_book.entries;
+        const lorebookEntries = cardData.data.character_book.entries;
         lorebookEntries.splice(pendingEntry, 1);
-        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -193,9 +183,9 @@ const TavernCardEditor = ({toggleTheme}) => {
     }
 
     const handleDeleteGroupGreeting = () => {
-        const groupGreetings = (useV3Spec ? cardDataV3 : cardDataV2).data.group_only_greetings;
+        const groupGreetings = cardData.data.group_only_greetings;
         groupGreetings.splice(pendingGroupGreeting, 1);
-        (useV3Spec ? setCardDataV3 : setCardDataV3)((prevState) => ({
+        cardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -207,7 +197,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleDeleteLorebook = () => {
-        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -232,21 +222,22 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 handleLorebookImportLogic(parsedCardData.data.character_book);
                                 return;
                             }
-                            setCardDataV3(parsedCardData);
+                            setCardData(parsedCardData);
                             console.log("V3 Card info found");
                             console.log(parsedCardData);
                             if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0)
                                 scanLorebookEntryNames(parsedCardData.data.character_book.entries);
-                            setUseV3Spec(true);
+                            return;
                         } else if (readCardData[item].keyword === "chara"){
                             if (importLorebook && item === readCardData.length - 1 && !useV3Spec){
                                 handleLorebookImportLogic(parsedCardData.data.character_book);
                                 return;
                             }
                             console.log("V2 card info found");
-                            setCardDataV2(parsedCardData);
-                            if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0 && item === readCardData.length - 1 && !useV3Spec)
+                            if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0 && item === readCardData.length - 1){
+                                setCardData(parsedCardData);
                                 scanLorebookEntryNames(parsedCardData.data.character_book.entries);
+                            }
                             console.log(parsedCardData);
                         }
                     }
@@ -259,9 +250,8 @@ const TavernCardEditor = ({toggleTheme}) => {
                         return;
                     }
                     console.log(`Only ${readCardData[0].keyword === "ccv3" ? "V3" : "V2"} Card info found`);
-                    setUseV3Spec(readCardData[0].keyword === "ccv3");
                     console.log(parsedCardData);
-                    (readCardData[0].keyword === "ccv3" ? setCardDataV3 : setCardDataV2)(parsedCardData);
+                    setCardData(parsedCardData);
                     if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0)
                         scanLorebookEntryNames(parsedCardData.data.character_book.entries);
                 }
@@ -275,8 +265,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                 handleLorebookImportLogic(parsedJson.spec==="lorebook_v3" ? parsedJson.data : parsedJson.data.character_book);
                 return;
             }
-            setUseV3Spec(parsedJson.spec === "chara_card_v3");
-            (parsedJson.spec === "chara_card_v3" ? setCardDataV3 : setCardDataV2)(parsedJson);
+            setCardData(parsedJson);
             if (typeof parsedJson.data.character_book !== "undefined" && parsedJson.data.character_book.entries.length > 0)
                 scanLorebookEntryNames(parsedJson.data.character_book.entries);
         }
@@ -288,7 +277,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleJsonDownload = () => {
-        const outgoingJson = (saveAsV3Spec ? populateV3Fields : backfillV2Data)(useV3Spec ? cardDataV3 : cardDataV2);
+        const outgoingJson = (saveAsV3Spec ? populateV3Fields : backfillV2Data)(cardData);
         const blob = new Blob([JSON.stringify(outgoingJson, null, 4)], { type: 'application/json' });
 
         const url = URL.createObjectURL(blob);
@@ -303,7 +292,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleLorebookDownload = () =>{
-        const outgoingBook = (useV3Spec ? cardDataV3 : cardDataV2).data.character_book;
+        const outgoingBook = cardData.data.character_book;
         const outgoingJson = {spec: "lorebook_v3", data: outgoingBook};
         const blob = new Blob([JSON.stringify(outgoingJson, null, 4)], { type: 'application/json' });
 
@@ -323,7 +312,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleLorebookImportLogic = (newLorebook) => {
-        (useV3Spec ? setCardDataV3 : setCardDataV2)((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -344,13 +333,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleOverwriteFile = () => {
-        if(pendingJson.spec === "chara_card_v3"){
-            setUseV3Spec(true);
-            setCardDataV3(pendingJson);
-        } else {
-            setUseV3Spec(false);
-            setCardDataV2(pendingJson);
-        }
+        setCardData(pendingJson);
         scanLorebookEntryNames(pendingJson.data.character_book.entries);
         setOverwriteConfirmation(false);
         setPendingJson(null)
@@ -365,7 +348,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             const respBlob = await response.blob();
             const arrayBuffer = await respBlob.arrayBuffer();
             const strippedPng = await stripPngChunks(arrayBuffer);
-            const outgoingJson = (saveAsV3Spec ? populateV3Fields : backfillV2Data)(useV3Spec ? cardDataV3 : cardDataV2);
+            const outgoingJson = (saveAsV3Spec ? populateV3Fields : backfillV2Data)(cardData);
             const assembledPng = await assembleNewPng(strippedPng, saveAsV3Spec ? [{keyword:"ccv3", data:outgoingJson}, {keyword: "chara", data:outgoingJson}] : {keyword:"chara", data:outgoingJson});
             const blob = new Blob([assembledPng], { type: 'image/png' });
 
@@ -402,44 +385,27 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handlePromoteGreeting = () => {
-        if (useV3Spec) {
-            const firstMes = cardDataV3.data.first_mes;
-            const altGreetings = cardDataV3.data.alternate_greetings;
-            const toPromote = altGreetings.splice(pendingGreeting, 1)
-            altGreetings.unshift(firstMes);
-            setCardDataV3((prevState) => ({
-                ...prevState,
-                data: {
-                    ...prevState.data,
-                    first_mes: toPromote,
-                    alternate_greetings: altGreetings
-                }
-            }))
-        } else {
-            const firstMes = cardDataV2.data.first_mes;
-            const altGreetings = cardDataV2.data.alternate_greetings;
-            const toPromote = altGreetings.splice(pendingGreeting, 1)
-            altGreetings.unshift(firstMes);
-            setCardDataV2((prevState) => ({
-                ...prevState,
-                data: {
-                    ...prevState.data,
-                    first_mes: toPromote,
-                    alternate_greetings: altGreetings
-                }
-            }))
-        }
-        setPromoteGreeting(false);
-        setPendingGreeting(-1);
-    };
+        const firstMes = cardData.data.first_mes;
+        const altGreetings = cardData.data.alternate_greetings;
+        const toPromote = altGreetings.splice(pendingGreeting, 1)
+        altGreetings.unshift(firstMes);
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                first_mes: toPromote,
+                alternate_greetings: altGreetings
+            }
+        }))
+    setPromoteGreeting(false);
+    setPendingGreeting(-1);
+};
 
     const handleRemoveFile = () => {
         setFile(null);
         setDeleteConfirmation(false);
         setPreview(default_avatar);
-        setCardDataV2(v2CardPrototype());
-        setCardDataV3(v3CardPrototype());
-        setUseV3Spec(false);
+        setCardData(v3CardPrototype());
     };
 
     const handleTabChange = (event, newValue) => {
@@ -582,34 +548,23 @@ const TavernCardEditor = ({toggleTheme}) => {
                             curTab={tabValue}
                             index={0}
                             arrayToIterate={charMetadataFields}
-                            cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
-                            cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
-                            useV3Spec={useV3Spec}
                         />
                         <AltGreetingTabPanel
                             curTab={tabValue}
                             index={1}
                             handleAltGreetingClick={handleAltGreetingClick}
                             handlePromoteClick={handlePromoteClick}
-                            cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
-                            cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
-                            useV3Spec={useV3Spec}
                         />
                         <BasicFieldTabPanel
                             curTab={tabValue}
                             index={2}
                             arrayToIterate={creatorMetadataFields}
-                            cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
-                            cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
-                            useV3Spec={useV3Spec}
                         />
                         <BasicFieldTabPanel
                             curTab={tabValue}
                             index={3}
                             arrayToIterate={promptFields}
-                            cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
-                            cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
-                            useV3Spec={useV3Spec}
+
                         />
                         <LorebookPanel
                             curTab={tabValue}
@@ -617,17 +572,12 @@ const TavernCardEditor = ({toggleTheme}) => {
                             handleDeleteEntryClick={handleDeleteEntryClick}
                             handleDeleteLorebookClick={handleDeleteLorebookClick}
                             handleLorebookDownload={handleLorebookDownload}
-                            cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
-                            cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
-                            useV3Spec={useV3Spec} handleImport={handleLorebookImport}
+                            handleImport={handleLorebookImport}
                         />
                         <GroupGreetingPanel
                             curTab={tabValue}
                             index={5}
                             handleGroupGreetingClick={handleGroupGreetingClick}
-                            cardToEdit={useV3Spec ? cardDataV3 : cardDataV2}
-                            cardSetter={useV3Spec ? setCardDataV3 : setCardDataV2}
-                            useV3Spec={useV3Spec}
                         />
                         <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
                             <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>

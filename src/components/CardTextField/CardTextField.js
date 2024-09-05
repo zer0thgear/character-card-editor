@@ -1,5 +1,7 @@
 import { TextField } from "@mui/material";
 
+import { useCard } from "../../context/CardContext";
+
 /**
  * 
  * @param {string} label Label to pass to the TextField component
@@ -7,12 +9,10 @@ import { TextField } from "@mui/material";
  * @param {*} changeCallback onChange callback function
  * @param {boolean} [multiline] Whether or not the TextField should be multiline
  * @param {int} [rows] If multiline, how many rows
- * @param {*} useV3Spec
- * @param {*} cardDataV2
- * @param {*} cardDataV3
  * @returns 
  */
-const CardTextField = ({label, fieldName, changeCallback, multiline=false, rows=1, cardToEdit}) => {
+const CardTextField = ({label, fieldName, changeCallback, multiline=false, rows=1}) => {
+    const { cardData } = useCard();
     return(
         <TextField 
             autoComplete="off"
@@ -24,7 +24,7 @@ const CardTextField = ({label, fieldName, changeCallback, multiline=false, rows=
             onChange={changeCallback}
             rows={multiline ? rows : undefined}
             slotProps = {multiline ? {htmlInput: {style: {resize:'vertical'}}} : {}}
-            value={cardToEdit.data[fieldName]}
+            value={cardData.data[fieldName]}
         />
     )
 }

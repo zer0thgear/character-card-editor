@@ -13,13 +13,15 @@ import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import AltGreetingTextField, { GroupGreetingTextField } from "../AltGreetingTextField/AltGreetingTextField";
 import CardTextField from "../CardTextField/CardTextField";
 import { LorebookEntryBool, LorebookEntryInt, LorebookEntryString, LorebookMetaBool, LorebookMetaInt, LorebookMetaString } from "../LorebookTextFields/LorebookTextFields";
-import { v2CharacterBookEntryPrototype, v2CharacterBookPrototype } from "../../utils/v2CardPrototype";
+import { useCard } from "../../context/CardContext";
 import { v3CharacterBookPrototype, v3CharacterBookEntryPrototype } from "../../utils/v3CardPrototype";
 
-export function BasicFieldTabPanel ({curTab, index, arrayToIterate, useV3Spec, cardToEdit, cardSetter}) {
+export function BasicFieldTabPanel ({curTab, index, arrayToIterate}) {
+    const { setCardData } = useCard();
+
     const handleTextFieldChange = (e) => {
         const {name, value} = e.target;
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -30,7 +32,7 @@ export function BasicFieldTabPanel ({curTab, index, arrayToIterate, useV3Spec, c
 
     const handleTagChange = (e) => {
         const {name, value} = e.target;
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -48,18 +50,20 @@ export function BasicFieldTabPanel ({curTab, index, arrayToIterate, useV3Spec, c
                     label={Object.hasOwn(field, "label") ? field.label : ""} 
                     multiline={Object.hasOwn(field, "multiline") ? field.multiline : false} 
                     rows={Object.hasOwn(field, "rows") ? field.rows : 1}
-                    changeCallback={field.fieldName === "tags" ? handleTagChange : handleTextFieldChange} cardToEdit={cardToEdit}
+                    changeCallback={field.fieldName === "tags" ? handleTagChange : handleTextFieldChange}
                 />
             ))}
         </div>
     );
 }
 
-export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, handlePromoteClick, useV3Spec, cardToEdit, cardSetter}) {
+export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, handlePromoteClick}) {
+    const { cardData, setCardData } = useCard();
+
     const handleAddGreeting = () => {
-        const altGreetingArray = cardToEdit.data.alternate_greetings;
+        const altGreetingArray = cardData.data.alternate_greetings;
         altGreetingArray.push("");
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -71,7 +75,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     const handleAltGreetingChange = (e) => {
         const {name, value} = e.target;
         const index = name.match(/altGreetingV[23](\d+)/)[1];
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -83,11 +87,11 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     const handleDragEnd = (result) => {
         if (!result.destination) return;
 
-        const items = cardToEdit.data.alternate_greetings;
+        const items = cardData.data.alternate_greetings;
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0 , reorderedItem);
 
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -107,7 +111,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
                             ref={provided.innerRef}
                             sx={{mb:1}}
                         >
-                            {cardToEdit.data.alternate_greetings.map((text, index) => (
+                            {cardData.data.alternate_greetings.map((text, index) => (
                                 <Draggable key={`draggableGreeting#${index}`} draggableId={`draggableGreeting#${index}`} index={index}>
                                     {(provided) => (
                                         <Box 
@@ -124,11 +128,11 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
                                                 </AccordionSummary>
                                                 <AccordionDetails>
                                                     <AltGreetingTextField
-                                                        key={(useV3Spec ? "altGreetingV3" : "altGreetingV2").concat(index)}
+                                                        key={"altGreeting".concat(index)}
                                                         greetingIndex={index}
                                                         label={"Alternate Greeting #".concat(index)}
-                                                        fieldName={(useV3Spec ? "altGreetingV3" : "altGreetingV2").concat(index)}
-                                                        changeCallback={handleAltGreetingChange} useV3Spec={useV3Spec} cardToEdit={cardToEdit}
+                                                        fieldName={"altGreeting".concat(index)}
+                                                        changeCallback={handleAltGreetingChange}
                                                         style={{flex:9}}
                                                     />
                                                 </AccordionDetails>
@@ -148,22 +152,24 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     );
 }
 
-export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDeleteLorebookClick, handleLorebookDownload, useV3Spec, cardToEdit, cardSetter, handleImport}){
+export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDeleteLorebookClick, handleLorebookDownload, handleImport}){
+    const { cardData, setCardData } = useCard();
+
     const addLorebook = () => {
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
-                character_book: useV3Spec ? v3CharacterBookPrototype() : v2CharacterBookPrototype()
+                character_book: v3CharacterBookPrototype()
             }
         }))
     }
 
     const addLoreBookEntry = () => {
-        const blankEntry = useV3Spec ? v3CharacterBookEntryPrototype() : v2CharacterBookEntryPrototype();
-        const lorebookEntryArray = cardToEdit.data.character_book.entries;
+        const blankEntry = v3CharacterBookEntryPrototype();
+        const lorebookEntryArray = cardData.data.character_book.entries;
         lorebookEntryArray.push(blankEntry);
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -178,11 +184,11 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
     const handleDragEnd = (result) => {
         if (!result.destination) return;
 
-        const items = cardToEdit.data.character_book.entries;
+        const items = cardData.data.character_book.entries;
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0, reorderedItem);
 
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -199,7 +205,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         const regexMatches = name.match(/^([^\d]+)#([\d]+)/);
         const fieldName = regexMatches[1];
         const index = parseInt(regexMatches[2], 10);
-        const items = cardToEdit.data.character_book.entries;
+        const items = cardData.data.character_book.entries;
         const [alteredItem] = items.splice(index, 1);
         if (fieldName === "name") {
             alteredItem.name = value;
@@ -209,7 +215,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         }
         items.splice(index, 0, alteredItem);
 
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -227,12 +233,12 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         const regexMatches = name.match(/^([^\d]+)#([\d]+)/);
         const fieldName = regexMatches[1];
         const index = parseInt(regexMatches[2], 10);
-        const items = cardToEdit.data.character_book.entries;
+        const items = cardData.data.character_book.entries;
         const [alteredItem] = items.splice(index, 1);
         alteredItem[fieldName] = keys;
         items.splice(index, 0, alteredItem);
 
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -246,7 +252,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
 
     const handleMetaFieldChange = (e) => {
         const {name, value} = e.target;
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -260,7 +266,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
 
     return(
         <div hidden={curTab !== index}>
-            {typeof cardToEdit.data.character_book === "undefined" ?
+            {typeof cardData.data.character_book === "undefined" ?
                 <Box sx={{mb:2}}>
                     
                     <Button variant="contained" onClick={addLorebook} sx={{mr:2}}>Attach new lorebook to card</Button>
@@ -276,7 +282,6 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                         <LorebookMetaString
                             fieldName="name"
                             changeCallback={handleMetaFieldChange}
-                            useV3Spec={useV3Spec} cardToEdit={cardToEdit} cardSetter={cardSetter}
                         />
                         <Tooltip title="Delete this lorebook">
                             <IconButton aria-label="delete" color="error" onClick={handleDeleteLorebookClick}><DeleteOutline/></IconButton>
@@ -285,31 +290,27 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                     <LorebookMetaString
                         fieldName="description"
                         changeCallback={handleMetaFieldChange}
-                        cardToEdit={cardToEdit}
                     />
                     <Box style={{alignItems:'baseline', display:'flex'}} sx={{gap:2}}>
                         <LorebookMetaInt
                             label="Lorebook Scan Depth"
                             fieldName="scan_depth"
                             changeCallback={handleMetaFieldChange}
-                            cardToEdit={cardToEdit}
                         />
                         <LorebookMetaInt
                             label="Lorebook Token Budget"
                             fieldName="token_budget"
                             changeCallback={handleMetaFieldChange}
-                            cardToEdit={cardToEdit}
                         />
                         <LorebookMetaBool
                             label="Lorebook Recursive Scanning"
                             fieldName="recursive_scanning"
                             changeCallback={handleMetaFieldChange}
-                            cardToEdit={cardToEdit}
                         />
                         <Button onClick={handleLorebookDownload} variant="contained">Download Lorebook</Button>
                     </Box>
                     <Button variant="contained" onClick={addLoreBookEntry} sx={{mb:1}}>Add new lorebook entry</Button>
-                    {cardToEdit.data.character_book.entries.length === 0 ? <div></div>:
+                    {cardData.data.character_book.entries.length === 0 ? <div></div>:
                         <DragDropContext onDragEnd={handleDragEnd}>
                             <Droppable droppableId="droppableLorebook">
                                 {(provided) => (
@@ -317,7 +318,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                         {...provided.droppableProps}
                                         ref={provided.innerRef}
                                     >
-                                        {cardToEdit.data.character_book.entries.map((text, index) => (
+                                        {cardData.data.character_book.entries.map((text, index) => (
                                             <Draggable key={`draggableLorebookEntry#${index}`} draggableId={`draggableLorebookEntry#${index}`} index={index}>
                                                 {(provided) => (
                                                     <Box
@@ -340,14 +341,12 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                                             fieldName="name"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
-                                                                            cardToEdit={cardToEdit}
                                                                         />
                                                                         <LorebookEntryBool
                                                                             label={`Entry #${index} Enabled`}
                                                                             fieldName="enabled"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
-                                                                            cardToEdit={cardToEdit}
                                                                         />
                                                                     </Box>
                                                                     <Box style={{display:"flex", flexDirection:'row', alignItems:'baseline'}}>
@@ -356,21 +355,18 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                                             fieldName="keys"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryKeysChange}
-                                                                            cardToEdit={cardToEdit}
                                                                         />
                                                                         <LorebookEntryBool
                                                                             label={`Must Also Match Secondary Keys?`}
                                                                             fieldName="selective"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
-                                                                            cardToEdit={cardToEdit}
                                                                         />
                                                                         <LorebookEntryString
                                                                             label={`Entry #${index} Secondary Keys`}
                                                                             fieldName="secondary_keys"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryKeysChange}
-                                                                            cardToEdit={cardToEdit}
                                                                         />
                                                                     </Box>
                                                                     <Box style={{display:"flex", flexDirection:'row', alignItems:'baseline', justifyContent:'space-between'}}>
@@ -379,28 +375,24 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                                             fieldName="insertion_order"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
-                                                                            cardToEdit={cardToEdit}
                                                                         />
                                                                         <LorebookEntryBool
                                                                             label="Case Sensitive?"
                                                                             fieldName="case_sensitive"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
-                                                                            cardToEdit={cardToEdit}
                                                                         />
                                                                         <LorebookEntryInt
                                                                             label={`Entry #${index} Priority`}
                                                                             fieldName="priority"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
-                                                                            cardToEdit={cardToEdit}
                                                                         />
                                                                         <LorebookEntryBool
                                                                             label="Is this entry always active?"
                                                                             fieldName="constant"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
-                                                                            cardToEdit={cardToEdit}
                                                                         />
                                                                     </Box>
                                                                     <LorebookEntryString
@@ -409,7 +401,6 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                                         entryIndex={index}
                                                                         changeCallback={handleEntryChange}
                                                                         rows={3}
-                                                                        cardToEdit={cardToEdit}
                                                                     />
                                                                 </Box>
                                                             </AccordionDetails>
@@ -433,11 +424,13 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
     )
 }
 
-export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick, useV3Spec, cardToEdit, cardSetter}){
+export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
+    const { cardData, setCardData } = useCard();
+
     const handleAddGroupGreeting = () => {
-        const groupGreetingArray = cardToEdit.data.group_only_greetings;
+        const groupGreetingArray = cardData.data.group_only_greetings;
         groupGreetingArray.push("");
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -449,7 +442,7 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick, use
     const handleGroupGreetingChange = (e) => {
         const {name, value} = e.target;
         const index = name.match(/groupGreetingV[23](\d+)/)[1];
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -461,11 +454,11 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick, use
     const handleDragEnd = (result) => {
         if (!result.destination) return;
 
-        const items = cardToEdit.data.group_only_greetings;
+        const items = cardData.data.group_only_greetings;
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0 , reorderedItem);
 
-        cardSetter((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
@@ -485,7 +478,7 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick, use
                             ref={provided.innerRef}
                             sx={{mb:1}}
                         >
-                            {cardToEdit.data.group_only_greetings.map((text, index) => (
+                            {cardData.data.group_only_greetings.map((text, index) => (
                                 <Draggable key={`draggableGroupGreeting#${index}`} draggableId={`draggableGroupGreeting#${index}`} index={index}>
                                     {(provided) => (
                                         <Box 
@@ -502,11 +495,11 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick, use
                                                 </AccordionSummary>
                                                 <AccordionDetails>
                                                     <GroupGreetingTextField
-                                                        key={(useV3Spec ? "groupGreetingV3" : "groupGreetingV2").concat(index)}
+                                                        key={"groupGreeting".concat(index)}
                                                         greetingIndex={index}
                                                         label={"Group Only Greeting #".concat(index)}
-                                                        fieldName={(useV3Spec ? "groupGreetingV3" : "groupGreetingV2").concat(index)}
-                                                        changeCallback={handleGroupGreetingChange} useV3Spec={useV3Spec} cardToEdit={cardToEdit}
+                                                        fieldName={"groupGreeting".concat(index)}
+                                                        changeCallback={handleGroupGreetingChange}
                                                         style={{flex:9}}
                                                     />
                                                 </AccordionDetails>
