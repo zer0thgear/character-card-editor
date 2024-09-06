@@ -274,16 +274,22 @@ const TavernCardEditor = ({toggleTheme}) => {
             } else {
                 console.log("This PNG doesn't have any Card Data!");
             }
-        } else { 
+        } else if (/.+\.json$/.test(selectedFile.name)){ 
             const parsedJson = JSON.parse(await selectedFile.text());
-            console.log(parsedJson);
-            if (importLorebook){
-                handleLorebookImportLogic(parsedJson.spec==="lorebook_v3" ? parsedJson.data : parsedJson.data.character_book);
-                return;
+            if(Object.hasOwn(parsedJson, "spec") || Object.hasOwn(parsedJson, "name")){
+                console.log(parsedJson);
+                if (importLorebook){
+                    handleLorebookImportLogic(parsedJson.spec==="lorebook_v3" ? parsedJson.data : parsedJson.data.character_book);
+                    return;
+                }
+                setCardData(parsedJson);
+                if (typeof parsedJson.data.character_book !== "undefined" && parsedJson.data.character_book.entries.length > 0)
+                    scanLorebookEntryNames(parsedJson.data.character_book.entries);
+            } else {
+                console.error("Please upload a valid .json")
             }
-            setCardData(parsedJson);
-            if (typeof parsedJson.data.character_book !== "undefined" && parsedJson.data.character_book.entries.length > 0)
-                scanLorebookEntryNames(parsedJson.data.character_book.entries);
+        } else {
+            console.error("Please upload a valid card file type (.png or .json)")
         }
     }
 
