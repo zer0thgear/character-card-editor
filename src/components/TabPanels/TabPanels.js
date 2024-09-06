@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import debounce from "lodash.debounce";
 import { 
     Accordion,
@@ -62,6 +62,7 @@ export function BasicFieldTabPanel ({curTab, index, arrayToIterate}) {
 
 export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, handlePromoteClick}) {
     const { cardData, setCardData } = useCard();
+    const [expanded, setExpanded] = useState([]);
 
     const debouncedSetCardData = useCallback(
         debounce((value) => {
@@ -88,6 +89,12 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
         }))
     };
 
+    const handleAccordionChange = (panel) => (event, isExpanded) => {
+        setExpanded((prevExpanded) => 
+            isExpanded ? [...prevExpanded, panel] : prevExpanded.filter((p) => p !== panel)
+        );
+    };
+
     const handleAltGreetingChange = (e) => {
         const {name, value} = e.target;
         const index = name.match(/altGreeting(\d+)/)[1];
@@ -102,6 +109,15 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
         items.splice(result.destination.index, 0 , reorderedItem);
 
         debouncedSetCardData(items);
+
+        setExpanded((prevExpanded) => 
+            prevExpanded.map((panel) => {
+                if (panel === result.source.index) return result.destination.index;
+                if (panel > result.source.index && panel <= result.destination.index) return panel - 1;
+                if (panel < result.source.index && panel >= result.destination.index) return panel + 1;
+                return panel;
+            })
+        );
     };
 
     return(
@@ -126,7 +142,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
                                             <Tooltip title="Drag to reorder">
                                                 <IconButton {...provided.dragHandleProps}><DragHandle/></IconButton>
                                             </Tooltip>
-                                            <Accordion style={{width:'100%'}} sx={{mb:2, mt:2}}>
+                                            <Accordion expanded={expanded.includes(index)} onChange={handleAccordionChange(index)} slotProps={{transition: {unmountOnExit: true}}} style={{width:'100%'}} sx={{mb:2, mt:2}}>
                                                 <AccordionSummary expandIcon={<ArrowDropDown/>}>
                                                     {"Alternate Greeting #".concat(index+1)}
                                                 </AccordionSummary>
@@ -158,6 +174,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
 
 export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDeleteLorebookClick, handleLorebookDownload, handleImport}){
     const { cardData, setCardData } = useCard();
+    const [expanded, setExpanded] = useState([]);
 
     const debouncedSetCardData = useCallback(
         debounce((value) => {
@@ -217,6 +234,12 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         }));
     }
 
+    const handleAccordionChange = (panel) => (event, isExpanded) => {
+        setExpanded((prevExpanded) =>
+            isExpanded ? [...prevExpanded, panel] : prevExpanded.filter((p) => p !== panel)
+        );
+    };
+
     const handleDragEnd = (result) => {
         if (!result.destination) return;
 
@@ -224,7 +247,16 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0, reorderedItem);
 
-        debouncedSetCardData(items)
+        debouncedSetCardData(items);
+        
+        setExpanded((prevExpanded) =>
+            prevExpanded.map((panel) => {
+                if (panel === result.source.index) return result.destination.index;
+                if (panel > result.source.index && panel <= result.destination.index) return panel - 1;
+                if (panel < result.source.index && panel >= result.destination.index) return panel + 1;
+                return panel;
+            })
+        );
     };
 
     const handleEntryChange = (e) => {
@@ -329,7 +361,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                         <Tooltip title="Drag to reorder">
                                                             <IconButton {...provided.dragHandleProps}><DragHandle/></IconButton>
                                                         </Tooltip>
-                                                        <Accordion style={{width:'100%'}} sx={{mb:2, mt:2}}>
+                                                        <Accordion expanded={expanded.includes(index)} onChange={handleAccordionChange(index)} slotProps={{transition: {unmountOnExit:true}}} style={{width:'100%'}} sx={{mb:2, mt:2}}>
                                                             <AccordionSummary expandIcon={<ArrowDropDown/>}>
                                                                 {`Entry #${index+1}`}
                                                             </AccordionSummary>
@@ -426,6 +458,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
 
 export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
     const { cardData, setCardData } = useCard();
+    const [expanded, setExpanded] = useState([]);
 
     const debouncedSetCardData = useCallback(
         debounce((value) => {
@@ -439,6 +472,12 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
         }, 300), 
         [setCardData]
     );
+
+    const handleAccordionChange = (panel) => (event, isExpanded) => {
+        setExpanded((prevExpanded) =>
+            isExpanded ? [...prevExpanded, panel] : prevExpanded.filter((p) => p !== panel)
+        );
+    };
 
     const handleAddGroupGreeting = () => {
         const groupGreetingArray = cardData.data.group_only_greetings;
@@ -465,7 +504,16 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0 , reorderedItem);
 
-        debouncedSetCardData(items)
+        debouncedSetCardData(items);
+
+        setExpanded((prevExpanded) =>
+            prevExpanded.map((panel) => {
+                if (panel === result.source.index) return result.destination.index;
+                if (panel > result.source.index && panel <= result.destination.index) return panel - 1;
+                if (panel < result.source.index && panel >= result.destination.index) return panel + 1;
+                return panel;
+            })
+        );
     };
 
     return(
@@ -490,7 +538,7 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
                                             <Tooltip title="Drag to reorder">
                                                 <IconButton {...provided.dragHandleProps}><DragHandle/></IconButton>
                                             </Tooltip>
-                                            <Accordion style={{width:'100%'}} sx={{mb:2, mt:2}}>
+                                            <Accordion expanded={expanded.includes(index)} onChange={handleAccordionChange(index)} slotProps={{transition: {unmountOnExit:true}}} style={{width:'100%'}} sx={{mb:2, mt:2}}>
                                                 <AccordionSummary expandIcon={<ArrowDropDown/>}>
                                                     {"Group Greeting #".concat(index+1)}
                                                 </AccordionSummary>
