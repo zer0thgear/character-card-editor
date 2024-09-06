@@ -21,6 +21,7 @@ import { v3CharacterBookPrototype, v3CharacterBookEntryPrototype } from "../../u
 export function BasicFieldTabPanel ({curTab, index, arrayToIterate}) {
     const { setCardData } = useCard();
 
+    // eslint-disable-next-line
     const debouncedSetCardData = useCallback(
         debounce((name, value) => {
             setCardData((prevState) => ({
@@ -64,6 +65,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     const { cardData, setCardData } = useCard();
     const [expanded, setExpanded] = useState([]);
 
+    // eslint-disable-next-line
     const debouncedSetCardData = useCallback(
         debounce((value) => {
             setCardData((prevState) => ({
@@ -176,6 +178,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
     const { cardData, setCardData } = useCard();
     const [expanded, setExpanded] = useState([]);
 
+    // eslint-disable-next-line
     const debouncedSetCardData = useCallback(
         debounce((value) => {
             setCardData((prevState) => ({
@@ -192,6 +195,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         [setCardData]
     );
 
+    // eslint-disable-next-line
     const debouncedSetaLoreMetadata = useCallback(
         debounce((name, value) => {
             setCardData((prevState) => ({
@@ -460,6 +464,7 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
     const { cardData, setCardData } = useCard();
     const [expanded, setExpanded] = useState([]);
 
+    // eslint-disable-next-line
     const debouncedSetCardData = useCallback(
         debounce((value) => {
             setCardData((prevState) => ({
