@@ -24,7 +24,7 @@ import FileUpload from '../FileUpload/FileUpload';
 import assembleNewPng from '../../utils/assembleNewPng';
 import parsePngChunks from '../../utils/parsePngChunks';
 import stripPngChunks from '../../utils/stripPngChunks';
-import { AltGreetingTabPanel, BasicFieldTabPanel, GroupGreetingPanel, LorebookPanel } from '../TabPanels/TabPanels';
+import { AltGreetingTabPanel, BasicFieldTabPanel, GroupGreetingPanel, LorebookPanel, MacrosPanel } from '../TabPanels/TabPanels';
 import { useCard } from '../../context/CardContext';
 import { v3CardPrototype } from '../../utils/v3CardPrototype';
 import './TavernCardEditor.css';
@@ -529,13 +529,14 @@ const TavernCardEditor = ({toggleTheme}) => {
                         />
                     </Container>}
                     <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
-                        <Tabs onChange={handleTabChange} value={tabValue} sx={{mb:2}}>
+                        <Tabs onChange={handleTabChange} value={tabValue} scrollButtons="auto" sx={{mb:2}} variant="scrollable">
                             <Tab id={0} label="v1 Spec Fields"/>
                             <Tab id={1} label="Alt Greetings"/>
                             <Tab id={2} label="Creator Metadata"/>
                             <Tab id={3} label="Prompts"/>
                             <Tab id={4} label="Lorebook"/>
                             <Tab id={5} label="Group Greetings"/>
+                            <Tab id={6} label="Macros"/>
                         </Tabs>
                         <BasicFieldTabPanel
                             curTab={tabValue}
@@ -571,6 +572,10 @@ const TavernCardEditor = ({toggleTheme}) => {
                             curTab={tabValue}
                             index={5}
                             handleGroupGreetingClick={handleGroupGreetingClick}
+                        />
+                        <MacrosPanel
+                            curTab={tabValue}
+                            index={6}
                         />
                         <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
                             <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
