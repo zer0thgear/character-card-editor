@@ -153,6 +153,38 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
 export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDeleteLorebookClick, handleLorebookDownload, handleImport}){
     const { cardData, setCardData } = useCard();
 
+    const debouncedSetCardData = useCallback(
+        debounce((value) => {
+            setCardData((prevState) => ({
+                ...prevState,
+                data: {
+                    ...prevState.data,
+                    character_book: {
+                        ...prevState.data.character_book,
+                        entries: value
+                    }
+                }
+            }))
+        }, 300), 
+        [setCardData]
+    );
+
+    const debouncedSetaLoreMetadata = useCallback(
+        debounce((name, value) => {
+            setCardData((prevState) => ({
+                ...prevState,
+                data: {
+                    ...prevState.data,
+                    character_book: {
+                        ...prevState.data.character_book,
+                        name: value
+                    }
+                }
+            }))
+        }, 300), 
+        [setCardData]
+    );
+
     const addLorebook = () => {
         setCardData((prevState) => ({
             ...prevState,
@@ -167,16 +199,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         const blankEntry = v3CharacterBookEntryPrototype();
         const lorebookEntryArray = cardData.data.character_book.entries;
         lorebookEntryArray.push(blankEntry);
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                character_book: {
-                    ...prevState.data.character_book,
-                    entries: lorebookEntryArray
-                }
-            }
-        }));
+        debouncedSetCardData(lorebookEntryArray)
     }
 
     const handleDragEnd = (result) => {
@@ -186,16 +209,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0, reorderedItem);
 
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                character_book: {
-                    ...prevState.data.character_book,
-                    entries: items
-                }
-            }
-        }));
+        debouncedSetCardData(items)
     };
 
     const handleEntryChange = (e) => {
@@ -213,17 +227,8 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         }
         items.splice(index, 0, alteredItem);
 
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                character_book:{
-                    ...prevState.data.character_book,
-                    entries: items
-                }
-            }
-        }));
-    }
+        debouncedSetCardData(items);
+    };
 
     const handleEntryKeysChange = (e) => {
         const {name, value} = e.target;
@@ -236,30 +241,12 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         alteredItem[fieldName] = keys;
         items.splice(index, 0, alteredItem);
 
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                character_book: {
-                    ...prevState.data.character_book,
-                    entries: items
-                }
-            }
-        }))
-    }
+        debouncedSetCardData(items);
+    };
 
     const handleMetaFieldChange = (e) => {
         const {name, value} = e.target;
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                character_book:{
-                    ...prevState.data.character_book,
-                    [name]: (/^\d+$/.test(value) ? parseInt(value, 10) : value)
-                }
-            }
-        }));
+        debouncedSetaLoreMetadata(name, (/^\d+$/.test(value) ? parseInt(value, 10) : value));
     };
 
     return(
