@@ -282,6 +282,10 @@ const TavernCardEditor = ({toggleTheme}) => {
                     handleLorebookImportLogic(parsedJson.spec==="lorebook_v3" ? parsedJson.data : parsedJson.data.character_book);
                     return;
                 }
+                if (parsedJson.spec === "lorebook_v3" && !importLorebook){
+                    console.error("Uploaded file was a lorebook, not a card");
+                    return;
+                }
                 setCardData(parsedJson);
                 if (typeof parsedJson.data.character_book !== "undefined" && parsedJson.data.character_book.entries.length > 0)
                     scanLorebookEntryNames(parsedJson.data.character_book.entries);
