@@ -44,7 +44,7 @@ const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0
 
 export const GroupGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0}) => {
     const { cardData } = useCard();
-    const [localValue, setLocalValue] = useState(cardData.data[fieldName]);
+    const [localValue, setLocalValue] = useState(cardData.data.group_only_greetings[greetingIndex]);
 
     useEffect(() => {
         setLocalValue(cardData.data.group_only_greetings[greetingIndex]);
