@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import debounce from "lodash.debounce";
 import { 
     Accordion,
@@ -7,6 +7,7 @@ import {
     Box,
     Button,
     IconButton,
+    TextField,
     Tooltip 
 } from "@mui/material";
 import { ArrowDropDown, DeleteOutline, DragHandle, KeyboardDoubleArrowUp } from "@mui/icons-material";
@@ -572,13 +573,23 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
     );
 }
 
-export function MacrosPanel({curTab, index, handlePurgeClick}){
+export function MacrosPanel({curTab, index, handlePurgeClick, handleFindReplaceClick}){
+    const toFindRef = useRef('');
+    const toReplaceRef = useRef('');
+
     return(
         <div hidden={curTab !== index}>
             <Box sx={{margin:2}}>
                 <Tooltip title="Remove ALL asterisks from ALL greeting fields">
                     <Button onClick={handlePurgeClick} variant="contained">Purge Asterisks</Button>
                 </Tooltip>
+                <Box style={{alignItems:"center", display:"flex", gap:4}} sx={{mt:2}}>
+                    <TextField inputRef={toFindRef} label="Text to find" size="small" sx={{width:"15em"}}/>
+                    <TextField inputRef={toReplaceRef} label="Text to use as replacement" size="small" sx={{width:"15em"}}/>
+                    <Tooltip title="Find and replace given text in the Description, Personality, Scenario, and ALL greeting fields">
+                        <Button onClick={() => handleFindReplaceClick(toFindRef.current.value, toReplaceRef.current.value)} variant="contained">Find and Replace</Button>
+                    </Tooltip>
+                </Box>
             </Box>
         </div>
     );

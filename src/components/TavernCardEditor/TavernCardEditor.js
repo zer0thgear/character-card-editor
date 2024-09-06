@@ -44,10 +44,12 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [deleteLorebookConfirmation, setDeleteLorebookConfirmation] = useState(false);
     const [displayImage, setDisplayImage] = useState(true);
     const [file, setFile] = useState(localStorage.getItem("cardData") === null ? null : {name: JSON.parse(localStorage.getItem("cardData")).data.name});
+    const [findReplaceConfirmation, setFindReplaceConfirmation] = useState(false);
     const [overwriteConfirmation, setOverwriteConfirmation] = useState(false);
     const [pendingEntry, setPendingEntry] = useState(-1);
     const [pendingGreeting, setPendingGreeting] = useState(-1);
     const [pendingGroupGreeting, setPendingGroupGreeting] = useState(-1)
+    const [pendingFindReplace, setPendingFindReplace] = useState([]);
     const [pendingJson, setPendingJson] = useState(null);
     const [promoteGreeting, setPromoteGreeting] = useState(false);
     const [purgeAsterisksConfirmation, setPurgeAsterisksConfirmation] = useState(false);
@@ -118,6 +120,11 @@ const TavernCardEditor = ({toggleTheme}) => {
     const closeDeleteGreetingConfirmation = () => {
         setDeleteGreetingConfirmation(false);
         setPendingGreeting(-1);
+    };
+
+    const closeFindReplaceConfirmation = () => {
+        setFindReplaceConfirmation(false);
+        setPendingFindReplace([]);
     };
 
     const closeGroupGreetingConfirmation = () => {
@@ -279,6 +286,37 @@ const TavernCardEditor = ({toggleTheme}) => {
                 scanLorebookEntryNames(parsedJson.data.character_book.entries);
         }
     }
+
+    const handleFindReplace = () => {
+        const [toFind, toReplace] = pendingFindReplace;
+        const newDescription = cardData.data.description.replaceAll(toFind, toReplace);
+        const newPersonality = cardData.data.personality.replaceAll(toFind, toReplace);
+        const newScenario = cardData.data.scenario.replaceAll(toFind, toReplace);
+        const newGreeting = cardData.data.first_mes.replaceAll(toFind, toReplace);
+        const newExample = cardData.data.mes_example.replaceAll(toFind, toReplace);
+        const newAlternates = cardData.data.alternate_greetings.length > 0 ? cardData.data.alternate_greetings.map((greeting) => greeting.replaceAll(toFind, toReplace)) : []
+        const newGropGreetings = cardData.data.group_only_greetings.length > 0 ? cardData.data.group_only_greetings.map((greeting) => greeting.replaceAll(toFind, toReplace)) : [];
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                description: newDescription,
+                personality: newPersonality,
+                scenario: newScenario,
+                first_mes: newGreeting,
+                mes_example: newExample,
+                alternate_greetings: newAlternates,
+                group_only_greetings: newGropGreetings
+            }
+        }));
+        setFindReplaceConfirmation(false);
+        setPendingFindReplace([]);
+    }
+
+    const handleFindReplaceClick = (toFind, toReplace) => {
+        setPendingFindReplace([toFind, toReplace]);
+        setFindReplaceConfirmation(true);
+    };
 
     const handleGroupGreetingClick = (index) => {
         setPendingGroupGreeting(index);
@@ -580,6 +618,13 @@ const TavernCardEditor = ({toggleTheme}) => {
                 dialogContent={"Are you sure you want to purge asterisks from all greetings? This macro should be used at your own risk as it does not discriminate and it cannot be undone."}
                 handleConfirm={handlePurgeAsterisks}
             />
+            <ConfirmationDialog
+                open={findReplaceConfirmation}
+                handleClose={closeFindReplaceConfirmation}
+                dialogTitle="Find and replace the text provided?"
+                dialogContent="Are you sure you want to find and replace the text you've provided? This will replace the specified text in the Description, Personality, Scenario, and ALL greetings. Note that there is no logic and is a quick and dirty find-and-replace. This action cannot be undone."
+                handleConfirm={handleFindReplace}
+            />
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center', overflow:"auto"}}>
                 <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={() => setDeleteConfirmation(true)}/>
                 <FormControlLabel control={<Checkbox checked={displayImage} onChange={() => setDisplayImage(!displayImage)}/>} label="Display image?" style={{whiteSpace:"nowrap"}}/>
@@ -661,6 +706,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 curTab={tabValue}
                                 index={6}
                                 handlePurgeClick={() => setPurgeAsterisksConfirmation(true)}
+                                handleFindReplaceClick={(val1, val2) => handleFindReplaceClick(val1, val2)}
                             />
                             <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
                                 <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
