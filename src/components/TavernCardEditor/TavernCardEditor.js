@@ -459,7 +459,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const debouncedSave = useCallback(
         debounce((data) => {
             localStorage.setItem("cardData", JSON.stringify(data));
-        }, 10000), []
+        }, 5000), []
     );
 
     useEffect(() => {
