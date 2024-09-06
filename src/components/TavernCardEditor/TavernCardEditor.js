@@ -12,7 +12,7 @@ import {
     Switch,
     Tab,
     Tabs,
-    //Tooltip
+    Tooltip
     //Typography
 } from '@mui/material'
 import { DarkMode, DarkModeOutlined, LightMode, LightModeOutlined } from '@mui/icons-material';
@@ -509,7 +509,9 @@ const TavernCardEditor = ({toggleTheme}) => {
                     <div>
                         <input accept={".json"} hidden id="json-upload" onChange={handleOverwriteClick} onClick={(event) => {event.target.value = null}} type="file"/>
                         <label htmlFor='json-upload'>
-                            <Button component="span" variant="contained">Overwrite With JSON File</Button>
+                            <Tooltip title="Overwrite the contents of this card with a JSON while retaining the display picture">
+                                <Button component="span" variant="contained">Overwrite With JSON File</Button>
+                            </Tooltip>
                         </label>
                     </div>
                 }
