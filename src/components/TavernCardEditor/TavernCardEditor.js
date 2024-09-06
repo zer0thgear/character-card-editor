@@ -121,6 +121,7 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     const closeGroupGreetingConfirmation = () => {
         setDeleteGroupGreetingConfirmation(false);
+        setPendingGroupGreeting(-1);
     };
 
     const closeOverwriteConfirmation = () => {
@@ -169,17 +170,9 @@ const TavernCardEditor = ({toggleTheme}) => {
         setDeleteEntryConfirmation(false);
     }
 
-    const handleDeleteClick = () => {
-        setDeleteConfirmation(true);
-    };
-
     const handleDeleteEntryClick = (index) => {
         setPendingEntry(index);
         setDeleteEntryConfirmation(true);
-    }
-
-    const handleDeleteLorebookClick = () => {
-        setDeleteLorebookConfirmation(true);
     }
 
     const handleDeleteGroupGreeting = () => {
@@ -205,7 +198,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             }
         }))
         setDeleteLorebookConfirmation(false);
-    }
+    };
 
     async function handleFileSelect(event, importLorebook=false) {
         const selectedFile = event.target.files[0];
@@ -307,10 +300,6 @@ const TavernCardEditor = ({toggleTheme}) => {
         URL.revokeObjectURL(url);
     };
 
-    const handleLorebookImport = (event) => {
-        handleFileSelect(event, true);
-    };
-
     const handleLorebookImportLogic = (newLorebook) => {
         setCardData((prevState) => ({
             ...prevState,
@@ -330,7 +319,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             setPendingJson(parsedJson);
             setOverwriteConfirmation(true);
         }
-    };
+    }
 
     const handleOverwriteFile = () => {
         setCardData(pendingJson);
@@ -365,12 +354,7 @@ const TavernCardEditor = ({toggleTheme}) => {
         } catch (error) {
             console.error("There was an error retrieving the card's PNG: ", error)
         }
-        
     }
-
-    const handlePreviewClick = () => {
-        previewImageRef.current.click();
-    };
 
     const handlePreviewUpload = (event) => {
         const file = event.target.files[0];
@@ -428,10 +412,6 @@ const TavernCardEditor = ({toggleTheme}) => {
         setCardData(v3CardPrototype());
     };
 
-    const handleTabChange = (event, newValue) => {
-        setTabValue(newValue);
-    };
-
     const scanLorebookEntryNames = (lorebook) => {
         for (let i = 0; i < lorebook.length; i++){
             if (lorebook[i].name !== lorebook[i].comment && (lorebook[i].name === "" || lorebook[i].comment === "" || !Object.hasOwn(lorebook[i], "name") || !Object.hasOwn(lorebook[i], "comment"))){
@@ -439,10 +419,6 @@ const TavernCardEditor = ({toggleTheme}) => {
                 return;
             }
         }
-    };
-
-    const toggleImageDisplay = () => {
-        setDisplayImage(!displayImage);
     };
 
     useEffect(() => {
@@ -527,8 +503,8 @@ const TavernCardEditor = ({toggleTheme}) => {
                 handleConfirm={handlePurgeAsterisks}
             />
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
-                <FormControlLabel control={<Checkbox checked={displayImage} onChange={toggleImageDisplay}/>} label="Display image?"/>
+                <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={() => setDeleteConfirmation(true)}/>
+                <FormControlLabel control={<Checkbox checked={displayImage} onChange={() => setDisplayImage(!displayImage)}/>} label="Display image?"/>
                 {file && 
                     <div>
                         <input accept={".json"} hidden id="json-upload" onChange={handleOverwriteClick} onClick={(event) => {event.target.value = null}} type="file"/>
@@ -546,7 +522,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             <Paper elevation={6}>
                 <Container disableGutters maxWidth={false} style={{display:"flex", height:"95vh"}}>
                     {displayImage && <Container disableGutters style={{alignItems:"center", display:"flex", flex:2, overflow:"auto"}} sx={{ml:2}}>
-                        <img alt={file ? file.name : "No avatar loaded"} onClick={handlePreviewClick} src={preview} style={{cursor:'pointer', objectFit:'cover'}}/>
+                        <img alt={file ? file.name : "No avatar loaded"} onClick={() => previewImageRef.current.click()} src={preview} style={{cursor:'pointer', objectFit:'cover'}}/>
                         <input
                             accept=".png"
                             hidden
@@ -556,7 +532,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                         />
                     </Container>}
                     <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
-                        <Tabs onChange={handleTabChange} value={tabValue} scrollButtons="auto" sx={{mb:2}} variant="scrollable">
+                        <Tabs onChange={(event, newValue) => setTabValue(newValue)} value={tabValue} scrollButtons="auto" sx={{mb:2}} variant="scrollable">
                             <Tab id={0} label="v1 Spec Fields"/>
                             <Tab id={1} label="Alt Greetings"/>
                             <Tab id={2} label="Creator Metadata"/>
@@ -591,9 +567,9 @@ const TavernCardEditor = ({toggleTheme}) => {
                             curTab={tabValue}
                             index={4}
                             handleDeleteEntryClick={handleDeleteEntryClick}
-                            handleDeleteLorebookClick={handleDeleteLorebookClick}
+                            handleDeleteLorebookClick={() => setDeleteLorebookConfirmation(true)}
                             handleLorebookDownload={handleLorebookDownload}
-                            handleImport={handleLorebookImport}
+                            handleImport={(event) => handleFileSelect(event, true)}
                         />
                         <GroupGreetingPanel
                             curTab={tabValue}
