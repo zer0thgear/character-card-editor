@@ -185,7 +185,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const handleDeleteGroupGreeting = () => {
         const groupGreetings = cardData.data.group_only_greetings;
         groupGreetings.splice(pendingGroupGreeting, 1);
-        cardData((prevState) => ({
+        setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
