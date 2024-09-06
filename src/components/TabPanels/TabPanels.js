@@ -128,13 +128,13 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
                                             </Tooltip>
                                             <Accordion style={{width:'100%'}} sx={{mb:2, mt:2}}>
                                                 <AccordionSummary expandIcon={<ArrowDropDown/>}>
-                                                    {"Alternate Greeting #".concat(index)}
+                                                    {"Alternate Greeting #".concat(index+1)}
                                                 </AccordionSummary>
                                                 <AccordionDetails>
                                                     <AltGreetingTextField
                                                         key={"altGreeting".concat(index)}
                                                         greetingIndex={index}
-                                                        label={"Alternate Greeting #".concat(index)}
+                                                        label={"Alternate Greeting #".concat(index+1)}
                                                         fieldName={"altGreeting".concat(index)}
                                                         changeCallback={handleAltGreetingChange}
                                                         style={{flex:9}}
@@ -331,19 +331,19 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                         </Tooltip>
                                                         <Accordion style={{width:'100%'}} sx={{mb:2, mt:2}}>
                                                             <AccordionSummary expandIcon={<ArrowDropDown/>}>
-                                                                {`Entry #${index}`}
+                                                                {`Entry #${index+1}`}
                                                             </AccordionSummary>
                                                             <AccordionDetails>
                                                                 <Box style={{width:'100%'}}>
                                                                     <Box style={{display:'flex', flexDirection:'row', alignItems:'baseline'}}>
                                                                         <LorebookEntryString
-                                                                            label={`Entry #${index} Name/Comment`}
+                                                                            label={`Entry #${index+1} Name/Comment`}
                                                                             fieldName="name"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
                                                                         />
                                                                         <LorebookEntryBool
-                                                                            label={`Entry #${index} Enabled`}
+                                                                            label={`Entry #${index+1} Enabled`}
                                                                             fieldName="enabled"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
@@ -351,7 +351,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                                     </Box>
                                                                     <Box style={{display:"flex", flexDirection:'row', alignItems:'baseline'}}>
                                                                         <LorebookEntryString
-                                                                            label={`Entry #${index} Keys`}
+                                                                            label={`Entry #${index+1} Keys`}
                                                                             fieldName="keys"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryKeysChange}
@@ -363,7 +363,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                                             changeCallback={handleEntryChange}
                                                                         />
                                                                         <LorebookEntryString
-                                                                            label={`Entry #${index} Secondary Keys`}
+                                                                            label={`Entry #${index+1} Secondary Keys`}
                                                                             fieldName="secondary_keys"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryKeysChange}
@@ -371,7 +371,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                                     </Box>
                                                                     <Box style={{display:"flex", flexDirection:'row', alignItems:'baseline', justifyContent:'space-between'}}>
                                                                         <LorebookEntryInt
-                                                                            label={`Entry #${index} Insertion Order`}
+                                                                            label={`Entry #${index+1} Insertion Order`}
                                                                             fieldName="insertion_order"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
@@ -383,7 +383,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                                             changeCallback={handleEntryChange}
                                                                         />
                                                                         <LorebookEntryInt
-                                                                            label={`Entry #${index} Priority`}
+                                                                            label={`Entry #${index+1} Priority`}
                                                                             fieldName="priority"
                                                                             entryIndex={index}
                                                                             changeCallback={handleEntryChange}
@@ -396,7 +396,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                                         />
                                                                     </Box>
                                                                     <LorebookEntryString
-                                                                        label={`Entry #${index} Content`}
+                                                                        label={`Entry #${index+1} Content`}
                                                                         fieldName="content"
                                                                         entryIndex={index}
                                                                         changeCallback={handleEntryChange}
@@ -492,13 +492,13 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
                                             </Tooltip>
                                             <Accordion style={{width:'100%'}} sx={{mb:2, mt:2}}>
                                                 <AccordionSummary expandIcon={<ArrowDropDown/>}>
-                                                    {"Group Greeting #".concat(index)}
+                                                    {"Group Greeting #".concat(index+1)}
                                                 </AccordionSummary>
                                                 <AccordionDetails>
                                                     <GroupGreetingTextField
                                                         key={"groupGreeting".concat(index)}
                                                         greetingIndex={index}
-                                                        label={"Group Only Greeting #".concat(index)}
+                                                        label={"Group Only Greeting #".concat(index+1)}
                                                         fieldName={"groupGreeting".concat(index)}
                                                         changeCallback={handleGroupGreetingChange}
                                                         style={{flex:9}}

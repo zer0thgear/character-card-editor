@@ -481,21 +481,21 @@ const TavernCardEditor = ({toggleTheme}) => {
                 open={deleteGreetingConfirmation}
                 handleClose={closeDeleteGreetingConfirmation}
                 dialogTitle="Delete alternate greeting?"
-                dialogContent={`Are you sure you want to delete Alt Greeting #${pendingGreeting}? This action cannot be undone.`}
+                dialogContent={`Are you sure you want to delete Alt Greeting #${pendingGreeting + 1}? This action cannot be undone.`}
                 handleConfirm={handleDeleteAltGreeting}
             />
             <ConfirmationDialog
                 open={promoteGreeting}
                 handleClose={closePromoteGreeting}
                 dialogTitle="Promote alternate greeting?"
-                dialogContent={`Are you sure you want to promote Alt Greeting #${pendingGreeting} to the first message? The existing first message will be moved to Alternate Greeting #0's spot.`}
+                dialogContent={`Are you sure you want to promote Alt Greeting #${pendingGreeting + 1} to the first message? The existing first message will be moved to Alternate Greeting #0's spot.`}
                 handleConfirm={handlePromoteGreeting}
             />
             <ConfirmationDialog
                 open={deleteEntryConfirmation}
                 handleClose={() => setDeleteEntryConfirmation(false)}
                 dialogTitle="Delete lorebook entry?"
-                dialogContent={`Are you sure you want to delete Lorebook Entry #${pendingEntry}? This action cannot be undone.`}
+                dialogContent={`Are you sure you want to delete Lorebook Entry #${pendingEntry + 1}? This action cannot be undone.`}
                 handleConfirm={handleDeleteEntry}
             />
             <ConfirmationDialog
@@ -509,7 +509,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                 open={deleteGroupGreetingConfirmation}
                 handleClose={closeGroupGreetingConfirmation}
                 dialogTitle="Delete this group only greeting?"
-                dialogContent={`Are you sure you want to delete Group Only Greeting #${pendingGroupGreeting}? This action cannot be undone.`}
+                dialogContent={`Are you sure you want to delete Group Only Greeting #${pendingGroupGreeting + 1}? This action cannot be undone.`}
                 handleConfirm={handleDeleteGroupGreeting}
             />
             <ConfirmationDialog 
