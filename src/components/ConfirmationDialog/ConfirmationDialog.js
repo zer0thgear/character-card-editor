@@ -7,7 +7,11 @@ import {
     DialogTitle 
 } from "@mui/material";
 
+import { useTheme } from "@emotion/react";
+
 const ConfirmationDialog = ({open, handleClose, dialogTitle, dialogContent, handleConfirm}) => {
+    const theme = useTheme();
+
     return (
         <div>
             <Dialog
@@ -23,8 +27,8 @@ const ConfirmationDialog = ({open, handleClose, dialogTitle, dialogContent, hand
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose} color="primary" variant="contained">Cancel</Button>
-                    <Button onClick={handleConfirm} color="primary" variant="contained">Confirm</Button>
+                    <Button onClick={handleClose} color={theme.palette.mode === "dark" ? "primary" : "secondary"} variant="contained">Cancel</Button>
+                    <Button onClick={handleConfirm} color="error" variant="contained">Confirm</Button>
                 </DialogActions>
             </Dialog>
         </div>
