@@ -374,7 +374,24 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     async function handlePreviewUpload (event) {
         const file = event.target.files[0];
-        if (file) {
+        if (!file) return;
+        if (file && file.type.startsWith("image/") && file.type !== "image/png") {
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext("2d");
+
+                ctx.drawImage(img, 0, 0);
+
+                const base64String = canvas.toDataURL("image/png");
+                setPreview(base64String);
+                localStorage.setItem("previewImage", base64String);
+            }
+        }
+        else if (file && file.type === "image/png") {
             try {
                 const inputBuffer = await readToBuffer(file);
                 const arrayBuffer = await stripPngChunks(inputBuffer);
@@ -384,6 +401,9 @@ const TavernCardEditor = ({toggleTheme}) => {
             } catch (error) {
                 console.error("Error stripping PNG chunks and converting to base64: ", error);
             }
+        } else {
+            console.error("Invalid file type upload");
+            return;
         }
     }
 
@@ -582,9 +602,9 @@ const TavernCardEditor = ({toggleTheme}) => {
             <Paper elevation={6}>
                 <Container disableGutters maxWidth={false} style={{display:"flex", height:"95vh"}}>
                     {displayImage && <Container disableGutters style={{alignItems:"center", display:"flex", flex:2, overflow:"auto"}} sx={{ml:2}}>
-                        <img alt={file ? file.name : "No avatar loaded"} onClick={() => previewImageRef.current.click()} src={preview} style={{cursor:'pointer', objectFit:'cover'}}/>
+                        <img alt={file ? file.name : "No avatar loaded"} onClick={() => previewImageRef.current.click()} src={preview} style={{cursor:'pointer', objectFit:'cover', width: "100%", height: "100%"}}/>
                         <input
-                            accept=".png"
+                            accept="image/*"
                             hidden
                             onChange={handlePreviewUpload}
                             ref={previewImageRef}
