@@ -580,15 +580,15 @@ const TavernCardEditor = ({toggleTheme}) => {
                 dialogContent={"Are you sure you want to purge asterisks from all greetings? This macro should be used at your own risk as it does not discriminate and it cannot be undone."}
                 handleConfirm={handlePurgeAsterisks}
             />
-            <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+            <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center', overflow:"auto"}}>
                 <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={() => setDeleteConfirmation(true)}/>
-                <FormControlLabel control={<Checkbox checked={displayImage} onChange={() => setDisplayImage(!displayImage)}/>} label="Display image?"/>
+                <FormControlLabel control={<Checkbox checked={displayImage} onChange={() => setDisplayImage(!displayImage)}/>} label="Display image?" style={{whiteSpace:"nowrap"}}/>
                 {file && 
                     <div>
                         <input accept={".json"} hidden id="json-upload" onChange={handleOverwriteClick} onClick={(event) => {event.target.value = null}} type="file"/>
                         <label htmlFor='json-upload'>
                             <Tooltip title="Overwrite the contents of this card with a JSON while retaining the display picture">
-                                <Button component="span" variant="contained">Overwrite With JSON File</Button>
+                                <Button component="span" style={{whiteSpace: "nowrap"}} variant="contained">Overwrite With JSON File</Button>
                             </Tooltip>
                         </label>
                     </div>
@@ -598,76 +598,78 @@ const TavernCardEditor = ({toggleTheme}) => {
                     <Switch checked={theme.palette.mode === "dark"} onChange={toggleTheme}/>
                     {theme.palette.mode === "dark" ? <DarkMode/> : <DarkModeOutlined/>}
                 </Box>
-            </Container>   
-            <Paper elevation={6}>
-                <Container disableGutters maxWidth={false} style={{display:"flex", height:"95vh"}}>
-                    {displayImage && <Container disableGutters style={{alignItems:"center", display:"flex", flex:2, overflow:"auto"}} sx={{ml:2}}>
-                        <img alt={file ? file.name : "No avatar loaded"} onClick={() => previewImageRef.current.click()} src={preview} style={{cursor:'pointer', objectFit:'cover', width: "100%", height: "100%"}}/>
-                        <input
-                            accept="image/*"
-                            hidden
-                            onChange={handlePreviewUpload}
-                            ref={previewImageRef}
-                            type="file"           
-                        />
-                    </Container>}
-                    <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
-                        <Tabs onChange={(event, newValue) => setTabValue(newValue)} value={tabValue} scrollButtons="auto" sx={{mb:2}} variant="scrollable">
-                            <Tab id={0} label="v1 Spec Fields"/>
-                            <Tab id={1} label="Alt Greetings"/>
-                            <Tab id={2} label="Creator Metadata"/>
-                            <Tab id={3} label="Prompts"/>
-                            <Tab id={4} label="Lorebook"/>
-                            <Tab id={5} label="Group Greetings"/>
-                            <Tab id={6} label="Macros"/>
-                        </Tabs>
-                        <BasicFieldTabPanel
-                            curTab={tabValue}
-                            index={0}
-                            arrayToIterate={charMetadataFields}
-                        />
-                        <AltGreetingTabPanel
-                            curTab={tabValue}
-                            index={1}
-                            handleAltGreetingClick={handleAltGreetingClick}
-                            handlePromoteClick={handlePromoteClick}
-                        />
-                        <BasicFieldTabPanel
-                            curTab={tabValue}
-                            index={2}
-                            arrayToIterate={creatorMetadataFields}
-                        />
-                        <BasicFieldTabPanel
-                            curTab={tabValue}
-                            index={3}
-                            arrayToIterate={promptFields}
+            </Container>
+            <Container disableGutters maxWidth={false}> 
+                <Paper elevation={6} style={{width:"100%"}}>
+                    <Container disableGutters maxWidth={false} style={{display:"flex", height:"95vh"}}>
+                        {displayImage && <Container disableGutters style={{alignItems:"center", display:"flex", flex:2, overflow:"auto"}} sx={{ml:2}}>
+                            <img alt={file ? file.name : "No avatar loaded"} onClick={() => previewImageRef.current.click()} src={preview} style={{cursor:'pointer', objectFit:'cover', width: "100%", height: "100%"}}/>
+                            <input
+                                accept="image/*"
+                                hidden
+                                onChange={handlePreviewUpload}
+                                ref={previewImageRef}
+                                type="file"           
+                            />
+                        </Container>}
+                        <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
+                            <Tabs onChange={(event, newValue) => setTabValue(newValue)} value={tabValue} scrollButtons="auto" sx={{mb:2}} variant="scrollable">
+                                <Tab id={0} label="v1 Spec Fields"/>
+                                <Tab id={1} label="Alt Greetings"/>
+                                <Tab id={2} label="Creator Metadata"/>
+                                <Tab id={3} label="Prompts"/>
+                                <Tab id={4} label="Lorebook"/>
+                                <Tab id={5} label="Group Greetings"/>
+                                <Tab id={6} label="Macros"/>
+                            </Tabs>
+                            <BasicFieldTabPanel
+                                curTab={tabValue}
+                                index={0}
+                                arrayToIterate={charMetadataFields}
+                            />
+                            <AltGreetingTabPanel
+                                curTab={tabValue}
+                                index={1}
+                                handleAltGreetingClick={handleAltGreetingClick}
+                                handlePromoteClick={handlePromoteClick}
+                            />
+                            <BasicFieldTabPanel
+                                curTab={tabValue}
+                                index={2}
+                                arrayToIterate={creatorMetadataFields}
+                            />
+                            <BasicFieldTabPanel
+                                curTab={tabValue}
+                                index={3}
+                                arrayToIterate={promptFields}
 
-                        />
-                        <LorebookPanel
-                            curTab={tabValue}
-                            index={4}
-                            handleDeleteEntryClick={handleDeleteEntryClick}
-                            handleDeleteLorebookClick={() => setDeleteLorebookConfirmation(true)}
-                            handleLorebookDownload={handleLorebookDownload}
-                            handleImport={(event) => handleFileSelect(event, true)}
-                        />
-                        <GroupGreetingPanel
-                            curTab={tabValue}
-                            index={5}
-                            handleGroupGreetingClick={handleGroupGreetingClick}
-                        />
-                        <MacrosPanel
-                            curTab={tabValue}
-                            index={6}
-                            handlePurgeClick={() => setPurgeAsterisksConfirmation(true)}
-                        />
-                        <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
-                            <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
-                            <Button onClick={handlePngDownload} variant="contained">Download as PNG</Button>
+                            />
+                            <LorebookPanel
+                                curTab={tabValue}
+                                index={4}
+                                handleDeleteEntryClick={handleDeleteEntryClick}
+                                handleDeleteLorebookClick={() => setDeleteLorebookConfirmation(true)}
+                                handleLorebookDownload={handleLorebookDownload}
+                                handleImport={(event) => handleFileSelect(event, true)}
+                            />
+                            <GroupGreetingPanel
+                                curTab={tabValue}
+                                index={5}
+                                handleGroupGreetingClick={handleGroupGreetingClick}
+                            />
+                            <MacrosPanel
+                                curTab={tabValue}
+                                index={6}
+                                handlePurgeClick={() => setPurgeAsterisksConfirmation(true)}
+                            />
+                            <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
+                                <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
+                                <Button onClick={handlePngDownload} variant="contained">Download as PNG</Button>
+                            </Container>
                         </Container>
                     </Container>
-                </Container>
-            </Paper>
+                </Paper>
+            </Container>  
         </Container>
     );
 }

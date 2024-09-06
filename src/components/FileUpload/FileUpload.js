@@ -23,7 +23,7 @@ const FileUpload = ({acceptedFileTypes, displayDeleteButton=false, file, fileCha
         <Box style={{display:'flex', alignItems:'center'}}>
             <input accept={acceptedFileTypes} hidden id="file-upload" onChange={fileChange} onClick={(event) => {event.target.value = null}} type ="file"/>
             <label htmlFor='file-upload'>
-                <Button component="span" size="small" variant="contained">Select File</Button>
+                <Button component="span" size="small" style={{whiteSpace:"nowrap"}} variant="contained">Select File</Button>
             </label>
             <Typography sx={{ml:2}} variant="body2">
                 {file ? `${file.name}` : 'No file selected'}
