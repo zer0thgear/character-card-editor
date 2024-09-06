@@ -5,7 +5,7 @@ import { v3CardPrototype } from '../utils/v3CardPrototype';
 const CardContext = createContext();
 
 export const CardProvider = ({children}) => {
-    const [cardData, setCardData] = useState(v3CardPrototype);
+    const [cardData, setCardData] = useState(localStorage.getItem("cardData") === null ? v3CardPrototype() : JSON.parse(localStorage.getItem("cardData")));
 
     return(
         <CardContext.Provider value={{ cardData, setCardData }}>

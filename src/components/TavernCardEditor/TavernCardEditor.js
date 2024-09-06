@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import debounce from "lodash.debounce";
 
 import {
     Button,
@@ -42,7 +43,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [deleteGroupGreetingConfirmation, setDeleteGroupGreetingConfirmation] = useState(false);
     const [deleteLorebookConfirmation, setDeleteLorebookConfirmation] = useState(false);
     const [displayImage, setDisplayImage] = useState(true);
-    const [file, setFile] = useState();
+    const [file, setFile] = useState(localStorage.getItem("cardData") === null ? null : {name: JSON.parse(localStorage.getItem("cardData")).data.name});
     const [overwriteConfirmation, setOverwriteConfirmation] = useState(false);
     const [pendingEntry, setPendingEntry] = useState(-1);
     const [pendingGreeting, setPendingGreeting] = useState(-1);
@@ -134,6 +135,18 @@ const TavernCardEditor = ({toggleTheme}) => {
         setPendingGreeting(-1);
     };
 
+    async function convertBufferToBase64(arrayBuffer) {
+        return new Promise((resolve) => {
+            const blob = new Blob([arrayBuffer], {type: 'image/png'});
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64String = reader.result;
+                resolve(base64String);
+            }
+            reader.readAsDataURL(blob);
+        });
+    }
+
     const handleAltGreetingClick = (index) => {
         setPendingGreeting(index);
         setDeleteGreetingConfirmation(true);
@@ -216,6 +229,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 return;
                             }
                             setCardData(parsedCardData);
+                            localStorage.setItem("cardData", JSON.stringify(parsedCardData));
                             console.log("V3 Card info found");
                             console.log(parsedCardData);
                             if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0)
@@ -229,6 +243,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                             console.log("V2 card info found");
                             if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0 && item === readCardData.length - 1){
                                 setCardData(parsedCardData);
+                                localStorage.setItem("cardData", JSON.stringify(parsedCardData));
                                 scanLorebookEntryNames(parsedCardData.data.character_book.entries);
                             }
                             console.log(parsedCardData);
@@ -245,6 +260,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                     console.log(`Only ${readCardData[0].keyword === "ccv3" ? "V3" : "V2"} Card info found`);
                     console.log(parsedCardData);
                     setCardData(parsedCardData);
+                    localStorage.setItem("cardData", JSON.stringify(parsedCardData));
                     if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0)
                         scanLorebookEntryNames(parsedCardData.data.character_book.entries);
                 }
@@ -356,13 +372,20 @@ const TavernCardEditor = ({toggleTheme}) => {
         }
     }
 
-    const handlePreviewUpload = (event) => {
+    async function handlePreviewUpload (event) {
         const file = event.target.files[0];
         if (file) {
-            const objectUrl = URL.createObjectURL(file);
-            setPreview(objectUrl);
+            try {
+                const inputBuffer = await readToBuffer(file);
+                const arrayBuffer = await stripPngChunks(inputBuffer);
+                const base64String = await convertBufferToBase64(arrayBuffer);
+                setPreview(base64String);
+                localStorage.setItem("previewImage", base64String);
+            } catch (error) {
+                console.error("Error stripping PNG chunks and converting to base64: ", error);
+            }
         }
-    };
+    }
 
     const handlePromoteClick = (index) => {
         setPendingGreeting(index);
@@ -410,6 +433,17 @@ const TavernCardEditor = ({toggleTheme}) => {
         setDeleteConfirmation(false);
         setPreview(default_avatar);
         setCardData(v3CardPrototype());
+        localStorage.setItem("cardData", JSON.stringify(v3CardPrototype()));
+        localStorage.setItem("previewImage", default_avatar);
+    };
+
+    const readToBuffer = (infile) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(infile);
+        });
     };
 
     const scanLorebookEntryNames = (lorebook) => {
@@ -421,21 +455,45 @@ const TavernCardEditor = ({toggleTheme}) => {
         }
     };
 
-    useEffect(() => {
-        const pngRegex = /.+\.png$/;
-        if (!file) {
-            setPreview(default_avatar);
-            return;
-        }
-        if (!pngRegex.test(file.name)){
-            setPreview(default_avatar);
-            return;
-        }
-        const objectUrl = URL.createObjectURL(file);
-        setPreview(objectUrl);
+    // eslint-disable-next-line
+    const debouncedSave = useCallback(
+        debounce((data) => {
+            localStorage.setItem("cardData", JSON.stringify(data));
+        }, 10000), []
+    );
 
-        return () => URL.revokeObjectURL(objectUrl);
+    useEffect(() => {
+        if (cardData) {
+            debouncedSave(cardData);
+        }
+    }, [cardData, debouncedSave]);
+
+    useEffect(() => {
+        (async () => {
+            const pngRegex = /.+\.png$/;
+            if (!file) {
+                setPreview(default_avatar);
+                return;
+            }
+            if (!pngRegex.test(file.name)){
+                setPreview(default_avatar);
+                return;
+            }
+            
+            const inputBuffer = await readToBuffer(file);
+            const strippedBuffer = await stripPngChunks(inputBuffer);
+            const base64String = await convertBufferToBase64(strippedBuffer)
+            setPreview(base64String);
+            localStorage.setItem("previewImage", base64String)
+        })()
     }, [file]);
+
+    useEffect(() => {
+        const storedPreviewImage = localStorage.getItem("previewImage");
+        if (storedPreviewImage){
+            setPreview(storedPreviewImage);
+        }
+    }, []);
 
     return(
         <Container maxWidth={false}>
