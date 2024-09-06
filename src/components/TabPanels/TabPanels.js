@@ -74,13 +74,19 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
             }));
         }, 300),
         [setCardData]
-    )
+    );
 
     const handleAddGreeting = () => {
         const altGreetingArray = cardData.data.alternate_greetings;
         altGreetingArray.push("");
-        debouncedSetCardData(altGreetingArray);
-    }
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                alternate_greetings: altGreetingArray
+            }
+        }))
+    };
 
     const handleAltGreetingChange = (e) => {
         const {name, value} = e.target;
@@ -199,7 +205,16 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         const blankEntry = v3CharacterBookEntryPrototype();
         const lorebookEntryArray = cardData.data.character_book.entries;
         lorebookEntryArray.push(blankEntry);
-        debouncedSetCardData(lorebookEntryArray)
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                character_book: {
+                    ...prevState.data.character_book,
+                    entries: lorebookEntryArray
+                }
+            }
+        }));
     }
 
     const handleDragEnd = (result) => {
@@ -428,8 +443,14 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
     const handleAddGroupGreeting = () => {
         const groupGreetingArray = cardData.data.group_only_greetings;
         groupGreetingArray.push("");
-        debouncedSetCardData(groupGreetingArray);
-    }
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                group_only_greetings: groupGreetingArray
+            }
+        }))
+    };
 
     const handleGroupGreetingChange = (e) => {
         const {name, value} = e.target;
