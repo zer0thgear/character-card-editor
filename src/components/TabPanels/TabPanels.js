@@ -497,3 +497,15 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
         </div>
     );
 }
+
+export function MacrosPanel({curTab, index, handlePurgeClick}){
+    return(
+        <div hidden={curTab !== index}>
+            <Box sx={{margin:2}}>
+                <Tooltip title="Remove ALL asterisks from ALL greeting fields">
+                    <Button onClick={handlePurgeClick} variant="contained">Purge Asterisks</Button>
+                </Tooltip>
+            </Box>
+        </div>
+    );
+}

@@ -49,6 +49,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [pendingGroupGreeting, setPendingGroupGreeting] = useState(-1)
     const [pendingJson, setPendingJson] = useState(null);
     const [promoteGreeting, setPromoteGreeting] = useState(false);
+    const [purgeAsterisksConfirmation, setPurgeAsterisksConfirmation] = useState(false);
     const [preview, setPreview] = useState(default_avatar);
     const [tabValue, setTabValue] = useState(0);
 
@@ -401,6 +402,25 @@ const TavernCardEditor = ({toggleTheme}) => {
         setPendingGreeting(-1);
     };
 
+    const handlePurgeAsterisks =() => {
+        const asteriskRegex = /\*(.+?)\*/g;
+        const newGreeting = cardData.data.first_mes.replace(asteriskRegex, '$1');
+        const newExample = cardData.data.mes_example.replace(asteriskRegex, '$1');
+        const newAlternates = cardData.data.alternate_greetings.length > 0 ? cardData.data.alternate_greetings.map((greeting) => greeting.replace(asteriskRegex, '$1')) : []
+        const newGropGreetings = cardData.data.group_only_greetings.length > 0 ? cardData.data.group_only_greetings.map((greeting) => greeting.replace(asteriskRegex, '$1')) : [];
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                first_mes: newGreeting,
+                mes_example: newExample,
+                alternate_greetings: newAlternates,
+                group_only_greetings: newGropGreetings
+            }
+        }));
+        setPurgeAsterisksConfirmation(false);
+    };
+
     const handleRemoveFile = () => {
         setFile(null);
         setDeleteConfirmation(false);
@@ -499,6 +519,13 @@ const TavernCardEditor = ({toggleTheme}) => {
                 dialogContent={"Are you sure you want to delete this lorebook? This action cannot be undone."}
                 handleConfirm={handleDeleteLorebook}
             />
+            <ConfirmationDialog 
+                open={purgeAsterisksConfirmation}
+                handleClose={() => setPurgeAsterisksConfirmation(false)}
+                dialogTitle="Purge asterisks from greetings?"
+                dialogContent={"Are you sure you want to purge asterisks from all greetings? This macro should be used at your own risk as it does not discriminate and it cannot be undone."}
+                handleConfirm={handlePurgeAsterisks}
+            />
             <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={handleDeleteClick}/>
                 <FormControlLabel control={<Checkbox checked={displayImage} onChange={toggleImageDisplay}/>} label="Display image?"/>
@@ -576,6 +603,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                         <MacrosPanel
                             curTab={tabValue}
                             index={6}
+                            handlePurgeClick={() => setPurgeAsterisksConfirmation(true)}
                         />
                         <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
                             <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
