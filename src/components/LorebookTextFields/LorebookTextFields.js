@@ -14,7 +14,7 @@ export function LorebookMetaString({label="", fieldName, changeCallback}){
 
     useEffect(() => {
         setLocalValue(cardData.data.character_book[fieldName]);
-    }, [cardData.data.character_book[fieldName]]);
+    }, [cardData.data.character_book, fieldName]);
 
     const handleChange = (e) => {
         const { value } = e.target;
@@ -48,7 +48,7 @@ export function LorebookMetaInt({label="", fieldName, changeCallback}){
 
     useEffect(() => {
         setLocalValue(cardData.data.character_book[fieldName]);
-    }, [cardData.data.character_book[fieldName]]);
+    }, [cardData.data.character_book, fieldName]);
 
     const handleChange = (e) => {
         const { value } = e.target;
@@ -95,7 +95,7 @@ export function LorebookEntryString({label="", fieldName, entryIndex, changeCall
 
     useEffect(() => {
         setLocalValue(cardData.data.character_book.entries[entryIndex][fieldName]);
-    }, [cardData.data.character_book.entries[entryIndex][fieldName]]);
+    }, [cardData.data.character_book.entries, entryIndex, fieldName]);
 
     const handleChange = (e) => {
         const { value } = e.target;
@@ -130,7 +130,7 @@ export function LorebookEntryInt({label="", fieldName, entryIndex, changeCallbac
 
     useEffect(() => {
         setLocalValue(cardData.data.character_book.entries[entryIndex][fieldName]);
-    }, [cardData.data.character_book.entries[entryIndex][fieldName]]);
+    }, [cardData.data.character_book.entries, entryIndex, fieldName]);
 
     const handleChange = (e) => {
         const { value } = e.target;

@@ -20,7 +20,7 @@ const CardTextField = ({label, fieldName, changeCallback, multiline=false, rows=
 
     useEffect(() => {
         setLocalValue(cardData.data[fieldName]);
-    }, [cardData.data[fieldName]]);
+    }, [cardData.data, fieldName]);
 
     const handleChange = (e) => {
         const { value } = e.target;

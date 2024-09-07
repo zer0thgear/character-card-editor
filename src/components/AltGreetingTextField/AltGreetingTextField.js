@@ -19,7 +19,7 @@ const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0
 
     useEffect(() => {
         setLocalValue(cardData.data.alternate_greetings[greetingIndex]);
-    }, [cardData.data.alternate_greetings[greetingIndex]]);
+    }, [cardData.data.alternate_greetings, greetingIndex]);
 
     const handleChange = (e) => {
         const { value } = e.target;
@@ -55,7 +55,7 @@ export const GroupGreetingTextField = ({label, fieldName, changeCallback, greeti
 
     useEffect(() => {
         setLocalValue(cardData.data.group_only_greetings[greetingIndex]);
-    }, [cardData.data.group_only_greetings[greetingIndex]]);
+    }, [cardData.data.group_only_greetings, greetingIndex]);
 
     const handleChange = (e) => {
         const { value } = e.target;
