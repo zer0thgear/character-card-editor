@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import debounce from "lodash.debounce";
+import imageCompression from 'browser-image-compression';
 
 import {
     Button,
@@ -426,7 +427,7 @@ const TavernCardEditor = ({toggleTheme}) => {
         if (file && file.type.startsWith("image/") && file.type !== "image/png") {
             const img = new Image();
             img.src = URL.createObjectURL(file);
-            img.onload = () => {
+            img.onload = async () => {
                 const canvas = document.createElement("canvas");
                 canvas.width = img.width;
                 canvas.height = img.height;
@@ -435,17 +436,30 @@ const TavernCardEditor = ({toggleTheme}) => {
                 ctx.drawImage(img, 0, 0);
 
                 const base64String = canvas.toDataURL("image/png");
-                setPreview(base64String);
-                localStorage.setItem("previewImage", base64String);
+                const pngBlob = await (await fetch(base64String)).blob();
+                // Compressing converted PNGs
+                const compressedPngBlob = await imageCompression(pngBlob, {maxSizeMb: 1, useWebWorker: true});
+
+                const comrpessedBase64Png = await imageCompression.getDataUrlFromFile(compressedPngBlob);
+
+                setPreview(comrpessedBase64Png);
+                localStorage.setItem("previewImage", comrpessedBase64Png);
             }
         }
         else if (file && file.type === "image/png") {
             try {
                 const inputBuffer = await readToBuffer(file);
                 const arrayBuffer = await stripPngChunks(inputBuffer);
-                const base64String = await convertBufferToBase64(arrayBuffer);
-                setPreview(base64String);
-                localStorage.setItem("previewImage", base64String);
+                const pngBlob = new Blob([arrayBuffer], {type: "image/png"});
+                const compressedPngBlob = await imageCompression(pngBlob, {maxSizeMb: 1, useWebWorker: true});
+
+                const comrpessedBase64Png = await imageCompression.getDataUrlFromFile(compressedPngBlob);
+
+                setPreview(comrpessedBase64Png);
+                localStorage.setItem("previewImage", comrpessedBase64Png);
+                //const base64String = await convertBufferToBase64(arrayBuffer);
+                //setPreview(base64String);
+                //localStorage.setItem("previewImage", base64String);
             } catch (error) {
                 console.error("Error stripping PNG chunks and converting to base64: ", error);
             }

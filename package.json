@@ -12,6 +12,7 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "browser-image-compression": "^2.0.2",
     "js-base64": "^3.7.7",
     "lodash.debounce": "^4.0.8",
     "react": "^18.3.1",
