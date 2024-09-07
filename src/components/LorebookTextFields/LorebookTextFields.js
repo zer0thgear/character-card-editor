@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { 
     MenuItem,
@@ -10,6 +10,7 @@ import { useCard } from "../../context/CardContext";
 export function LorebookMetaString({label="", fieldName, changeCallback}){
     const { cardData } = useCard();
     const [localValue, setLocalValue] = useState(cardData.data.character_book[fieldName]);
+    const inputRef = useRef(null);
 
     useEffect(() => {
         setLocalValue(cardData.data.character_book[fieldName]);
@@ -17,14 +18,19 @@ export function LorebookMetaString({label="", fieldName, changeCallback}){
 
     const handleChange = (e) => {
         const { value } = e.target;
+        const cursorPosition = inputRef.current.selectionStart;
         setLocalValue(value);
         changeCallback(e);
+        setTimeout(() => {
+            inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+        }, 0);
     };
 
     return(
         <TextField
             autoComplete="off"
             fullWidth
+            inputRef={inputRef}
             label={label && label !== "" ? label : "Lorebook".concat(" ", fieldName.charAt(0).toUpperCase() + fieldName.slice(1))}
             margin="normal"
             multiline
@@ -85,6 +91,7 @@ export function LorebookMetaBool({label="", fieldName, changeCallback}){
 export function LorebookEntryString({label="", fieldName, entryIndex, changeCallback, rows=1}){
     const { cardData } = useCard();
     const [localValue, setLocalValue] = useState(cardData.data.character_book.entries[entryIndex][fieldName]);
+    const inputRef = useRef(null);
 
     useEffect(() => {
         setLocalValue(cardData.data.character_book.entries[entryIndex][fieldName]);
@@ -92,14 +99,19 @@ export function LorebookEntryString({label="", fieldName, entryIndex, changeCall
 
     const handleChange = (e) => {
         const { value } = e.target;
+        const cursorPosition = inputRef.current.selectionStart;
         setLocalValue(value);
         changeCallback(e);
+        setTimeout(() => {
+            inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+        }, 0);
     }
     
     return(
         <TextField
             autoComplete="off"
             fullWidth
+            inputRef={inputRef}
             label={label && label !== "" ? label : "Entry".concat(" ", fieldName.charAt(0).toUpperCase() + fieldName.slice(1))}
             margin="normal"
             multiline

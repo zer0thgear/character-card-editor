@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { TextField } from "@mui/material";
 
@@ -15,6 +15,7 @@ import { useCard } from "../../context/CardContext";
 const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0}) => {
     const { cardData } = useCard();
     const [localValue, setLocalValue] = useState(cardData.data[fieldName]);
+    const inputRef = useRef(null);
 
     useEffect(() => {
         setLocalValue(cardData.data.alternate_greetings[greetingIndex]);
@@ -22,14 +23,19 @@ const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0
 
     const handleChange = (e) => {
         const { value } = e.target;
+        const cursorPosition = inputRef.current.selectionStart;
         setLocalValue(value);
         changeCallback(e);
+        setTimeout(() => {
+            inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+        }, 0);
     }
 
     return(
         <TextField 
             autoComplete="off"
             fullWidth
+            inputRef={inputRef}
             label={label}
             margin="normal"
             multiline
@@ -45,6 +51,7 @@ const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0
 export const GroupGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0}) => {
     const { cardData } = useCard();
     const [localValue, setLocalValue] = useState(cardData.data.group_only_greetings[greetingIndex]);
+    const inputRef = useRef(null);
 
     useEffect(() => {
         setLocalValue(cardData.data.group_only_greetings[greetingIndex]);
@@ -52,14 +59,19 @@ export const GroupGreetingTextField = ({label, fieldName, changeCallback, greeti
 
     const handleChange = (e) => {
         const { value } = e.target;
+        const cursorPosition = inputRef.current.selectionStart;
         setLocalValue(value);
         changeCallback(e);
+        setTimeout(() => {
+            inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+        }, 0);
     }
 
     return(
         <TextField 
             autoComplete="off"
             fullWidth
+            inputRef={inputRef}
             label={label}
             margin="normal"
             multiline

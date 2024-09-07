@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { TextField } from "@mui/material";
 
@@ -16,6 +16,7 @@ import { useCard } from "../../context/CardContext";
 const CardTextField = ({label, fieldName, changeCallback, multiline=false, rows=1}) => {
     const { cardData } = useCard();
     const [localValue, setLocalValue] = useState(cardData.data[fieldName]);
+    const inputRef = useRef(null);
 
     useEffect(() => {
         setLocalValue(cardData.data[fieldName]);
@@ -23,14 +24,19 @@ const CardTextField = ({label, fieldName, changeCallback, multiline=false, rows=
 
     const handleChange = (e) => {
         const { value } = e.target;
+        const cursorPosition = inputRef.current.selectionStart;
         setLocalValue(value);
         changeCallback(e);
+        setTimeout(() => {
+            inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+        }, 0);
     }
 
     return(
         <TextField 
             autoComplete="off"
             fullWidth
+            inputRef={inputRef}
             label={label && label !== "" ? label : "Character".concat(" ", fieldName.charAt(0).toUpperCase() + fieldName.slice(1))}
             margin="normal"
             multiline={multiline}
