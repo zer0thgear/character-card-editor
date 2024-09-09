@@ -15,7 +15,7 @@ import { useCard } from "../../context/CardContext";
  */
 const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0}) => {
     const { cardData } = useCard();
-    const [localValue, setLocalValue] = useState(cardData.data[fieldName]);
+    const [localValue, setLocalValue] = useState(cardData.data.alternate_greetings[greetingIndex]);
     const inputRef = useRef(null);
 
     useEffect(() => {

@@ -161,7 +161,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleDeleteAltGreeting = () => {
-        const altGreetings = cardData.data.alternate_greetings;
+        const altGreetings = [...cardData.data.alternate_greetings];
         altGreetings.splice(pendingGreeting, 1);
         setCardData((prevState) => ({
             ...prevState,

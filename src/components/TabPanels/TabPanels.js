@@ -99,7 +99,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     const handleDragEnd = (result) => {
         if (!result.destination) return;
 
-        const items = cardData.data.alternate_greetings;
+        const items = [...cardData.data.alternate_greetings];
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0 , reorderedItem);
 
