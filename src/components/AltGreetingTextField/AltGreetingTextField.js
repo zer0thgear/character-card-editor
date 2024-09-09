@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import debounce from "lodash.debounce";
 
 import { TextField } from "@mui/material";
 
@@ -21,11 +22,19 @@ const AltGreetingTextField = ({label, fieldName, changeCallback, greetingIndex=0
         setLocalValue(cardData.data.alternate_greetings[greetingIndex]);
     }, [cardData.data.alternate_greetings, greetingIndex]);
 
+    // eslint-disable-next-line
+    const debouncedChangeCallback = useCallback(
+        debounce((e) => {
+            changeCallback(e);
+        }, 300),
+        [changeCallback]
+    );
+
     const handleChange = (e) => {
         const { value } = e.target;
         const cursorPosition = inputRef.current.selectionStart;
         setLocalValue(value);
-        changeCallback(e);
+        debouncedChangeCallback(e);
         setTimeout(() => {
             inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
         }, 0);

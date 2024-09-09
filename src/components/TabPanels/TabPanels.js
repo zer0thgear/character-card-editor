@@ -66,20 +66,6 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     const { cardData, setCardData } = useCard();
     const [expanded, setExpanded] = useState([]);
 
-    // eslint-disable-next-line
-    const debouncedSetCardData = useCallback(
-        debounce((value) => {
-            setCardData((prevState) => ({
-                ...prevState,
-                data: {
-                    ...prevState.data,
-                    alternate_greetings: value
-                }
-            }));
-        }, 300),
-        [setCardData]
-    );
-
     const handleAddGreeting = () => {
         const altGreetingArray = cardData.data.alternate_greetings;
         altGreetingArray.push("");
@@ -101,7 +87,13 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     const handleAltGreetingChange = (e) => {
         const {name, value} = e.target;
         const index = name.match(/altGreeting(\d+)/)[1];
-        debouncedSetCardData(cardData.data.alternate_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting))
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                alternate_greetings: prevState.data.alternate_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting)
+            }
+        }));
     };
 
     const handleDragEnd = (result) => {
@@ -111,7 +103,13 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0 , reorderedItem);
 
-        debouncedSetCardData(items);
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                alternate_greetings: items
+            }
+        }));
 
         setExpanded((prevExpanded) => 
             prevExpanded.map((panel) => {
