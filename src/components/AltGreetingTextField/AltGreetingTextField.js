@@ -66,11 +66,20 @@ export const GroupGreetingTextField = ({label, fieldName, changeCallback, greeti
         setLocalValue(cardData.data.group_only_greetings[greetingIndex]);
     }, [cardData.data.group_only_greetings, greetingIndex]);
 
+    // eslint-disable-next-line
+    const debouncedChangeCallback = useCallback(
+        debounce((e) => {
+            changeCallback(e);
+        }, 300), 
+        [changeCallback]
+    );
+
+
     const handleChange = (e) => {
         const { value } = e.target;
         const cursorPosition = inputRef.current.selectionStart;
         setLocalValue(value);
-        changeCallback(e);
+        debouncedChangeCallback(e);
         setTimeout(() => {
             inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
         }, 0);

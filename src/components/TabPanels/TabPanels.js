@@ -463,20 +463,6 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
     const { cardData, setCardData } = useCard();
     const [expanded, setExpanded] = useState([]);
 
-    // eslint-disable-next-line
-    const debouncedSetCardData = useCallback(
-        debounce((value) => {
-            setCardData((prevState) => ({
-                ...prevState,
-                data: {
-                    ...prevState.data,
-                    group_only_greetings: value
-                }
-            }));
-        }, 300), 
-        [setCardData]
-    );
-
     const handleAccordionChange = (panel) => (event, isExpanded) => {
         setExpanded((prevExpanded) =>
             isExpanded ? [...prevExpanded, panel] : prevExpanded.filter((p) => p !== panel)
@@ -484,7 +470,7 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
     };
 
     const handleAddGroupGreeting = () => {
-        const groupGreetingArray = cardData.data.group_only_greetings;
+        const groupGreetingArray = [...cardData.data.group_only_greetings];
         groupGreetingArray.push("");
         setCardData((prevState) => ({
             ...prevState,
@@ -498,17 +484,29 @@ export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
     const handleGroupGreetingChange = (e) => {
         const {name, value} = e.target;
         const index = name.match(/groupGreeting(\d+)/)[1];
-        debouncedSetCardData(cardData.data.group_only_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting));
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                group_only_greetings: prevState.data.group_only_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting)
+            }
+        }));
     };
 
     const handleDragEnd = (result) => {
         if (!result.destination) return;
 
-        const items = cardData.data.group_only_greetings;
+        const items = [...cardData.data.group_only_greetings];
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0 , reorderedItem);
 
-        debouncedSetCardData(items);
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                group_only_greetings: items
+            }
+        }));
 
         setExpanded((prevExpanded) =>
             prevExpanded.map((panel) => {
