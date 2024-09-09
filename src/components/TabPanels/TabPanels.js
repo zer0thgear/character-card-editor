@@ -67,7 +67,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     const [expanded, setExpanded] = useState([]);
 
     const handleAddGreeting = () => {
-        const altGreetingArray = cardData.data.alternate_greetings;
+        const altGreetingArray = [...cardData.data.alternate_greetings];
         altGreetingArray.push("");
         setCardData((prevState) => ({
             ...prevState,

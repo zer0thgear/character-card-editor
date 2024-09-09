@@ -87,7 +87,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const backfillLorebookNames = () => {
-        const lorebookEntries = cardData.data.character_book.entries.map((entry) => {
+        const lorebookEntries = [...cardData.data.character_book.entries].map((entry) => {
             const newEntry = entry;
             if (newEntry.name === "" || !Object.hasOwn(newEntry, "name") || typeof newEntry.name === "undefined") newEntry.name = newEntry.comment;
             else newEntry.comment = newEntry.name;
@@ -175,7 +175,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     }
 
     const handleDeleteEntry = () => {
-        const lorebookEntries = cardData.data.character_book.entries;
+        const lorebookEntries = [...cardData.data.character_book.entries];
         lorebookEntries.splice(pendingEntry, 1);
         setCardData((prevState) => ({
             ...prevState,
@@ -197,7 +197,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     }
 
     const handleDeleteGroupGreeting = () => {
-        const groupGreetings = cardData.data.group_only_greetings;
+        const groupGreetings = [...cardData.data.group_only_greetings];
         groupGreetings.splice(pendingGroupGreeting, 1);
         setCardData((prevState) => ({
             ...prevState,
@@ -305,8 +305,8 @@ const TavernCardEditor = ({toggleTheme}) => {
         const newScenario = cardData.data.scenario.replaceAll(toFind, toReplace);
         const newGreeting = cardData.data.first_mes.replaceAll(toFind, toReplace);
         const newExample = cardData.data.mes_example.replaceAll(toFind, toReplace);
-        const newAlternates = cardData.data.alternate_greetings.length > 0 ? cardData.data.alternate_greetings.map((greeting) => greeting.replaceAll(toFind, toReplace)) : []
-        const newGropGreetings = cardData.data.group_only_greetings.length > 0 ? cardData.data.group_only_greetings.map((greeting) => greeting.replaceAll(toFind, toReplace)) : [];
+        const newAlternates = cardData.data.alternate_greetings.length > 0 ? [...cardData.data.alternate_greetings].map((greeting) => greeting.replaceAll(toFind, toReplace)) : []
+        const newGropGreetings = cardData.data.group_only_greetings.length > 0 ? [...cardData.data.group_only_greetings].map((greeting) => greeting.replaceAll(toFind, toReplace)) : [];
         setCardData((prevState) => ({
             ...prevState,
             data: {
@@ -476,7 +476,7 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     const handlePromoteGreeting = () => {
         const firstMes = cardData.data.first_mes;
-        const altGreetings = cardData.data.alternate_greetings;
+        const altGreetings = [...cardData.data.alternate_greetings];
         const toPromote = altGreetings.splice(pendingGreeting, 1)
         altGreetings.unshift(firstMes);
         setCardData((prevState) => ({
@@ -495,8 +495,8 @@ const TavernCardEditor = ({toggleTheme}) => {
         const asteriskRegex = /\*(.+?)\*/g;
         const newGreeting = cardData.data.first_mes.replace(asteriskRegex, '$1');
         const newExample = cardData.data.mes_example.replace(asteriskRegex, '$1');
-        const newAlternates = cardData.data.alternate_greetings.length > 0 ? cardData.data.alternate_greetings.map((greeting) => greeting.replace(asteriskRegex, '$1')) : []
-        const newGropGreetings = cardData.data.group_only_greetings.length > 0 ? cardData.data.group_only_greetings.map((greeting) => greeting.replace(asteriskRegex, '$1')) : [];
+        const newAlternates = cardData.data.alternate_greetings.length > 0 ? [...cardData.data.alternate_greetings].map((greeting) => greeting.replace(asteriskRegex, '$1')) : []
+        const newGropGreetings = cardData.data.group_only_greetings.length > 0 ? [...cardData.data.group_only_greetings].map((greeting) => greeting.replace(asteriskRegex, '$1')) : [];
         setCardData((prevState) => ({
             ...prevState,
             data: {
