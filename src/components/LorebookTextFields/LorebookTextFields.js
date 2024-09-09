@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import debounce from "lodash.debounce";
 
 import { 
     MenuItem,
@@ -16,11 +17,19 @@ export function LorebookMetaString({label="", fieldName, changeCallback}){
         setLocalValue(cardData.data.character_book[fieldName]);
     }, [cardData.data.character_book, fieldName]);
 
+    // eslint-disable-next-line
+    const debouncedChangeCallback = useCallback(
+        debounce((e) => {
+            changeCallback(e);
+        }, 300), 
+        [changeCallback]
+    );
+
     const handleChange = (e) => {
         const { value } = e.target;
         const cursorPosition = inputRef.current.selectionStart;
         setLocalValue(value);
-        changeCallback(e);
+        debouncedChangeCallback(e);
         setTimeout(() => {
             inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
         }, 0);
@@ -50,10 +59,18 @@ export function LorebookMetaInt({label="", fieldName, changeCallback}){
         setLocalValue(cardData.data.character_book[fieldName]);
     }, [cardData.data.character_book, fieldName]);
 
+    // eslint-disable-next-line
+    const debouncedChangeCallback = useCallback(
+        debounce((e) => {
+            changeCallback(e);
+        }, 300), 
+        [changeCallback]
+    );
+
     const handleChange = (e) => {
         const { value } = e.target;
         setLocalValue(value);
-        changeCallback(e);
+        debouncedChangeCallback(e);
     };
     
     return(
@@ -97,11 +114,19 @@ export function LorebookEntryString({label="", fieldName, entryIndex, changeCall
         setLocalValue(cardData.data.character_book.entries[entryIndex][fieldName]);
     }, [cardData.data.character_book.entries, entryIndex, fieldName]);
 
+    // eslint-disable-next-line
+    const debouncedChangeCallback = useCallback(
+        debounce((e) => {
+            changeCallback(e);
+        }, 300), 
+        [changeCallback]
+    );
+    
     const handleChange = (e) => {
         const { value } = e.target;
         const cursorPosition = inputRef.current.selectionStart;
         setLocalValue(value);
-        changeCallback(e);
+        debouncedChangeCallback(e);
         setTimeout(() => {
             inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
         }, 0);
@@ -132,10 +157,18 @@ export function LorebookEntryInt({label="", fieldName, entryIndex, changeCallbac
         setLocalValue(cardData.data.character_book.entries[entryIndex][fieldName]);
     }, [cardData.data.character_book.entries, entryIndex, fieldName]);
 
+    // eslint-disable-next-line
+    const debouncedChangeCallback = useCallback(
+        debounce((e) => {
+            changeCallback(e);
+        }, 300), 
+        [changeCallback]
+    );
+
     const handleChange = (e) => {
         const { value } = e.target;
         setLocalValue(value);
-        changeCallback(e);
+        debouncedChangeCallback(e);
     }
     
     return(

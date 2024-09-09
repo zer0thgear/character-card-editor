@@ -177,40 +177,6 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
     const { cardData, setCardData } = useCard();
     const [expanded, setExpanded] = useState([]);
 
-    // eslint-disable-next-line
-    const debouncedSetCardData = useCallback(
-        debounce((value) => {
-            setCardData((prevState) => ({
-                ...prevState,
-                data: {
-                    ...prevState.data,
-                    character_book: {
-                        ...prevState.data.character_book,
-                        entries: value
-                    }
-                }
-            }))
-        }, 300), 
-        [setCardData]
-    );
-
-    // eslint-disable-next-line
-    const debouncedSetaLoreMetadata = useCallback(
-        debounce((name, value) => {
-            setCardData((prevState) => ({
-                ...prevState,
-                data: {
-                    ...prevState.data,
-                    character_book: {
-                        ...prevState.data.character_book,
-                        name: value
-                    }
-                }
-            }))
-        }, 300), 
-        [setCardData]
-    );
-
     const addLorebook = () => {
         setCardData((prevState) => ({
             ...prevState,
@@ -223,7 +189,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
 
     const addLoreBookEntry = () => {
         const blankEntry = v3CharacterBookEntryPrototype();
-        const lorebookEntryArray = cardData.data.character_book.entries;
+        const lorebookEntryArray = [...cardData.data.character_book.entries];
         lorebookEntryArray.push(blankEntry);
         setCardData((prevState) => ({
             ...prevState,
@@ -246,11 +212,20 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
     const handleDragEnd = (result) => {
         if (!result.destination) return;
 
-        const items = cardData.data.character_book.entries;
+        const items = [...cardData.data.character_book.entries];
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0, reorderedItem);
 
-        debouncedSetCardData(items);
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                character_book: {
+                    ...prevState.data.character_book,
+                    entries: items
+                }
+            }
+        }));
         
         setExpanded((prevExpanded) =>
             prevExpanded.map((panel) => {
@@ -267,7 +242,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         const regexMatches = name.match(/^([^\d]+)#([\d]+)/);
         const fieldName = regexMatches[1];
         const index = parseInt(regexMatches[2], 10);
-        const items = cardData.data.character_book.entries;
+        const items = [...cardData.data.character_book.entries];
         const [alteredItem] = items.splice(index, 1);
         if (fieldName === "name") {
             alteredItem.name = value;
@@ -277,7 +252,16 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         }
         items.splice(index, 0, alteredItem);
 
-        debouncedSetCardData(items);
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                character_book: {
+                    ...prevState.data.character_book,
+                    entries: items
+                }
+            }
+        }));
     };
 
     const handleEntryKeysChange = (e) => {
@@ -286,17 +270,35 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         const regexMatches = name.match(/^([^\d]+)#([\d]+)/);
         const fieldName = regexMatches[1];
         const index = parseInt(regexMatches[2], 10);
-        const items = cardData.data.character_book.entries;
+        const items = [...cardData.data.character_book.entries];
         const [alteredItem] = items.splice(index, 1);
         alteredItem[fieldName] = keys;
         items.splice(index, 0, alteredItem);
 
-        debouncedSetCardData(items);
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                character_book: {
+                    ...prevState.data.character_book,
+                    entries: items
+                }
+            }
+        }));
     };
 
     const handleMetaFieldChange = (e) => {
         const {name, value} = e.target;
-        debouncedSetaLoreMetadata(name, (/^\d+$/.test(value) ? parseInt(value, 10) : value));
+        setCardData((prevState) => ({
+            ...prevState,
+            data: {
+                ...prevState.data,
+                character_book: {
+                    ...prevState.data.character_book,
+                    [name]: (/^\d+$/.test(value) ? parseInt(value, 10) : value)
+                }
+            }
+        }));
     };
 
     return(
