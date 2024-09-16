@@ -355,7 +355,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                         {...provided.droppableProps}
                                         ref={provided.innerRef}
                                     >
-                                        {cardData.data.character_book.entries.map((text, index) => (
+                                        {cardData.data.character_book.entries.map((entry, index) => (
                                             <Draggable key={`draggableLorebookEntry#${index}`} draggableId={`draggableLorebookEntry#${index}`} index={index}>
                                                 {(provided) => (
                                                     <Box
@@ -368,7 +368,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                         </Tooltip>
                                                         <Accordion expanded={expanded.includes(index)} onChange={handleAccordionChange(index)} slotProps={{transition: {unmountOnExit:true}}} style={{width:'100%'}} sx={{mb:2, mt:2}}>
                                                             <AccordionSummary expandIcon={<ArrowDropDown/>}>
-                                                                {`Entry #${index+1}`}
+                                                                {`${entry.name}`}
                                                             </AccordionSummary>
                                                             <AccordionDetails>
                                                                 <Box style={{width:'100%'}}>
