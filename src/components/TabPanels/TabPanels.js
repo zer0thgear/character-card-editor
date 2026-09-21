@@ -403,7 +403,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                         </Tooltip>
                                                         <Accordion expanded={expanded.includes(index)} onChange={handleAccordionChange(index)} slotProps={{transition: {unmountOnExit:true}}} style={{width:'100%'}} sx={{mb:2, mt:2}}>
                                                             <AccordionSummary expandIcon={<ArrowDropDown/>}>
-                                                                {`${entry.name}`}
+                                                                {entry.name || entry.comment || `Lorebook Entry #${index+1}`}
                                                             </AccordionSummary>
                                                             <AccordionDetails>
                                                                 <Box style={{width:'100%'}}>
