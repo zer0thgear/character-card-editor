@@ -22,6 +22,7 @@ import default_avatar from '../../assets/default_avatar.png';
 import FileUpload from '../FileUpload/FileUpload';
 import assembleNewPng from '../../utils/assembleNewPng';
 import getStoredCardData from '../../utils/getStoredCardData';
+import normalizeCardData, { normalizeLorebook } from '../../utils/normalizeCardData';
 import parsePngChunks from '../../utils/parsePngChunks';
 import stripPngChunks from '../../utils/stripPngChunks';
 import { AltGreetingTabPanel, BasicFieldTabPanel, GroupGreetingPanel, LorebookPanel, MacrosPanel } from '../TabPanels/TabPanels';
@@ -222,78 +223,58 @@ const TavernCardEditor = ({toggleTheme}) => {
         setDeleteLorebookConfirmation(false);
     };
 
+    const loadCardIntoState = (parsedCardData) => {
+        const result = normalizeCardData(parsedCardData);
+        if (!result.ok) {
+            console.error(result.error);
+            return;
+        }
+        setCardData(result.cardData);
+        localStorage.setItem("cardData", JSON.stringify(result.cardData));
+        if (typeof result.cardData.data.character_book !== "undefined" && result.cardData.data.character_book.entries.length > 0)
+            scanLorebookEntryNames(result.cardData.data.character_book.entries);
+    };
+
     async function handleFileSelect(event, importLorebook=false) {
         const selectedFile = event.target.files[0];
         if(!importLorebook) setFile(selectedFile);
         if (/.+\.png$/.test(selectedFile.name)){
             const readCardData = await parsePngChunks(selectedFile, ["ccv3", "chara"]);
-            if (readCardData) {
-                if (readCardData.length >= 2) {
-                    for (let item = 0; item < readCardData.length; item++){
-                        const parsedCardData = readCardData[item].data;
-                        if (!Object.hasOwn(parsedCardData.data, "group_only_greetings")) parsedCardData.data.group_only_greetings = [];
-                        if (readCardData[item].keyword === "ccv3"){
-                            if (importLorebook){
-                                handleLorebookImportLogic(parsedCardData.data.character_book);
-                                return;
-                            }
-                            setCardData(parsedCardData);
-                            localStorage.setItem("cardData", JSON.stringify(parsedCardData));
-                            console.log("V3 Card info found");
-                            console.log(parsedCardData);
-                            if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0)
-                                scanLorebookEntryNames(parsedCardData.data.character_book.entries);
-                            return;
-                        } else if (readCardData[item].keyword === "chara"){
-                            if (importLorebook && item === readCardData.length - 1 && item === readCardData.length - 1){
-                                handleLorebookImportLogic(parsedCardData.data.character_book);
-                                return;
-                            }
-                            console.log("V2 card info found");
-                            if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0 && item === readCardData.length - 1){
-                                setCardData(parsedCardData);
-                                localStorage.setItem("cardData", JSON.stringify(parsedCardData));
-                                scanLorebookEntryNames(parsedCardData.data.character_book.entries);
-                            }
-                            console.log(parsedCardData);
-                        }
-                    }
-                }
-                else {
-                    const parsedCardData = readCardData[0].data;
-                    if (!Object.hasOwn(parsedCardData.data, "group_only_greetings")) parsedCardData.data.group_only_greetings = [];
-                    if (importLorebook){
-                        handleLorebookImportLogic(parsedCardData.data.character_book);
-                        return;
-                    }
-                    console.log(`Only ${readCardData[0].keyword === "ccv3" ? "V3" : "V2"} Card info found`);
-                    console.log(parsedCardData);
-                    setCardData(parsedCardData);
-                    localStorage.setItem("cardData", JSON.stringify(parsedCardData));
-                    if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0)
-                        scanLorebookEntryNames(parsedCardData.data.character_book.entries);
-                }
-            } else {
-                console.log("This PNG doesn't have any Card Data!");
+            if (!readCardData) {
+                console.error("This PNG doesn't have any Card Data!");
+                return;
             }
-        } else if (/.+\.json$/.test(selectedFile.name)){ 
-            const parsedJson = JSON.parse(await selectedFile.text());
-            if(Object.hasOwn(parsedJson, "spec") || Object.hasOwn(parsedJson, "name")){
-                console.log(parsedJson);
-                if (importLorebook){
-                    handleLorebookImportLogic(parsedJson.spec==="lorebook_v3" ? parsedJson.data : parsedJson.data.character_book);
-                    return;
-                }
-                if (parsedJson.spec === "lorebook_v3" && !importLorebook){
-                    console.error("Uploaded file was a lorebook, not a card");
-                    return;
-                }
-                setCardData(parsedJson);
-                if (typeof parsedJson.data.character_book !== "undefined" && parsedJson.data.character_book.entries.length > 0)
-                    scanLorebookEntryNames(parsedJson.data.character_book.entries);
-            } else {
-                console.error("Please upload a valid .json")
+
+            // Prefer a ccv3 (V3) chunk when present; otherwise fall back to the chara (V2) chunk.
+            const preferredChunk = readCardData.find((chunk) => chunk.keyword === "ccv3") ?? readCardData[readCardData.length - 1];
+            const parsedCardData = preferredChunk.data;
+
+            if (importLorebook) {
+                const lorebookSource = typeof parsedCardData?.data === "object" && parsedCardData.data !== null ? parsedCardData.data.character_book : undefined;
+                handleLorebookImportLogic(normalizeLorebook(lorebookSource));
+                return;
             }
+
+            console.log(`${preferredChunk.keyword === "ccv3" ? "V3" : "V2"} Card info found: `, parsedCardData);
+            loadCardIntoState(parsedCardData);
+        } else if (/.+\.json$/.test(selectedFile.name)){
+            let parsedJson;
+            try {
+                parsedJson = JSON.parse(await selectedFile.text());
+            } catch (error) {
+                console.error("Please upload a valid .json file: ", error);
+                return;
+            }
+
+            if (importLorebook) {
+                const lorebookSource = typeof parsedJson === "object" && parsedJson !== null && parsedJson.spec === "lorebook_v3"
+                    ? parsedJson.data
+                    : parsedJson?.data?.character_book;
+                handleLorebookImportLogic(normalizeLorebook(lorebookSource));
+                return;
+            }
+
+            loadCardIntoState(parsedJson);
         } else {
             console.error("Please upload a valid card file type (.png or .json)")
         }
@@ -380,11 +361,21 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     async function handleOverwriteClick(event) {
         const file = event.target.files[0];
-        if (file) {
-            const parsedJson = JSON.parse(await file.text());
-            setPendingJson(parsedJson);
-            setOverwriteConfirmation(true);
+        if (!file) return;
+        let parsedJson;
+        try {
+            parsedJson = JSON.parse(await file.text());
+        } catch (error) {
+            console.error("Please upload a valid .json file: ", error);
+            return;
         }
+        const result = normalizeCardData(parsedJson);
+        if (!result.ok) {
+            console.error(result.error);
+            return;
+        }
+        setPendingJson(result.cardData);
+        setOverwriteConfirmation(true);
     }
 
     const handleOverwriteFile = () => {
