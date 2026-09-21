@@ -8,14 +8,11 @@ import {
     Checkbox,
     Container,
     FormControlLabel,
-    //IconButton,
     Paper,
-    //TextField,
     Switch,
     Tab,
     Tabs,
     Tooltip
-    //Typography
 } from '@mui/material'
 import { DarkMode, DarkModeOutlined, LightMode, LightModeOutlined } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles'
@@ -24,6 +21,7 @@ import ConfirmationDialog from '../ConfirmationDialog/ConfirmationDialog';
 import default_avatar from '../../assets/default_avatar.png';
 import FileUpload from '../FileUpload/FileUpload';
 import assembleNewPng from '../../utils/assembleNewPng';
+import getStoredCardData from '../../utils/getStoredCardData';
 import parsePngChunks from '../../utils/parsePngChunks';
 import stripPngChunks from '../../utils/stripPngChunks';
 import { AltGreetingTabPanel, BasicFieldTabPanel, GroupGreetingPanel, LorebookPanel, MacrosPanel } from '../TabPanels/TabPanels';
@@ -44,7 +42,10 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [deleteGroupGreetingConfirmation, setDeleteGroupGreetingConfirmation] = useState(false);
     const [deleteLorebookConfirmation, setDeleteLorebookConfirmation] = useState(false);
     const [displayImage, setDisplayImage] = useState(true);
-    const [file, setFile] = useState(localStorage.getItem("cardData") === null ? null : {name: JSON.parse(localStorage.getItem("cardData")).data.name});
+    const [file, setFile] = useState(() => {
+        const storedCardData = getStoredCardData();
+        return storedCardData === null ? null : {name: storedCardData.data.name};
+    });
     const [findReplaceConfirmation, setFindReplaceConfirmation] = useState(false);
     const [overwriteConfirmation, setOverwriteConfirmation] = useState(false);
     const [pendingEntry, setPendingEntry] = useState(-1);
@@ -108,9 +109,9 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     const populateV3Fields = (inJson) => {
         const outJson = inJson;
-        if (!inJson.spec === "chara_card_v3" && !inJson.spec_version === "3.0"){
+        if (inJson.spec !== "chara_card_v3" || inJson.spec_version !== "3.0"){
             outJson.spec = 'chara_card_v3';
-        outJson.spec_version = '3.0';
+            outJson.spec_version = '3.0';
         }
         const currTime = Math.floor(Date.now() / 1000);
         if (!Object.hasOwn(outJson.data, "creation_date") || typeof outJson.data.creation_date === "undefined") outJson.data.creation_date = currTime;
@@ -388,7 +389,8 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     const handleOverwriteFile = () => {
         setCardData(pendingJson);
-        scanLorebookEntryNames(pendingJson.data.character_book.entries);
+        if (typeof pendingJson.data.character_book !== "undefined" && pendingJson.data.character_book.entries.length > 0)
+            scanLorebookEntryNames(pendingJson.data.character_book.entries);
         setOverwriteConfirmation(false);
         setPendingJson(null)
     };
@@ -457,9 +459,6 @@ const TavernCardEditor = ({toggleTheme}) => {
 
                 setPreview(comrpessedBase64Png);
                 localStorage.setItem("previewImage", comrpessedBase64Png);
-                //const base64String = await convertBufferToBase64(arrayBuffer);
-                //setPreview(base64String);
-                //localStorage.setItem("previewImage", base64String);
             } catch (error) {
                 console.error("Error stripping PNG chunks and converting to base64: ", error);
             }
@@ -477,7 +476,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const handlePromoteGreeting = () => {
         const firstMes = cardData.data.first_mes;
         const altGreetings = [...cardData.data.alternate_greetings];
-        const toPromote = altGreetings.splice(pendingGreeting, 1)
+        const [toPromote] = altGreetings.splice(pendingGreeting, 1)
         altGreetings.unshift(firstMes);
         setCardData((prevState) => ({
             ...prevState,
