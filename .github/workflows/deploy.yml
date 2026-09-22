@@ -23,4 +23,6 @@ jobs:
       - run: npm run build
 
       - name: Deploy to gh-pages
-        run: npx gh-pages -d build -u '"github-actions[bot]" <github-actions@users.noreply.github.com>'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx gh-pages -d build -r "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" -u '"github-actions[bot]" <github-actions@users.noreply.github.com>'
