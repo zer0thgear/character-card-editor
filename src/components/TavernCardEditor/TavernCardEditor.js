@@ -8,14 +8,11 @@ import {
     Checkbox,
     Container,
     FormControlLabel,
-    //IconButton,
     Paper,
-    //TextField,
     Switch,
     Tab,
     Tabs,
     Tooltip
-    //Typography
 } from '@mui/material'
 import { DarkMode, DarkModeOutlined, LightMode, LightModeOutlined } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles'
@@ -24,9 +21,12 @@ import ConfirmationDialog from '../ConfirmationDialog/ConfirmationDialog';
 import default_avatar from '../../assets/default_avatar.png';
 import FileUpload from '../FileUpload/FileUpload';
 import assembleNewPng from '../../utils/assembleNewPng';
+import getStoredCardData from '../../utils/getStoredCardData';
+import normalizeCardData, { normalizeLorebook } from '../../utils/normalizeCardData';
 import parsePngChunks from '../../utils/parsePngChunks';
+import selectPreferredCardChunk, { countLorebookEntries } from '../../utils/selectPreferredCardChunk';
 import stripPngChunks from '../../utils/stripPngChunks';
-import { AltGreetingTabPanel, BasicFieldTabPanel, GroupGreetingPanel, LorebookPanel, MacrosPanel } from '../TabPanels/TabPanels';
+import { AltGreetingTabPanel, BasicFieldTabPanel, GroupGreetingPanel, LorebookPanel, MacrosPanel, RawJsonPanel } from '../TabPanels/TabPanels';
 import { useCard } from '../../context/CardContext';
 import { v3CardPrototype } from '../../utils/v3CardPrototype';
 import './TavernCardEditor.css';
@@ -44,7 +44,10 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [deleteGroupGreetingConfirmation, setDeleteGroupGreetingConfirmation] = useState(false);
     const [deleteLorebookConfirmation, setDeleteLorebookConfirmation] = useState(false);
     const [displayImage, setDisplayImage] = useState(true);
-    const [file, setFile] = useState(localStorage.getItem("cardData") === null ? null : {name: JSON.parse(localStorage.getItem("cardData")).data.name});
+    const [file, setFile] = useState(() => {
+        const storedCardData = getStoredCardData();
+        return storedCardData === null ? null : {name: storedCardData.data.name};
+    });
     const [findReplaceConfirmation, setFindReplaceConfirmation] = useState(false);
     const [overwriteConfirmation, setOverwriteConfirmation] = useState(false);
     const [pendingEntry, setPendingEntry] = useState(-1);
@@ -69,8 +72,10 @@ const TavernCardEditor = ({toggleTheme}) => {
     const creatorMetadataFields = [
         {fieldName: "creator"},
         {fieldName: "character_version", label: "Character Version"},
+        {fieldName: "nickname", label: "Nickname"},
         {fieldName: "creator_notes", label: "Creator Notes", multiline:true, rows:10},
-        {fieldName: "tags", label: "Tags (Comma separated, no quotes)", multiline:true}
+        {fieldName: "tags", label: "Tags (Comma separated, no quotes)", multiline:true},
+        {fieldName: "source", label: "Source (read-only, tracked automatically)", multiline:true, readOnly:true}
     ];
 
     const promptFields = [
@@ -87,8 +92,8 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const backfillLorebookNames = () => {
-        const lorebookEntries = [...cardData.data.character_book.entries].map((entry) => {
-            const newEntry = entry;
+        const lorebookEntries = cardData.data.character_book.entries.map((entry) => {
+            const newEntry = {...entry};
             if (newEntry.name === "" || !Object.hasOwn(newEntry, "name") || typeof newEntry.name === "undefined") newEntry.name = newEntry.comment;
             else newEntry.comment = newEntry.name;
             return newEntry
@@ -108,9 +113,9 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     const populateV3Fields = (inJson) => {
         const outJson = inJson;
-        if (!inJson.spec === "chara_card_v3" && !inJson.spec_version === "3.0"){
+        if (inJson.spec !== "chara_card_v3" || inJson.spec_version !== "3.0"){
             outJson.spec = 'chara_card_v3';
-        outJson.spec_version = '3.0';
+            outJson.spec_version = '3.0';
         }
         const currTime = Math.floor(Date.now() / 1000);
         if (!Object.hasOwn(outJson.data, "creation_date") || typeof outJson.data.creation_date === "undefined") outJson.data.creation_date = currTime;
@@ -221,78 +226,66 @@ const TavernCardEditor = ({toggleTheme}) => {
         setDeleteLorebookConfirmation(false);
     };
 
+    const loadCardIntoState = (parsedCardData) => {
+        const result = normalizeCardData(parsedCardData);
+        if (!result.ok) {
+            console.error(result.error);
+            return;
+        }
+        setCardData(result.cardData);
+        localStorage.setItem("cardData", JSON.stringify(result.cardData));
+        if (typeof result.cardData.data.character_book !== "undefined" && result.cardData.data.character_book.entries.length > 0)
+            scanLorebookEntryNames(result.cardData.data.character_book.entries);
+    };
+
     async function handleFileSelect(event, importLorebook=false) {
         const selectedFile = event.target.files[0];
         if(!importLorebook) setFile(selectedFile);
         if (/.+\.png$/.test(selectedFile.name)){
             const readCardData = await parsePngChunks(selectedFile, ["ccv3", "chara"]);
-            if (readCardData) {
-                if (readCardData.length >= 2) {
-                    for (let item = 0; item < readCardData.length; item++){
-                        const parsedCardData = readCardData[item].data;
-                        if (!Object.hasOwn(parsedCardData.data, "group_only_greetings")) parsedCardData.data.group_only_greetings = [];
-                        if (readCardData[item].keyword === "ccv3"){
-                            if (importLorebook){
-                                handleLorebookImportLogic(parsedCardData.data.character_book);
-                                return;
-                            }
-                            setCardData(parsedCardData);
-                            localStorage.setItem("cardData", JSON.stringify(parsedCardData));
-                            console.log("V3 Card info found");
-                            console.log(parsedCardData);
-                            if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0)
-                                scanLorebookEntryNames(parsedCardData.data.character_book.entries);
-                            return;
-                        } else if (readCardData[item].keyword === "chara"){
-                            if (importLorebook && item === readCardData.length - 1 && item === readCardData.length - 1){
-                                handleLorebookImportLogic(parsedCardData.data.character_book);
-                                return;
-                            }
-                            console.log("V2 card info found");
-                            if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0 && item === readCardData.length - 1){
-                                setCardData(parsedCardData);
-                                localStorage.setItem("cardData", JSON.stringify(parsedCardData));
-                                scanLorebookEntryNames(parsedCardData.data.character_book.entries);
-                            }
-                            console.log(parsedCardData);
-                        }
-                    }
-                }
-                else {
-                    const parsedCardData = readCardData[0].data;
-                    if (!Object.hasOwn(parsedCardData.data, "group_only_greetings")) parsedCardData.data.group_only_greetings = [];
-                    if (importLorebook){
-                        handleLorebookImportLogic(parsedCardData.data.character_book);
-                        return;
-                    }
-                    console.log(`Only ${readCardData[0].keyword === "ccv3" ? "V3" : "V2"} Card info found`);
-                    console.log(parsedCardData);
-                    setCardData(parsedCardData);
-                    localStorage.setItem("cardData", JSON.stringify(parsedCardData));
-                    if (typeof parsedCardData.data.character_book !== "undefined" && parsedCardData.data.character_book.entries.length > 0)
-                        scanLorebookEntryNames(parsedCardData.data.character_book.entries);
-                }
-            } else {
-                console.log("This PNG doesn't have any Card Data!");
+            if (!readCardData) {
+                console.error("This PNG doesn't have any Card Data!");
+                return;
             }
-        } else if (/.+\.json$/.test(selectedFile.name)){ 
-            const parsedJson = JSON.parse(await selectedFile.text());
-            if(Object.hasOwn(parsedJson, "spec") || Object.hasOwn(parsedJson, "name")){
-                console.log(parsedJson);
-                if (importLorebook){
-                    handleLorebookImportLogic(parsedJson.spec==="lorebook_v3" ? parsedJson.data : parsedJson.data.character_book);
-                    return;
-                }
-                if (parsedJson.spec === "lorebook_v3" && !importLorebook){
-                    console.error("Uploaded file was a lorebook, not a card");
-                    return;
-                }
-                setCardData(parsedJson);
-                if (typeof parsedJson.data.character_book !== "undefined" && parsedJson.data.character_book.entries.length > 0)
-                    scanLorebookEntryNames(parsedJson.data.character_book.entries);
-            } else {
-                console.error("Please upload a valid .json")
+
+            // Some export tools embed more than one card copy in a PNG and the copies can go out
+            // of sync (e.g. one has the full lorebook, another has none/a stale one), so pick
+            // whichever chunk actually has the most complete lorebook rather than guessing by
+            // keyword or position.
+            if (readCardData.length > 1) {
+                const entryCounts = readCardData.map((chunk) => `${chunk.keyword}: ${countLorebookEntries(chunk)} lorebook entries`);
+                if (new Set(readCardData.map(countLorebookEntries)).size > 1)
+                    console.warn(`This PNG has multiple embedded card copies with differing lorebook sizes (${entryCounts.join(", ")}). Using the most complete one.`);
             }
+            const preferredChunk = selectPreferredCardChunk(readCardData);
+            const parsedCardData = preferredChunk.data;
+
+            if (importLorebook) {
+                const lorebookSource = typeof parsedCardData?.data === "object" && parsedCardData.data !== null ? parsedCardData.data.character_book : undefined;
+                handleLorebookImportLogic(normalizeLorebook(lorebookSource));
+                return;
+            }
+
+            console.log(`${preferredChunk.keyword === "ccv3" ? "V3" : "V2"} Card info found: `, parsedCardData);
+            loadCardIntoState(parsedCardData);
+        } else if (/.+\.json$/.test(selectedFile.name)){
+            let parsedJson;
+            try {
+                parsedJson = JSON.parse(await selectedFile.text());
+            } catch (error) {
+                console.error("Please upload a valid .json file: ", error);
+                return;
+            }
+
+            if (importLorebook) {
+                const lorebookSource = typeof parsedJson === "object" && parsedJson !== null && parsedJson.spec === "lorebook_v3"
+                    ? parsedJson.data
+                    : parsedJson?.data?.character_book;
+                handleLorebookImportLogic(normalizeLorebook(lorebookSource));
+                return;
+            }
+
+            loadCardIntoState(parsedJson);
         } else {
             console.error("Please upload a valid card file type (.png or .json)")
         }
@@ -379,16 +372,27 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     async function handleOverwriteClick(event) {
         const file = event.target.files[0];
-        if (file) {
-            const parsedJson = JSON.parse(await file.text());
-            setPendingJson(parsedJson);
-            setOverwriteConfirmation(true);
+        if (!file) return;
+        let parsedJson;
+        try {
+            parsedJson = JSON.parse(await file.text());
+        } catch (error) {
+            console.error("Please upload a valid .json file: ", error);
+            return;
         }
+        const result = normalizeCardData(parsedJson);
+        if (!result.ok) {
+            console.error(result.error);
+            return;
+        }
+        setPendingJson(result.cardData);
+        setOverwriteConfirmation(true);
     }
 
     const handleOverwriteFile = () => {
         setCardData(pendingJson);
-        scanLorebookEntryNames(pendingJson.data.character_book.entries);
+        if (typeof pendingJson.data.character_book !== "undefined" && pendingJson.data.character_book.entries.length > 0)
+            scanLorebookEntryNames(pendingJson.data.character_book.entries);
         setOverwriteConfirmation(false);
         setPendingJson(null)
     };
@@ -457,9 +461,6 @@ const TavernCardEditor = ({toggleTheme}) => {
 
                 setPreview(comrpessedBase64Png);
                 localStorage.setItem("previewImage", comrpessedBase64Png);
-                //const base64String = await convertBufferToBase64(arrayBuffer);
-                //setPreview(base64String);
-                //localStorage.setItem("previewImage", base64String);
             } catch (error) {
                 console.error("Error stripping PNG chunks and converting to base64: ", error);
             }
@@ -477,7 +478,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const handlePromoteGreeting = () => {
         const firstMes = cardData.data.first_mes;
         const altGreetings = [...cardData.data.alternate_greetings];
-        const toPromote = altGreetings.splice(pendingGreeting, 1)
+        const [toPromote] = altGreetings.splice(pendingGreeting, 1)
         altGreetings.unshift(firstMes);
         setCardData((prevState) => ({
             ...prevState,
@@ -589,8 +590,8 @@ const TavernCardEditor = ({toggleTheme}) => {
             <ConfirmationDialog
                 open={overwriteConfirmation}
                 handleClose={closeOverwriteConfirmation}
-                dialogTitle="Overwrite with a JSON file?"
-                dialogContent="Are you sure you want to overwrite the current fields with a different JSON file? This action cannot be undone."
+                dialogTitle="Overwrite the current card?"
+                dialogContent="Are you sure you want to overwrite the current fields with this JSON? This action cannot be undone."
                 handleConfirm={handleOverwriteFile}
             />
             <ConfirmationDialog
@@ -690,6 +691,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 <Tab id={4} label="Lorebook"/>
                                 <Tab id={5} label="Group Greetings"/>
                                 <Tab id={6} label="Macros"/>
+                                <Tab id={7} label="Raw JSON"/>
                             </Tabs>
                             <BasicFieldTabPanel
                                 curTab={tabValue}
@@ -731,6 +733,14 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 index={6}
                                 handlePurgeClick={() => setPurgeAsterisksConfirmation(true)}
                                 handleFindReplaceClick={(val1, val2) => handleFindReplaceClick(val1, val2)}
+                            />
+                            <RawJsonPanel
+                                curTab={tabValue}
+                                index={7}
+                                onApply={(normalizedCardData) => {
+                                    setPendingJson(normalizedCardData);
+                                    setOverwriteConfirmation(true);
+                                }}
                             />
                             <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
                                 <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>

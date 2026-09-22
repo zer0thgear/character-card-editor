@@ -1,14 +1,16 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import debounce from "lodash.debounce";
-import { 
+import {
     Accordion,
     AccordionDetails,
     AccordionSummary,
+    Alert,
     Box,
     Button,
     IconButton,
     TextField,
-    Tooltip 
+    Tooltip,
+    Typography
 } from "@mui/material";
 import { ArrowDropDown, DeleteOutline, DragHandle, KeyboardDoubleArrowUp } from "@mui/icons-material";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
@@ -17,6 +19,7 @@ import AltGreetingTextField, { GroupGreetingTextField } from "../AltGreetingText
 import CardTextField from "../CardTextField/CardTextField";
 import { LorebookEntryBool, LorebookEntryInt, LorebookEntryString, LorebookMetaBool, LorebookMetaInt, LorebookMetaString } from "../LorebookTextFields/LorebookTextFields";
 import { useCard } from "../../context/CardContext";
+import normalizeCardData from "../../utils/normalizeCardData";
 import { v3CharacterBookPrototype, v3CharacterBookEntryPrototype } from "../../utils/v3CardPrototype";
 
 export function BasicFieldTabPanel ({curTab, index, arrayToIterate}) {
@@ -46,52 +49,71 @@ export function BasicFieldTabPanel ({curTab, index, arrayToIterate}) {
         debouncedSetCardData(name, value.split(","));
     }
 
+    const handleReadOnlyChange = () => {};
+
     return(
         <div hidden={curTab !== index}>
             {arrayToIterate.map((field, index) => (
                 <CardTextField
-                    key={field.fieldName.concat(index)} 
-                    fieldName={field.fieldName} 
-                    label={Object.hasOwn(field, "label") ? field.label : ""} 
-                    multiline={Object.hasOwn(field, "multiline") ? field.multiline : false} 
+                    key={field.fieldName.concat(index)}
+                    fieldName={field.fieldName}
+                    label={Object.hasOwn(field, "label") ? field.label : ""}
+                    multiline={Object.hasOwn(field, "multiline") ? field.multiline : false}
                     rows={Object.hasOwn(field, "rows") ? field.rows : 1}
-                    changeCallback={field.fieldName === "tags" ? handleTagChange : handleTextFieldChange}
+                    readOnly={Object.hasOwn(field, "readOnly") ? field.readOnly : false}
+                    changeCallback={field.readOnly ? handleReadOnlyChange : (field.fieldName === "tags" ? handleTagChange : handleTextFieldChange)}
                 />
             ))}
         </div>
     );
 }
 
-export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, handlePromoteClick}) {
+/**
+ * Shared reorderable-list panel for the two "list of greeting strings" fields
+ * (alternate_greetings and group_only_greetings), which otherwise differ only in which
+ * field they edit, their text/id labels, and whether a "promote" action is offered.
+ *
+ * @param {int} curTab Currently selected tab index
+ * @param {int} index This panel's tab index
+ * @param {string} fieldName Card data field to edit ("alternate_greetings" or "group_only_greetings")
+ * @param {string} namePrefix Prefix used to build each field's unique name/key (e.g. "altGreeting")
+ * @param {string} droppableId Unique id for the dnd Droppable
+ * @param {string} accordionLabelPrefix Text prefixed to (index+1) for the accordion header
+ * @param {string} fieldLabelPrefix Text prefixed to (index+1) for the text field's label
+ * @param {*} TextFieldComponent Greeting text field component (AltGreetingTextField or GroupGreetingTextField)
+ * @param {*} handleDeleteClick Called with the greeting's index when its delete button is clicked
+ * @param {*} [handlePromoteClick] If provided, renders a "promote to first message" button per greeting
+ */
+function GreetingListPanel({curTab, index, fieldName, namePrefix, droppableId, accordionLabelPrefix, fieldLabelPrefix, TextFieldComponent, handleDeleteClick, handlePromoteClick}) {
     const { cardData, setCardData } = useCard();
     const [expanded, setExpanded] = useState([]);
 
+    const greetings = cardData.data[fieldName];
+
     const handleAddGreeting = () => {
-        const altGreetingArray = [...cardData.data.alternate_greetings];
-        altGreetingArray.push("");
         setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
-                alternate_greetings: altGreetingArray
+                [fieldName]: [...prevState.data[fieldName], ""]
             }
         }))
     };
 
     const handleAccordionChange = (panel) => (event, isExpanded) => {
-        setExpanded((prevExpanded) => 
+        setExpanded((prevExpanded) =>
             isExpanded ? [...prevExpanded, panel] : prevExpanded.filter((p) => p !== panel)
         );
     };
 
-    const handleAltGreetingChange = (e) => {
+    const handleGreetingChange = (e) => {
         const {name, value} = e.target;
-        const index = name.match(/altGreeting(\d+)/)[1];
+        const greetingIndex = name.match(new RegExp(`${namePrefix}(\\d+)`))[1];
         setCardData((prevState) => ({
             ...prevState,
             data: {
                 ...prevState.data,
-                alternate_greetings: prevState.data.alternate_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting)
+                [fieldName]: prevState.data[fieldName].map((greeting, i) => i === parseInt(greetingIndex, 10) ? value : greeting)
             }
         }));
     };
@@ -99,7 +121,7 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
     const handleDragEnd = (result) => {
         if (!result.destination) return;
 
-        const items = [...cardData.data.alternate_greetings];
+        const items = [...greetings];
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0 , reorderedItem);
 
@@ -107,11 +129,11 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
             ...prevState,
             data: {
                 ...prevState.data,
-                alternate_greetings: items
+                [fieldName]: items
             }
         }));
 
-        setExpanded((prevExpanded) => 
+        setExpanded((prevExpanded) =>
             prevExpanded.map((panel) => {
                 if (panel === result.source.index) return result.destination.index;
                 if (panel > result.source.index && panel <= result.destination.index) return panel - 1;
@@ -125,17 +147,17 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
         <div hidden={curTab !== index}>
             <Button onClick={handleAddGreeting} variant="contained" sx={{mb:1}}>Add new greeting</Button>
             <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="droppable">
+                <Droppable droppableId={droppableId}>
                     {(provided) => (
                         <Box
                             {...provided.droppableProps}
                             ref={provided.innerRef}
                             sx={{mb:1}}
                         >
-                            {cardData.data.alternate_greetings.map((text, index) => (
-                                <Draggable key={`draggableGreeting#${index}`} draggableId={`draggableGreeting#${index}`} index={index}>
+                            {greetings.map((text, greetingIndex) => (
+                                <Draggable key={`draggable${droppableId}#${greetingIndex}`} draggableId={`draggable${droppableId}#${greetingIndex}`} index={greetingIndex}>
                                     {(provided) => (
-                                        <Box 
+                                        <Box
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
                                             style={{display:"flex", ...provided.draggableProps.style}}
@@ -143,25 +165,27 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
                                             <Tooltip title="Drag to reorder">
                                                 <IconButton {...provided.dragHandleProps}><DragHandle/></IconButton>
                                             </Tooltip>
-                                            <Accordion expanded={expanded.includes(index)} onChange={handleAccordionChange(index)} slotProps={{transition: {unmountOnExit: true}}} style={{width:'100%'}} sx={{mb:2, mt:2}}>
+                                            <Accordion expanded={expanded.includes(greetingIndex)} onChange={handleAccordionChange(greetingIndex)} slotProps={{transition: {unmountOnExit: true}}} style={{width:'100%'}} sx={{mb:2, mt:2}}>
                                                 <AccordionSummary expandIcon={<ArrowDropDown/>}>
-                                                    {"Alternate Greeting #".concat(index+1)}
+                                                    {accordionLabelPrefix.concat(greetingIndex+1)}
                                                 </AccordionSummary>
                                                 <AccordionDetails>
-                                                    <AltGreetingTextField
-                                                        key={"altGreeting".concat(index)}
-                                                        greetingIndex={index}
-                                                        label={"Alternate Greeting #".concat(index+1)}
-                                                        fieldName={"altGreeting".concat(index)}
-                                                        changeCallback={handleAltGreetingChange}
+                                                    <TextFieldComponent
+                                                        key={namePrefix.concat(greetingIndex)}
+                                                        greetingIndex={greetingIndex}
+                                                        label={fieldLabelPrefix.concat(greetingIndex+1)}
+                                                        fieldName={namePrefix.concat(greetingIndex)}
+                                                        changeCallback={handleGreetingChange}
                                                         style={{flex:9}}
                                                     />
                                                 </AccordionDetails>
                                             </Accordion>
-                                            <Tooltip title="Promote this greeting to first message"><IconButton onClick={() => handlePromoteClick(index)}><KeyboardDoubleArrowUp/></IconButton></Tooltip>
-                                            <Tooltip title="Delete this greeting"><IconButton aria-label="delete" color="error" onClick={() => handleAltGreetingClick(index)}><DeleteOutline/></IconButton></Tooltip>
+                                            {handlePromoteClick &&
+                                                <Tooltip title="Promote this greeting to first message"><IconButton onClick={() => handlePromoteClick(greetingIndex)}><KeyboardDoubleArrowUp/></IconButton></Tooltip>
+                                            }
+                                            <Tooltip title="Delete this greeting"><IconButton aria-label="delete" color="error" onClick={() => handleDeleteClick(greetingIndex)}><DeleteOutline/></IconButton></Tooltip>
                                         </Box>
-                                    )}  
+                                    )}
                                 </Draggable>
                             ))}
                             {provided.placeholder}
@@ -170,6 +194,23 @@ export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, hand
                 </Droppable>
             </DragDropContext>
         </div>
+    );
+}
+
+export function AltGreetingTabPanel({curTab, index, handleAltGreetingClick, handlePromoteClick}) {
+    return(
+        <GreetingListPanel
+            curTab={curTab}
+            index={index}
+            fieldName="alternate_greetings"
+            namePrefix="altGreeting"
+            droppableId="droppableGreeting"
+            accordionLabelPrefix="Alternate Greeting #"
+            fieldLabelPrefix="Alternate Greeting #"
+            TextFieldComponent={AltGreetingTextField}
+            handleDeleteClick={handleAltGreetingClick}
+            handlePromoteClick={handlePromoteClick}
+        />
     );
 }
 
@@ -243,7 +284,8 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         const fieldName = regexMatches[1];
         const index = parseInt(regexMatches[2], 10);
         const items = [...cardData.data.character_book.entries];
-        const [alteredItem] = items.splice(index, 1);
+        const [oldItem] = items.splice(index, 1);
+        const alteredItem = {...oldItem};
         if (fieldName === "name") {
             alteredItem.name = value;
             alteredItem.comment = value;
@@ -271,8 +313,8 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         const fieldName = regexMatches[1];
         const index = parseInt(regexMatches[2], 10);
         const items = [...cardData.data.character_book.entries];
-        const [alteredItem] = items.splice(index, 1);
-        alteredItem[fieldName] = keys;
+        const [oldItem] = items.splice(index, 1);
+        const alteredItem = {...oldItem, [fieldName]: keys};
         items.splice(index, 0, alteredItem);
 
         setCardData((prevState) => ({
@@ -368,7 +410,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                         </Tooltip>
                                                         <Accordion expanded={expanded.includes(index)} onChange={handleAccordionChange(index)} slotProps={{transition: {unmountOnExit:true}}} style={{width:'100%'}} sx={{mb:2, mt:2}}>
                                                             <AccordionSummary expandIcon={<ArrowDropDown/>}>
-                                                                {`${entry.name}`}
+                                                                {entry.name || entry.comment || `Lorebook Entry #${index+1}`}
                                                             </AccordionSummary>
                                                             <AccordionDetails>
                                                                 <Box style={{width:'100%'}}>
@@ -462,112 +504,18 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
 }
 
 export function GroupGreetingPanel({curTab, index, handleGroupGreetingClick}){
-    const { cardData, setCardData } = useCard();
-    const [expanded, setExpanded] = useState([]);
-
-    const handleAccordionChange = (panel) => (event, isExpanded) => {
-        setExpanded((prevExpanded) =>
-            isExpanded ? [...prevExpanded, panel] : prevExpanded.filter((p) => p !== panel)
-        );
-    };
-
-    const handleAddGroupGreeting = () => {
-        const groupGreetingArray = [...cardData.data.group_only_greetings];
-        groupGreetingArray.push("");
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                group_only_greetings: groupGreetingArray
-            }
-        }))
-    };
-
-    const handleGroupGreetingChange = (e) => {
-        const {name, value} = e.target;
-        const index = name.match(/groupGreeting(\d+)/)[1];
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                group_only_greetings: prevState.data.group_only_greetings.map((greeting, i) => i === parseInt(index, 10) ? value : greeting)
-            }
-        }));
-    };
-
-    const handleDragEnd = (result) => {
-        if (!result.destination) return;
-
-        const items = [...cardData.data.group_only_greetings];
-        const [reorderedItem] = items.splice(result.source.index, 1);
-        items.splice(result.destination.index, 0 , reorderedItem);
-
-        setCardData((prevState) => ({
-            ...prevState,
-            data: {
-                ...prevState.data,
-                group_only_greetings: items
-            }
-        }));
-
-        setExpanded((prevExpanded) =>
-            prevExpanded.map((panel) => {
-                if (panel === result.source.index) return result.destination.index;
-                if (panel > result.source.index && panel <= result.destination.index) return panel - 1;
-                if (panel < result.source.index && panel >= result.destination.index) return panel + 1;
-                return panel;
-            })
-        );
-    };
-
     return(
-        <div hidden={curTab !== index}>
-            <Button onClick={handleAddGroupGreeting} variant="contained" sx={{mb:1}}>Add new greeting</Button>
-            <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="droppableGroupGreeting">
-                    {(provided) => (
-                        <Box
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}
-                            sx={{mb:1}}
-                        >
-                            {cardData.data.group_only_greetings.map((text, index) => (
-                                <Draggable key={`draggableGroupGreeting#${index}`} draggableId={`draggableGroupGreeting#${index}`} index={index}>
-                                    {(provided) => (
-                                        <Box 
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            style={{display:"flex", ...provided.draggableProps.style}}
-                                        >
-                                            <Tooltip title="Drag to reorder">
-                                                <IconButton {...provided.dragHandleProps}><DragHandle/></IconButton>
-                                            </Tooltip>
-                                            <Accordion expanded={expanded.includes(index)} onChange={handleAccordionChange(index)} slotProps={{transition: {unmountOnExit:true}}} style={{width:'100%'}} sx={{mb:2, mt:2}}>
-                                                <AccordionSummary expandIcon={<ArrowDropDown/>}>
-                                                    {"Group Greeting #".concat(index+1)}
-                                                </AccordionSummary>
-                                                <AccordionDetails>
-                                                    <GroupGreetingTextField
-                                                        key={"groupGreeting".concat(index)}
-                                                        greetingIndex={index}
-                                                        label={"Group Only Greeting #".concat(index+1)}
-                                                        fieldName={"groupGreeting".concat(index)}
-                                                        changeCallback={handleGroupGreetingChange}
-                                                        style={{flex:9}}
-                                                    />
-                                                </AccordionDetails>
-                                            </Accordion>
-                                            <Tooltip title="Delete this greeting"><IconButton aria-label="delete" color="error" onClick={() => handleGroupGreetingClick(index)}><DeleteOutline/></IconButton></Tooltip>
-                                        </Box>
-                                    )}  
-                                </Draggable>
-                            ))}
-                            {provided.placeholder}
-                        </Box>
-                    )}
-                </Droppable>
-            </DragDropContext>
-        </div>
+        <GreetingListPanel
+            curTab={curTab}
+            index={index}
+            fieldName="group_only_greetings"
+            namePrefix="groupGreeting"
+            droppableId="droppableGroupGreeting"
+            accordionLabelPrefix="Group Greeting #"
+            fieldLabelPrefix="Group Only Greeting #"
+            TextFieldComponent={GroupGreetingTextField}
+            handleDeleteClick={handleGroupGreetingClick}
+        />
     );
 }
 
@@ -589,6 +537,80 @@ export function MacrosPanel({curTab, index, handlePurgeClick, handleFindReplaceC
                     </Tooltip>
                 </Box>
             </Box>
+        </div>
+    );
+}
+
+/**
+ * Power-user escape hatch: view and directly edit the card's raw JSON. Local-only until
+ * "Apply Changes" is clicked, so typing invalid/incomplete JSON along the way never touches
+ * card state. Applying re-validates through the same normalizeCardData used for uploads, then
+ * hands the result to onApply (the parent shows a confirmation and actually applies it, reusing
+ * the same flow as "Overwrite With JSON File").
+ *
+ * @param {int} curTab Currently selected tab index
+ * @param {int} index This panel's tab index
+ * @param {*} onApply Called with the normalized card object once the edited JSON validates
+ */
+export function RawJsonPanel({curTab, index, onApply}) {
+    const { cardData } = useCard();
+    const [rawJsonText, setRawJsonText] = useState(() => JSON.stringify(cardData, null, 2));
+    const [dirty, setDirty] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        if (!dirty) setRawJsonText(JSON.stringify(cardData, null, 2));
+    }, [cardData, dirty]);
+
+    const handleChange = (e) => {
+        setRawJsonText(e.target.value);
+        setDirty(true);
+        setError(null);
+    };
+
+    const handleReset = () => {
+        setRawJsonText(JSON.stringify(cardData, null, 2));
+        setDirty(false);
+        setError(null);
+    };
+
+    const handleApplyClick = () => {
+        let parsedJson;
+        try {
+            parsedJson = JSON.parse(rawJsonText);
+        } catch (err) {
+            setError(`Invalid JSON: ${err.message}`);
+            return;
+        }
+        const result = normalizeCardData(parsedJson);
+        if (!result.ok) {
+            setError(result.error);
+            return;
+        }
+        setError(null);
+        setDirty(false);
+        onApply(result.cardData);
+    };
+
+    return(
+        <div hidden={curTab !== index}>
+            <Box sx={{mb:1, display:"flex", alignItems:"center", gap:2}}>
+                <Tooltip title="Validate and apply the JSON below to the card, after confirmation">
+                    <Button onClick={handleApplyClick} variant="contained">Apply Changes</Button>
+                </Tooltip>
+                <Button disabled={!dirty} onClick={handleReset} variant="outlined">Reset</Button>
+                {dirty && <Typography color="text.secondary" variant="body2">Unapplied changes</Typography>}
+            </Box>
+            {error && <Alert severity="error" sx={{mb:1}}>{error}</Alert>}
+            <TextField
+                autoComplete="off"
+                fullWidth
+                multiline
+                onChange={handleChange}
+                rows={20}
+                slotProps={{htmlInput: {style: {fontFamily:"monospace", fontSize:"0.85em", resize:"vertical"}}}}
+                value={rawJsonText}
+            />
         </div>
     );
 }

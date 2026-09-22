@@ -1,88 +1,36 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import debounce from "lodash.debounce";
+import { MenuItem, TextField } from "@mui/material";
 
-import { 
-    MenuItem,
-    TextField 
-} from "@mui/material";
-
+import DebouncedTextField from "../DebouncedTextField/DebouncedTextField";
+import capitalize from "../../utils/capitalize";
 import { useCard } from "../../context/CardContext";
 
 export function LorebookMetaString({label="", fieldName, changeCallback}){
     const { cardData } = useCard();
-    const [localValue, setLocalValue] = useState(cardData.data.character_book[fieldName]);
-    const inputRef = useRef(null);
-
-    useEffect(() => {
-        setLocalValue(cardData.data.character_book[fieldName]);
-    }, [cardData.data.character_book, fieldName]);
-
-    // eslint-disable-next-line
-    const debouncedChangeCallback = useCallback(
-        debounce((e) => {
-            changeCallback(e);
-        }, 300), 
-        [changeCallback]
-    );
-
-    const handleChange = (e) => {
-        const { value } = e.target;
-        const cursorPosition = inputRef.current.selectionStart;
-        setLocalValue(value);
-        debouncedChangeCallback(e);
-        setTimeout(() => {
-            inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
-        }, 0);
-    };
 
     return(
-        <TextField
-            autoComplete="off"
-            fullWidth
-            inputRef={inputRef}
-            label={label && label !== "" ? label : "Lorebook".concat(" ", fieldName.charAt(0).toUpperCase() + fieldName.slice(1))}
-            margin="normal"
+        <DebouncedTextField
+            label={label && label !== "" ? label : "Lorebook".concat(" ", capitalize(fieldName))}
             multiline
             name={fieldName}
-            onChange={handleChange}
-            slotProps={{htmlInput: {style: {resize:'vertical'}}}}
-            value={localValue}
+            onChange={changeCallback}
+            value={cardData.data.character_book[fieldName]}
         />
     );
 }
 
 export function LorebookMetaInt({label="", fieldName, changeCallback}){
     const { cardData } = useCard();
-    const [localValue, setLocalValue] = useState(cardData.data.character_book[fieldName]);
 
-    useEffect(() => {
-        setLocalValue(cardData.data.character_book[fieldName]);
-    }, [cardData.data.character_book, fieldName]);
-
-    // eslint-disable-next-line
-    const debouncedChangeCallback = useCallback(
-        debounce((e) => {
-            changeCallback(e);
-        }, 300), 
-        [changeCallback]
-    );
-
-    const handleChange = (e) => {
-        const { value } = e.target;
-        setLocalValue(value);
-        debouncedChangeCallback(e);
-    };
-    
     return(
-        <TextField
-            autoComplete="off"
-            label={label && label !== "" ? label : "Lorebook".concat(" ", fieldName.charAt(0).toUpperCase() + fieldName.slice(1))}
-            margin="normal"
+        <DebouncedTextField
+            fullWidth={false}
+            label={label && label !== "" ? label : "Lorebook".concat(" ", capitalize(fieldName))}
             name={fieldName}
-            onChange={handleChange}
+            onChange={changeCallback}
+            preserveCursor={false}
             slotProps={{htmlInput: {inputMode: "numeric", style: {resize:'vertical'}}}}
             type="number"
-            value={localValue}
+            value={cardData.data.character_book[fieldName]}
         />
     );
 }
@@ -107,80 +55,33 @@ export function LorebookMetaBool({label="", fieldName, changeCallback}){
 
 export function LorebookEntryString({label="", fieldName, entryIndex, changeCallback, rows=1}){
     const { cardData } = useCard();
-    const [localValue, setLocalValue] = useState(cardData.data.character_book.entries[entryIndex][fieldName]);
-    const inputRef = useRef(null);
 
-    useEffect(() => {
-        setLocalValue(cardData.data.character_book.entries[entryIndex][fieldName]);
-    }, [cardData.data.character_book.entries, entryIndex, fieldName]);
-
-    // eslint-disable-next-line
-    const debouncedChangeCallback = useCallback(
-        debounce((e) => {
-            changeCallback(e);
-        }, 300), 
-        [changeCallback]
-    );
-    
-    const handleChange = (e) => {
-        const { value } = e.target;
-        const cursorPosition = inputRef.current.selectionStart;
-        setLocalValue(value);
-        debouncedChangeCallback(e);
-        setTimeout(() => {
-            inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
-        }, 0);
-    }
-    
     return(
-        <TextField
-            autoComplete="off"
-            fullWidth
-            inputRef={inputRef}
-            label={label && label !== "" ? label : "Entry".concat(" ", fieldName.charAt(0).toUpperCase() + fieldName.slice(1))}
-            margin="normal"
+        <DebouncedTextField
+            label={label && label !== "" ? label : "Entry".concat(" ", capitalize(fieldName))}
             multiline
             name={`${fieldName}#${entryIndex}`}
-            onChange={handleChange}
+            onChange={changeCallback}
             rows={rows}
             slotProps={{htmlInput: {style: {resize:'vertical'}}, inputLabel: {shrink:true}}}
-            value={localValue}
+            value={cardData.data.character_book.entries[entryIndex][fieldName]}
         />
     );
 }
 
 export function LorebookEntryInt({label="", fieldName, entryIndex, changeCallback}){
     const { cardData } = useCard();
-    const [localValue, setLocalValue] = useState(cardData.data.character_book.entries[entryIndex][fieldName]);
 
-    useEffect(() => {
-        setLocalValue(cardData.data.character_book.entries[entryIndex][fieldName]);
-    }, [cardData.data.character_book.entries, entryIndex, fieldName]);
-
-    // eslint-disable-next-line
-    const debouncedChangeCallback = useCallback(
-        debounce((e) => {
-            changeCallback(e);
-        }, 300), 
-        [changeCallback]
-    );
-
-    const handleChange = (e) => {
-        const { value } = e.target;
-        setLocalValue(value);
-        debouncedChangeCallback(e);
-    }
-    
     return(
-        <TextField
-            autoComplete="off"
-            label={label && label !== "" ? label : "Lorebook".concat(" ", fieldName.charAt(0).toUpperCase() + fieldName.slice(1))}
-            margin="normal"
+        <DebouncedTextField
+            fullWidth={false}
+            label={label && label !== "" ? label : "Lorebook".concat(" ", capitalize(fieldName))}
             name={`${fieldName}#${entryIndex}`}
-            onChange={handleChange}
+            onChange={changeCallback}
+            preserveCursor={false}
             slotProps={{htmlInput: {inputMode: "numeric", style: {resize:'vertical'}}}}
             type="number"
-            value={localValue}
+            value={cardData.data.character_book.entries[entryIndex][fieldName]}
         />
     );
 }

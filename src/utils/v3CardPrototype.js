@@ -23,7 +23,7 @@ export const v3CardPrototype = () => {return({
         
         // New V3 fields
         assets: undefined,
-        nickname: undefined,
+        nickname: "",
         creator_notes_multilingual: undefined,
         source: undefined,
         group_only_greetings: [],
