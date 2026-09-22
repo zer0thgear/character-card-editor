@@ -90,8 +90,8 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const backfillLorebookNames = () => {
-        const lorebookEntries = [...cardData.data.character_book.entries].map((entry) => {
-            const newEntry = entry;
+        const lorebookEntries = cardData.data.character_book.entries.map((entry) => {
+            const newEntry = {...entry};
             if (newEntry.name === "" || !Object.hasOwn(newEntry, "name") || typeof newEntry.name === "undefined") newEntry.name = newEntry.comment;
             else newEntry.comment = newEntry.name;
             return newEntry

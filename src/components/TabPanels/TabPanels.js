@@ -278,7 +278,8 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         const fieldName = regexMatches[1];
         const index = parseInt(regexMatches[2], 10);
         const items = [...cardData.data.character_book.entries];
-        const [alteredItem] = items.splice(index, 1);
+        const [oldItem] = items.splice(index, 1);
+        const alteredItem = {...oldItem};
         if (fieldName === "name") {
             alteredItem.name = value;
             alteredItem.comment = value;
@@ -306,8 +307,8 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
         const fieldName = regexMatches[1];
         const index = parseInt(regexMatches[2], 10);
         const items = [...cardData.data.character_book.entries];
-        const [alteredItem] = items.splice(index, 1);
-        alteredItem[fieldName] = keys;
+        const [oldItem] = items.splice(index, 1);
+        const alteredItem = {...oldItem, [fieldName]: keys};
         items.splice(index, 0, alteredItem);
 
         setCardData((prevState) => ({
