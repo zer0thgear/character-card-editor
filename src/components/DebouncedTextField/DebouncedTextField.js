@@ -21,8 +21,10 @@ import { TextField } from "@mui/material";
  * @param {boolean} [preserveCursor] Restore cursor position after each change. Must be false for
  * inputs whose type doesn't support text selection (e.g. type="number"), which throw when
  * selectionStart/setSelectionRange are accessed.
+ * @param {boolean} [readOnly] Renders the field as informational/non-editable (e.g. a V3 field
+ * like "source" that the spec says shouldn't be user-edited), rather than disabled.
  */
-const DebouncedTextField = ({label, name, onChange, value, debounceMs = 300, multiline = false, rows, preserveCursor = true, ...rest}) => {
+const DebouncedTextField = ({label, name, onChange, value, debounceMs = 300, multiline = false, rows, preserveCursor = true, readOnly = false, ...rest}) => {
     const [localValue, setLocalValue] = useState(value);
     const inputRef = useRef(null);
 
@@ -61,7 +63,7 @@ const DebouncedTextField = ({label, name, onChange, value, debounceMs = 300, mul
             name={name}
             onChange={handleChange}
             rows={multiline ? rows : undefined}
-            slotProps={multiline ? {htmlInput: {style: {resize:'vertical'}}} : {}}
+            slotProps={{htmlInput: {readOnly, style: multiline ? {resize:'vertical'} : undefined}}}
             value={localValue}
             {...rest}
         />

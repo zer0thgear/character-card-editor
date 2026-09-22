@@ -49,16 +49,19 @@ export function BasicFieldTabPanel ({curTab, index, arrayToIterate}) {
         debouncedSetCardData(name, value.split(","));
     }
 
+    const handleReadOnlyChange = () => {};
+
     return(
         <div hidden={curTab !== index}>
             {arrayToIterate.map((field, index) => (
                 <CardTextField
-                    key={field.fieldName.concat(index)} 
-                    fieldName={field.fieldName} 
-                    label={Object.hasOwn(field, "label") ? field.label : ""} 
-                    multiline={Object.hasOwn(field, "multiline") ? field.multiline : false} 
+                    key={field.fieldName.concat(index)}
+                    fieldName={field.fieldName}
+                    label={Object.hasOwn(field, "label") ? field.label : ""}
+                    multiline={Object.hasOwn(field, "multiline") ? field.multiline : false}
                     rows={Object.hasOwn(field, "rows") ? field.rows : 1}
-                    changeCallback={field.fieldName === "tags" ? handleTagChange : handleTextFieldChange}
+                    readOnly={Object.hasOwn(field, "readOnly") ? field.readOnly : false}
+                    changeCallback={field.readOnly ? handleReadOnlyChange : (field.fieldName === "tags" ? handleTagChange : handleTextFieldChange)}
                 />
             ))}
         </div>

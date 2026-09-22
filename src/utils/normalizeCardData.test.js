@@ -45,6 +45,16 @@ describe('normalizeCardData', () => {
         expect(result.cardData.data.scenario).toBe('');
     });
 
+    test('defaults a missing nickname (a V3 field with no prior UI) to an empty string', () => {
+        const card = v3CardPrototype();
+        card.data.name = 'Test';
+        delete card.data.nickname;
+
+        const result = normalizeCardData(card);
+        expect(result.ok).toBe(true);
+        expect(result.cardData.data.nickname).toBe('');
+    });
+
     test('defaults missing/malformed array fields to empty arrays', () => {
         const card = v3CardPrototype();
         card.data.name = 'Test';

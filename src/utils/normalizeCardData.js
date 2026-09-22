@@ -1,7 +1,8 @@
 // String fields the app reads directly (e.g. via .replaceAll) and assumes are always strings.
 const STRING_FIELDS = [
     "description", "personality", "scenario", "first_mes", "mes_example",
-    "creator_notes", "system_prompt", "post_history_instructions", "creator", "character_version"
+    "creator_notes", "system_prompt", "post_history_instructions", "creator", "character_version",
+    "nickname"
 ];
 
 // Array fields the app iterates/maps over and assumes are always arrays.
