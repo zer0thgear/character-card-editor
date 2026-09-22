@@ -24,6 +24,7 @@ import assembleNewPng from '../../utils/assembleNewPng';
 import getStoredCardData from '../../utils/getStoredCardData';
 import normalizeCardData, { normalizeLorebook } from '../../utils/normalizeCardData';
 import parsePngChunks from '../../utils/parsePngChunks';
+import selectPreferredCardChunk, { countLorebookEntries } from '../../utils/selectPreferredCardChunk';
 import stripPngChunks from '../../utils/stripPngChunks';
 import { AltGreetingTabPanel, BasicFieldTabPanel, GroupGreetingPanel, LorebookPanel, MacrosPanel } from '../TabPanels/TabPanels';
 import { useCard } from '../../context/CardContext';
@@ -245,8 +246,16 @@ const TavernCardEditor = ({toggleTheme}) => {
                 return;
             }
 
-            // Prefer a ccv3 (V3) chunk when present; otherwise fall back to the chara (V2) chunk.
-            const preferredChunk = readCardData.find((chunk) => chunk.keyword === "ccv3") ?? readCardData[readCardData.length - 1];
+            // Some export tools embed more than one card copy in a PNG and the copies can go out
+            // of sync (e.g. one has the full lorebook, another has none/a stale one), so pick
+            // whichever chunk actually has the most complete lorebook rather than guessing by
+            // keyword or position.
+            if (readCardData.length > 1) {
+                const entryCounts = readCardData.map((chunk) => `${chunk.keyword}: ${countLorebookEntries(chunk)} lorebook entries`);
+                if (new Set(readCardData.map(countLorebookEntries)).size > 1)
+                    console.warn(`This PNG has multiple embedded card copies with differing lorebook sizes (${entryCounts.join(", ")}). Using the most complete one.`);
+            }
+            const preferredChunk = selectPreferredCardChunk(readCardData);
             const parsedCardData = preferredChunk.data;
 
             if (importLorebook) {
