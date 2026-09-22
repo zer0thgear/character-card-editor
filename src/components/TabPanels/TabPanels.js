@@ -1,14 +1,16 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import debounce from "lodash.debounce";
-import { 
+import {
     Accordion,
     AccordionDetails,
     AccordionSummary,
+    Alert,
     Box,
     Button,
     IconButton,
     TextField,
-    Tooltip 
+    Tooltip,
+    Typography
 } from "@mui/material";
 import { ArrowDropDown, DeleteOutline, DragHandle, KeyboardDoubleArrowUp } from "@mui/icons-material";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
@@ -17,6 +19,7 @@ import AltGreetingTextField, { GroupGreetingTextField } from "../AltGreetingText
 import CardTextField from "../CardTextField/CardTextField";
 import { LorebookEntryBool, LorebookEntryInt, LorebookEntryString, LorebookMetaBool, LorebookMetaInt, LorebookMetaString } from "../LorebookTextFields/LorebookTextFields";
 import { useCard } from "../../context/CardContext";
+import normalizeCardData from "../../utils/normalizeCardData";
 import { v3CharacterBookPrototype, v3CharacterBookEntryPrototype } from "../../utils/v3CardPrototype";
 
 export function BasicFieldTabPanel ({curTab, index, arrayToIterate}) {
@@ -531,6 +534,80 @@ export function MacrosPanel({curTab, index, handlePurgeClick, handleFindReplaceC
                     </Tooltip>
                 </Box>
             </Box>
+        </div>
+    );
+}
+
+/**
+ * Power-user escape hatch: view and directly edit the card's raw JSON. Local-only until
+ * "Apply Changes" is clicked, so typing invalid/incomplete JSON along the way never touches
+ * card state. Applying re-validates through the same normalizeCardData used for uploads, then
+ * hands the result to onApply (the parent shows a confirmation and actually applies it, reusing
+ * the same flow as "Overwrite With JSON File").
+ *
+ * @param {int} curTab Currently selected tab index
+ * @param {int} index This panel's tab index
+ * @param {*} onApply Called with the normalized card object once the edited JSON validates
+ */
+export function RawJsonPanel({curTab, index, onApply}) {
+    const { cardData } = useCard();
+    const [rawJsonText, setRawJsonText] = useState(() => JSON.stringify(cardData, null, 2));
+    const [dirty, setDirty] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        if (!dirty) setRawJsonText(JSON.stringify(cardData, null, 2));
+    }, [cardData, dirty]);
+
+    const handleChange = (e) => {
+        setRawJsonText(e.target.value);
+        setDirty(true);
+        setError(null);
+    };
+
+    const handleReset = () => {
+        setRawJsonText(JSON.stringify(cardData, null, 2));
+        setDirty(false);
+        setError(null);
+    };
+
+    const handleApplyClick = () => {
+        let parsedJson;
+        try {
+            parsedJson = JSON.parse(rawJsonText);
+        } catch (err) {
+            setError(`Invalid JSON: ${err.message}`);
+            return;
+        }
+        const result = normalizeCardData(parsedJson);
+        if (!result.ok) {
+            setError(result.error);
+            return;
+        }
+        setError(null);
+        setDirty(false);
+        onApply(result.cardData);
+    };
+
+    return(
+        <div hidden={curTab !== index}>
+            <Box sx={{mb:1, display:"flex", alignItems:"center", gap:2}}>
+                <Tooltip title="Validate and apply the JSON below to the card, after confirmation">
+                    <Button onClick={handleApplyClick} variant="contained">Apply Changes</Button>
+                </Tooltip>
+                <Button disabled={!dirty} onClick={handleReset} variant="outlined">Reset</Button>
+                {dirty && <Typography color="text.secondary" variant="body2">Unapplied changes</Typography>}
+            </Box>
+            {error && <Alert severity="error" sx={{mb:1}}>{error}</Alert>}
+            <TextField
+                autoComplete="off"
+                fullWidth
+                multiline
+                onChange={handleChange}
+                rows={20}
+                slotProps={{htmlInput: {style: {fontFamily:"monospace", fontSize:"0.85em", resize:"vertical"}}}}
+                value={rawJsonText}
+            />
         </div>
     );
 }

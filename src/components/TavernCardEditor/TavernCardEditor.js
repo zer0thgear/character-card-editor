@@ -26,7 +26,7 @@ import normalizeCardData, { normalizeLorebook } from '../../utils/normalizeCardD
 import parsePngChunks from '../../utils/parsePngChunks';
 import selectPreferredCardChunk, { countLorebookEntries } from '../../utils/selectPreferredCardChunk';
 import stripPngChunks from '../../utils/stripPngChunks';
-import { AltGreetingTabPanel, BasicFieldTabPanel, GroupGreetingPanel, LorebookPanel, MacrosPanel } from '../TabPanels/TabPanels';
+import { AltGreetingTabPanel, BasicFieldTabPanel, GroupGreetingPanel, LorebookPanel, MacrosPanel, RawJsonPanel } from '../TabPanels/TabPanels';
 import { useCard } from '../../context/CardContext';
 import { v3CardPrototype } from '../../utils/v3CardPrototype';
 import './TavernCardEditor.css';
@@ -588,8 +588,8 @@ const TavernCardEditor = ({toggleTheme}) => {
             <ConfirmationDialog
                 open={overwriteConfirmation}
                 handleClose={closeOverwriteConfirmation}
-                dialogTitle="Overwrite with a JSON file?"
-                dialogContent="Are you sure you want to overwrite the current fields with a different JSON file? This action cannot be undone."
+                dialogTitle="Overwrite the current card?"
+                dialogContent="Are you sure you want to overwrite the current fields with this JSON? This action cannot be undone."
                 handleConfirm={handleOverwriteFile}
             />
             <ConfirmationDialog
@@ -689,6 +689,7 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 <Tab id={4} label="Lorebook"/>
                                 <Tab id={5} label="Group Greetings"/>
                                 <Tab id={6} label="Macros"/>
+                                <Tab id={7} label="Raw JSON"/>
                             </Tabs>
                             <BasicFieldTabPanel
                                 curTab={tabValue}
@@ -730,6 +731,14 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 index={6}
                                 handlePurgeClick={() => setPurgeAsterisksConfirmation(true)}
                                 handleFindReplaceClick={(val1, val2) => handleFindReplaceClick(val1, val2)}
+                            />
+                            <RawJsonPanel
+                                curTab={tabValue}
+                                index={7}
+                                onApply={(normalizedCardData) => {
+                                    setPendingJson(normalizedCardData);
+                                    setOverwriteConfirmation(true);
+                                }}
                             />
                             <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
                                 <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
