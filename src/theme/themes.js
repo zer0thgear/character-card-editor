@@ -40,6 +40,14 @@ const components = {
             },
         },
     },
+    MuiAccordionDetails: {
+        styleOverrides: {
+            // Default MUI padding (16px horizontal) reads noticeably tighter than the
+            // 24px used everywhere else in the layout, most visible on the last column
+            // of a multi-field row (e.g. lorebook entries) sitting close to the edge.
+            root: { padding: '8px 24px 24px' },
+        },
+    },
 };
 
 export const light = createTheme({

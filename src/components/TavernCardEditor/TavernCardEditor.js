@@ -733,8 +733,8 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 </Stack>
                             }
                         </Container>}
-                        <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, overflow:"auto"}} sx={{p: 3}}>
-                            <Tabs onChange={(event, newValue) => setTabValue(newValue)} value={tabValue} scrollButtons="auto" sx={{mb:2}} variant="scrollable">
+                        <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, overflow:"hidden"}} sx={{p: 3}}>
+                            <Tabs onChange={(event, newValue) => setTabValue(newValue)} value={tabValue} scrollButtons="auto" sx={{mb:2, flexShrink: 0}} variant="scrollable">
                                 <Tab id={0} label="v1 Spec Fields"/>
                                 <Tab id={1} label="Alt Greetings"/>
                                 <Tab id={2} label="Creator Metadata"/>
@@ -744,56 +744,58 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 <Tab id={6} label="Macros"/>
                                 <Tab id={7} label="Raw JSON"/>
                             </Tabs>
-                            <BasicFieldTabPanel
-                                curTab={tabValue}
-                                index={0}
-                                arrayToIterate={charMetadataFields}
-                            />
-                            <AltGreetingTabPanel
-                                curTab={tabValue}
-                                index={1}
-                                handleAltGreetingClick={handleAltGreetingClick}
-                                handlePromoteClick={handlePromoteClick}
-                            />
-                            <BasicFieldTabPanel
-                                curTab={tabValue}
-                                index={2}
-                                arrayToIterate={creatorMetadataFields}
-                            />
-                            <BasicFieldTabPanel
-                                curTab={tabValue}
-                                index={3}
-                                arrayToIterate={promptFields}
+                            <Box sx={{flex: 1, overflow: 'auto', pr: 1, mr: -1}}>
+                                <BasicFieldTabPanel
+                                    curTab={tabValue}
+                                    index={0}
+                                    arrayToIterate={charMetadataFields}
+                                />
+                                <AltGreetingTabPanel
+                                    curTab={tabValue}
+                                    index={1}
+                                    handleAltGreetingClick={handleAltGreetingClick}
+                                    handlePromoteClick={handlePromoteClick}
+                                />
+                                <BasicFieldTabPanel
+                                    curTab={tabValue}
+                                    index={2}
+                                    arrayToIterate={creatorMetadataFields}
+                                />
+                                <BasicFieldTabPanel
+                                    curTab={tabValue}
+                                    index={3}
+                                    arrayToIterate={promptFields}
 
-                            />
-                            <LorebookPanel
-                                curTab={tabValue}
-                                index={4}
-                                handleDeleteEntryClick={handleDeleteEntryClick}
-                                handleDeleteLorebookClick={() => setDeleteLorebookConfirmation(true)}
-                                handleLorebookDownload={handleLorebookDownload}
-                                handleImport={(event) => handleFileSelect(event, true)}
-                            />
-                            <GroupGreetingPanel
-                                curTab={tabValue}
-                                index={5}
-                                handleGroupGreetingClick={handleGroupGreetingClick}
-                            />
-                            <MacrosPanel
-                                curTab={tabValue}
-                                index={6}
-                                handlePurgeClick={() => setPurgeAsterisksConfirmation(true)}
-                                handleFindReplaceClick={(val1, val2) => handleFindReplaceClick(val1, val2)}
-                            />
-                            <RawJsonPanel
-                                curTab={tabValue}
-                                index={7}
-                                onApply={(normalizedCardData) => {
-                                    setPendingJson(normalizedCardData);
-                                    setOverwriteConfirmation(true);
-                                }}
-                            />
-                            <Stack direction="row" justifyContent="space-between" sx={{pt: 2, mt: 2, borderTop: 1, borderColor: 'divider'}}>
+                                />
+                                <LorebookPanel
+                                    curTab={tabValue}
+                                    index={4}
+                                    handleDeleteEntryClick={handleDeleteEntryClick}
+                                    handleDeleteLorebookClick={() => setDeleteLorebookConfirmation(true)}
+                                    handleLorebookDownload={handleLorebookDownload}
+                                    handleImport={(event) => handleFileSelect(event, true)}
+                                />
+                                <GroupGreetingPanel
+                                    curTab={tabValue}
+                                    index={5}
+                                    handleGroupGreetingClick={handleGroupGreetingClick}
+                                />
+                                <MacrosPanel
+                                    curTab={tabValue}
+                                    index={6}
+                                    handlePurgeClick={() => setPurgeAsterisksConfirmation(true)}
+                                    handleFindReplaceClick={(val1, val2) => handleFindReplaceClick(val1, val2)}
+                                />
+                                <RawJsonPanel
+                                    curTab={tabValue}
+                                    index={7}
+                                    onApply={(normalizedCardData) => {
+                                        setPendingJson(normalizedCardData);
+                                        setOverwriteConfirmation(true);
+                                    }}
+                                />
+                            </Box>
+                            <Stack direction="row" justifyContent="space-between" sx={{pt: 2, mt: 2, borderTop: 1, borderColor: 'divider', flexShrink: 0}}>
                                 <Button onClick={handleJsonDownload} variant="outlined">Download as JSON</Button>
                                 <Button onClick={handlePngDownload} variant="contained">Download as PNG</Button>
                             </Stack>
