@@ -51,18 +51,29 @@ export function BasicFieldTabPanel ({curTab, index, arrayToIterate}) {
 
     const handleReadOnlyChange = () => {};
 
+    const renderField = (field, key) => (
+        <CardTextField
+            key={key}
+            fieldName={field.fieldName}
+            label={Object.hasOwn(field, "label") ? field.label : ""}
+            multiline={Object.hasOwn(field, "multiline") ? field.multiline : false}
+            rows={Object.hasOwn(field, "rows") ? field.rows : 1}
+            readOnly={Object.hasOwn(field, "readOnly") ? field.readOnly : false}
+            showCount={Object.hasOwn(field, "showCount") ? field.showCount : false}
+            changeCallback={field.readOnly ? handleReadOnlyChange : (field.fieldName === "tags" ? handleTagChange : handleTextFieldChange)}
+        />
+    );
+
     return(
         <div hidden={curTab !== index}>
             {arrayToIterate.map((field, index) => (
-                <CardTextField
-                    key={field.fieldName.concat(index)}
-                    fieldName={field.fieldName}
-                    label={Object.hasOwn(field, "label") ? field.label : ""}
-                    multiline={Object.hasOwn(field, "multiline") ? field.multiline : false}
-                    rows={Object.hasOwn(field, "rows") ? field.rows : 1}
-                    readOnly={Object.hasOwn(field, "readOnly") ? field.readOnly : false}
-                    changeCallback={field.readOnly ? handleReadOnlyChange : (field.fieldName === "tags" ? handleTagChange : handleTextFieldChange)}
-                />
+                // A field config may itself be an array of short, related fields (e.g.
+                // Personality/Scenario) meant to sit side by side instead of full-width stacked.
+                Array.isArray(field) ? (
+                    <Box key={`row${index}`} sx={{display: "grid", gridTemplateColumns: `repeat(${field.length}, minmax(0, 1fr))`, gap: 2}}>
+                        {field.map((subField, subIndex) => renderField(subField, subField.fieldName.concat(index, subIndex)))}
+                    </Box>
+                ) : renderField(field, field.fieldName.concat(index))
             ))}
         </div>
     );

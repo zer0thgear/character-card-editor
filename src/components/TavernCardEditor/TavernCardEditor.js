@@ -7,14 +7,16 @@ import {
     Box,
     Checkbox,
     Container,
+    Divider,
     FormControlLabel,
-    Paper,
+    Stack,
     Switch,
     Tab,
     Tabs,
-    Tooltip
+    Tooltip,
+    Typography
 } from '@mui/material'
-import { DarkMode, DarkModeOutlined, LightMode, LightModeOutlined } from '@mui/icons-material';
+import { CheckCircleOutline, DarkMode, DarkModeOutlined, LightMode, LightModeOutlined, PersonOutline } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles'
 
 import ConfirmationDialog from '../ConfirmationDialog/ConfirmationDialog';
@@ -58,14 +60,17 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [promoteGreeting, setPromoteGreeting] = useState(false);
     const [purgeAsterisksConfirmation, setPurgeAsterisksConfirmation] = useState(false);
     const [preview, setPreview] = useState(default_avatar);
+    const [lastSavedAt, setLastSavedAt] = useState(null);
     const [tabValue, setTabValue] = useState(0);
 
     const charMetadataFields = [
         {fieldName: "name"},
-        {fieldName: "description", multiline:true, rows:10},
-        {fieldName: "personality", multiline:true},
-        {fieldName: "scenario", multiline:true},
-        {fieldName: "first_mes", label: "First Message", multiline:true, rows:10},
+        {fieldName: "description", multiline:true, rows:10, showCount:true},
+        [
+            {fieldName: "personality", multiline:true, rows:4},
+            {fieldName: "scenario", multiline:true, rows:4}
+        ],
+        {fieldName: "first_mes", label: "First Message", multiline:true, rows:10, showCount:true},
         {fieldName: "mes_example", label: "Example Messages", multiline:true, rows:10}
     ];
 
@@ -542,6 +547,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     const debouncedSave = useCallback(
         debounce((data) => {
             localStorage.setItem("cardData", JSON.stringify(data));
+            setLastSavedAt(new Date());
         }, 5000), []
     );
 
@@ -650,39 +656,84 @@ const TavernCardEditor = ({toggleTheme}) => {
                 dialogContent="Are you sure you want to find and replace the text you've provided? This will replace the specified text in the Description, Personality, Scenario, and ALL greetings. Note that there is no logic and is a quick and dirty find-and-replace. This action cannot be undone."
                 handleConfirm={handleFindReplace}
             />
-            <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center', overflow:"auto"}}>
-                <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={() => setDeleteConfirmation(true)}/>
-                <FormControlLabel control={<Checkbox checked={displayImage} onChange={() => setDisplayImage(!displayImage)}/>} label="Display image?" style={{whiteSpace:"nowrap"}}/>
-                {file && 
-                    <div>
-                        <input accept={".json"} hidden id="json-upload" onChange={handleOverwriteClick} onClick={(event) => {event.target.value = null}} type="file"/>
-                        <label htmlFor='json-upload'>
-                            <Tooltip title="Overwrite the contents of this card with a JSON while retaining the display picture">
-                                <Button component="span" style={{whiteSpace: "nowrap"}} variant="contained">Overwrite With JSON File</Button>
-                            </Tooltip>
-                        </label>
-                    </div>
-                }
-                <Box style={{display:'flex', alignItems:'center'}}>
-                    {theme.palette.mode === "dark" ? <LightModeOutlined/> : <LightMode/>}
-                    <Switch checked={theme.palette.mode === "dark"} onChange={toggleTheme}/>
-                    {theme.palette.mode === "dark" ? <DarkMode/> : <DarkModeOutlined/>}
-                </Box>
-            </Container>
-            <Container disableGutters maxWidth={false}> 
-                <Paper elevation={6} style={{width:"100%"}}>
-                    <Container disableGutters maxWidth={false} style={{display:"flex", height:"95vh"}}>
-                        {displayImage && <Container disableGutters style={{alignItems:"center", display:"flex", flex:2, overflow:"auto"}} sx={{ml:2}}>
-                            <img alt={file ? file.name : "No avatar loaded"} onClick={() => previewImageRef.current.click()} src={preview} style={{cursor:'pointer', objectFit:'cover', width: "100%", height: "100%"}}/>
+            <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{height: 64, px: 3, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper'}}
+            >
+                <Stack direction="row" alignItems="center" spacing={1.5}>
+                    <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={() => setDeleteConfirmation(true)}/>
+                </Stack>
+                <Stack direction="row" alignItems="center" spacing={3}>
+                    <FormControlLabel control={<Checkbox checked={displayImage} onChange={() => setDisplayImage(!displayImage)}/>} label="Show portrait" sx={{whiteSpace:"nowrap"}}/>
+                    {file &&
+                        <div>
+                            <input accept={".json"} hidden id="json-upload" onChange={handleOverwriteClick} onClick={(event) => {event.target.value = null}} type="file"/>
+                            <label htmlFor='json-upload'>
+                                <Tooltip title="Overwrite the contents of this card with a JSON while retaining the display picture">
+                                    <Button component="span" sx={{whiteSpace: "nowrap"}} variant="outlined">Overwrite with JSON</Button>
+                                </Tooltip>
+                            </label>
+                        </div>
+                    }
+                    <Divider orientation="vertical" flexItem sx={{my: 1.5}}/>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                        {theme.palette.mode === "dark" ? <LightModeOutlined fontSize="small"/> : <LightMode fontSize="small"/>}
+                        <Switch checked={theme.palette.mode === "dark"} onChange={toggleTheme}/>
+                        {theme.palette.mode === "dark" ? <DarkMode fontSize="small"/> : <DarkModeOutlined fontSize="small"/>}
+                    </Stack>
+                </Stack>
+            </Stack>
+            <Box sx={{
+                display: "flex",
+                height: "calc(100vh - 64px - 48px)",
+                m: 3,
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 3,
+                overflow: "hidden"
+            }}>
+                        {displayImage && <Container disableGutters style={{alignItems:"center", display:"flex", flexDirection: "column", flex:2, overflow:"auto", gap: 12}} sx={{p: 3}}>
+                            <Box
+                                onClick={() => previewImageRef.current.click()}
+                                sx={{
+                                    flex: 1,
+                                    width: "100%",
+                                    borderRadius: 2,
+                                    border: 1,
+                                    borderColor: 'divider',
+                                    overflow: "hidden",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    cursor: 'pointer',
+                                    bgcolor: theme.palette.mode === "dark" ? "#1e1f27" : "#efeef7",
+                                    backgroundImage: theme.palette.mode === "dark"
+                                        ? "linear-gradient(160deg, #23242e 0%, #1b1c24 100%)"
+                                        : "linear-gradient(160deg, #ffffff 0%, #efeef7 100%)",
+                                }}
+                            >
+                                {file
+                                    ? <img alt={file.name} src={preview} style={{objectFit:'cover', width: "100%", height: "100%"}}/>
+                                    : <PersonOutline sx={{fontSize: 96, color: theme.palette.mode === "dark" ? "#4a4c5c" : "#c3c2d4"}}/>
+                                }
+                            </Box>
                             <input
                                 accept="image/*"
                                 hidden
                                 onChange={handlePreviewUpload}
                                 ref={previewImageRef}
-                                type="file"           
+                                type="file"
                             />
+                            {lastSavedAt &&
+                                <Stack direction="row" alignItems="center" spacing={0.75} sx={{color: 'text.secondary', mt: 1.5}}>
+                                    <CheckCircleOutline sx={{fontSize: 14}}/>
+                                    <Typography variant="caption">Saved locally at {lastSavedAt.toLocaleTimeString()}</Typography>
+                                </Stack>
+                            }
                         </Container>}
-                        <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
+                        <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, overflow:"auto"}} sx={{p: 3}}>
                             <Tabs onChange={(event, newValue) => setTabValue(newValue)} value={tabValue} scrollButtons="auto" sx={{mb:2}} variant="scrollable">
                                 <Tab id={0} label="v1 Spec Fields"/>
                                 <Tab id={1} label="Alt Greetings"/>
@@ -742,14 +793,12 @@ const TavernCardEditor = ({toggleTheme}) => {
                                     setOverwriteConfirmation(true);
                                 }}
                             />
-                            <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
-                                <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
+                            <Stack direction="row" justifyContent="space-between" sx={{pt: 2, mt: 2, borderTop: 1, borderColor: 'divider'}}>
+                                <Button onClick={handleJsonDownload} variant="outlined">Download as JSON</Button>
                                 <Button onClick={handlePngDownload} variant="contained">Download as PNG</Button>
-                            </Container>
+                            </Stack>
                         </Container>
-                    </Container>
-                </Paper>
-            </Container>  
+            </Box>
         </Container>
     );
 }
