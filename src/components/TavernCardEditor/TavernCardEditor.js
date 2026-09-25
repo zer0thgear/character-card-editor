@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import debounce from "lodash.debounce";
 import imageCompression from 'browser-image-compression';
 
@@ -22,16 +22,29 @@ import { useTheme } from '@mui/material/styles'
 import ConfirmationDialog from '../ConfirmationDialog/ConfirmationDialog';
 import default_avatar from '../../assets/default_avatar.png';
 import FileUpload from '../FileUpload/FileUpload';
-import assembleNewPng from '../../utils/assembleNewPng';
+import buildCardPng, { buildOutgoingCards, cardDataChunkBytes } from '../../utils/buildCardPng';
 import getStoredCardData from '../../utils/getStoredCardData';
+import formatBytes from '../../utils/formatBytes';
 import normalizeCardData, { normalizeLorebook } from '../../utils/normalizeCardData';
 import parsePngChunks from '../../utils/parsePngChunks';
+import PortraitCompressionDialog from '../PortraitCompressionDialog/PortraitCompressionDialog';
 import selectPreferredCardChunk, { countLorebookEntries } from '../../utils/selectPreferredCardChunk';
 import stripPngChunks from '../../utils/stripPngChunks';
 import { AltGreetingTabPanel, BasicFieldTabPanel, GroupGreetingPanel, LorebookPanel, MacrosPanel, RawJsonPanel } from '../TabPanels/TabPanels';
 import { useCard } from '../../context/CardContext';
 import { v3CardPrototype } from '../../utils/v3CardPrototype';
 import './TavernCardEditor.css';
+
+// Portraits are stored as data URLs, and a large one can exceed the ~5 MB localStorage quota. Clear
+// the stored copy in that case, rather than leave a previous card's portrait to be restored on reload.
+function storePreviewImage(dataUrl) {
+    try {
+        localStorage.setItem("previewImage", dataUrl);
+    } catch (error) {
+        localStorage.removeItem("previewImage");
+        console.warn("Portrait is too large to keep across page reloads:", error);
+    }
+}
 
 const TavernCardEditor = ({toggleTheme}) => {
     const theme = useTheme();
@@ -60,6 +73,12 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [promoteGreeting, setPromoteGreeting] = useState(false);
     const [purgeAsterisksConfirmation, setPurgeAsterisksConfirmation] = useState(false);
     const [preview, setPreview] = useState(default_avatar);
+    // A downscaled copy of `preview` chosen in the compression dialog; `preview` itself stays the
+    // original so the user can re-pick a size (or revert) without stacking compression losses.
+    const [compressedPreview, setCompressedPreview] = useState(null);
+    const [compressDialogOpen, setCompressDialogOpen] = useState(false);
+    const [portraitBytes, setPortraitBytes] = useState(null);
+    const portrait = compressedPreview ?? preview;
     const [lastSavedAt, setLastSavedAt] = useState(null);
     const [tabValue, setTabValue] = useState(0);
 
@@ -88,14 +107,6 @@ const TavernCardEditor = ({toggleTheme}) => {
         {fieldName: "post_history_instructions", label: "Post History Instructions", multiline:true, rows:5}
     ]
 
-    const backfillV2Data = (inJson) => {
-        if (inJson.spec === "chara_card_v2" && inJson.spec_version === "2.0") return inJson;
-        const outJson = inJson;
-        outJson.spec = 'chara_card_v2';
-        outJson.spec_version = '2.0';
-        return outJson;
-    };
-
     const backfillLorebookNames = () => {
         const lorebookEntries = cardData.data.character_book.entries.map((entry) => {
             const newEntry = {...entry};
@@ -114,18 +125,6 @@ const TavernCardEditor = ({toggleTheme}) => {
             }
         }))
         setBackfillEntriesConfirmation(false);
-    };
-
-    const populateV3Fields = (inJson) => {
-        const outJson = inJson;
-        if (inJson.spec !== "chara_card_v3" || inJson.spec_version !== "3.0"){
-            outJson.spec = 'chara_card_v3';
-            outJson.spec_version = '3.0';
-        }
-        const currTime = Math.floor(Date.now() / 1000);
-        if (!Object.hasOwn(outJson.data, "creation_date") || typeof outJson.data.creation_date === "undefined") outJson.data.creation_date = currTime;
-        outJson.data.modification_date = currTime;
-        return outJson;
     };
 
     const closeDeleteGreetingConfirmation = () => {
@@ -333,7 +332,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleJsonDownload = () => {
-        const outgoingJson = populateV3Fields(cardData);
+        const outgoingJson = buildOutgoingCards(cardData).v3;
         const blob = new Blob([JSON.stringify(outgoingJson, null, 4)], { type: 'application/json' });
 
         const url = URL.createObjectURL(blob);
@@ -404,22 +403,18 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     async function handlePngDownload() {
         try {
-            const response = await fetch(preview);
+            const response = await fetch(portrait);
             if (!response.ok){
                 throw new Error("Network response was not OK");
             }
             const respBlob = await response.blob();
-            const arrayBuffer = await respBlob.arrayBuffer();
-            const strippedPng = await stripPngChunks(arrayBuffer);
-            const outgoingV3 = populateV3Fields(cardData);
-            const outgoingV2 = backfillV2Data(cardData);
-            const assembledPng = await assembleNewPng(strippedPng, [{keyword:"ccv3", data:outgoingV3}, {keyword: "chara", data:outgoingV2}]);
+            const assembledPng = await buildCardPng(await respBlob.arrayBuffer(), cardData);
             const blob = new Blob([assembledPng], { type: 'image/png' });
 
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${outgoingV3.data.name}.png`
+            a.download = `${cardData.data.name}.png`
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -447,12 +442,12 @@ const TavernCardEditor = ({toggleTheme}) => {
                 const base64String = canvas.toDataURL("image/png");
                 const pngBlob = await (await fetch(base64String)).blob();
                 // Compressing converted PNGs
-                const compressedPngBlob = await imageCompression(pngBlob, {maxSizeMb: 1, useWebWorker: true});
+                const compressedPngBlob = await imageCompression(pngBlob, {useWebWorker: true});
 
                 const comrpessedBase64Png = await imageCompression.getDataUrlFromFile(compressedPngBlob);
 
                 setPreview(comrpessedBase64Png);
-                localStorage.setItem("previewImage", comrpessedBase64Png);
+                storePreviewImage(comrpessedBase64Png);
             }
         }
         else if (file && file.type === "image/png") {
@@ -460,12 +455,12 @@ const TavernCardEditor = ({toggleTheme}) => {
                 const inputBuffer = await readToBuffer(file);
                 const arrayBuffer = await stripPngChunks(inputBuffer);
                 const pngBlob = new Blob([arrayBuffer], {type: "image/png"});
-                const compressedPngBlob = await imageCompression(pngBlob, {maxSizeMb: 1, useWebWorker: true});
+                const compressedPngBlob = await imageCompression(pngBlob, {useWebWorker: true});
 
                 const comrpessedBase64Png = await imageCompression.getDataUrlFromFile(compressedPngBlob);
 
                 setPreview(comrpessedBase64Png);
-                localStorage.setItem("previewImage", comrpessedBase64Png);
+                storePreviewImage(comrpessedBase64Png);
             } catch (error) {
                 console.error("Error stripping PNG chunks and converting to base64: ", error);
             }
@@ -522,7 +517,7 @@ const TavernCardEditor = ({toggleTheme}) => {
         setPreview(default_avatar);
         setCardData(v3CardPrototype());
         localStorage.setItem("cardData", JSON.stringify(v3CardPrototype()));
-        localStorage.setItem("previewImage", default_avatar);
+        storePreviewImage(default_avatar);
     };
 
     const readToBuffer = (infile) => {
@@ -573,9 +568,34 @@ const TavernCardEditor = ({toggleTheme}) => {
             const strippedBuffer = await stripPngChunks(inputBuffer);
             const base64String = await convertBufferToBase64(strippedBuffer)
             setPreview(base64String);
-            localStorage.setItem("previewImage", base64String)
+            storePreviewImage(base64String);
         })()
     }, [file]);
+
+    useEffect(() => {
+        setCompressedPreview(null);
+    }, [preview]);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetch(portrait)
+            .then((response) => response.arrayBuffer())
+            .then(stripPngChunks)
+            .then((stripped) => { if (!cancelled) setPortraitBytes(stripped.byteLength); })
+            .catch(() => { if (!cancelled) setPortraitBytes(null); });
+        return () => { cancelled = true; };
+    }, [portrait]);
+
+    // Re-serializing the whole card on every keystroke commit is cheap but not free with a big
+    // lorebook, so let React schedule it at low priority.
+    const deferredCardData = useDeferredValue(cardData);
+    const cardDataBytes = useMemo(() => cardDataChunkBytes(deferredCardData), [deferredCardData]);
+
+    const handleApplyCompression = (dataUrl) => {
+        setCompressedPreview(dataUrl === preview ? null : dataUrl);
+        storePreviewImage(dataUrl);
+        setCompressDialogOpen(false);
+    };
 
     useEffect(() => {
         const storedPreviewImage = localStorage.getItem("previewImage");
@@ -586,6 +606,12 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     return(
         <Container maxWidth={false}>
+            <PortraitCompressionDialog
+                open={compressDialogOpen}
+                source={preview}
+                onClose={() => setCompressDialogOpen(false)}
+                onApply={handleApplyCompression}
+            />
             <ConfirmationDialog 
                 open={deleteConfirmation} 
                 handleClose={() => setDeleteConfirmation(false)} 
@@ -720,8 +746,8 @@ const TavernCardEditor = ({toggleTheme}) => {
                                         : "linear-gradient(160deg, #ffffff 0%, #efeef7 100%)",
                                 }}
                             >
-                                {preview !== default_avatar
-                                    ? <img alt={file ? file.name : "Uploaded portrait"} src={preview} style={{objectFit:'cover', width: "100%", height: "100%"}}/>
+                                {portrait !== default_avatar
+                                    ? <img alt={file ? file.name : "Uploaded portrait"} src={portrait} style={{objectFit:'cover', width: "100%", height: "100%"}}/>
                                     : <PersonOutline sx={{fontSize: 96, color: theme.palette.mode === "dark" ? "#4a4c5c" : "#c3c2d4"}}/>
                                 }
                             </Box>
@@ -797,7 +823,19 @@ const TavernCardEditor = ({toggleTheme}) => {
                             </Box>
                             <Stack direction="row" justifyContent="space-between" sx={{pt: 2, mt: 2, borderTop: 1, borderColor: 'divider', flexShrink: 0}}>
                                 <Button onClick={handleJsonDownload} variant="outlined">Download as JSON</Button>
-                                <Button onClick={handlePngDownload} variant="contained">Download as PNG</Button>
+                                <Stack direction="row" alignItems="center" spacing={2}>
+                                    {portraitBytes !== null &&
+                                        <Tooltip title={`Portrait ${formatBytes(portraitBytes)} + card data ${formatBytes(cardDataBytes)}`}>
+                                            <Typography color="text.secondary" variant="body2" sx={{whiteSpace: 'nowrap'}}>
+                                                PNG size: {formatBytes(portraitBytes + cardDataBytes)}
+                                            </Typography>
+                                        </Tooltip>
+                                    }
+                                    {preview !== default_avatar &&
+                                        <Button onClick={() => setCompressDialogOpen(true)} sx={{whiteSpace: 'nowrap'}} variant="text">Compress portrait</Button>
+                                    }
+                                    <Button onClick={handlePngDownload} sx={{whiteSpace: 'nowrap'}} variant="contained">Download as PNG</Button>
+                                </Stack>
                             </Stack>
                         </Container>
             </Box>
