@@ -30,6 +30,50 @@ function getChunkTypes (arrayBuffer) {
     return types;
 }
 
+function crc32 (bytes) {
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < bytes.length; i++) {
+        crc ^= bytes[i];
+        for (let k = 0; k < 8; k++) crc = (crc >>> 1) ^ (0xEDB88320 & -(crc & 1));
+    }
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+function makeChunk (type, payload) {
+    const chunk = new Uint8Array(12 + payload.length);
+    const view = new DataView(chunk.buffer);
+    view.setUint32(0, payload.length);
+    for (let i = 0; i < 4; i++) chunk[4 + i] = type.charCodeAt(i);
+    chunk.set(payload, 8);
+    view.setUint32(8 + payload.length, crc32(chunk.subarray(4, 8 + payload.length)));
+    return chunk;
+}
+
+// Same image as the blank PNG, but with its compressed image data split across two IDAT chunks,
+// the way most real encoders (including browsers' canvas.toBlob) write anything bigger than a few KB.
+function multiIdatPngArrayBuffer () {
+    const original = new Uint8Array(blankPngArrayBuffer());
+    const view = new DataView(original.buffer);
+    const parts = [original.slice(0, 8)];
+    let offset = 8;
+    while (offset < original.length) {
+        const length = view.getUint32(offset);
+        const type = String.fromCharCode(...original.slice(offset + 4, offset + 8));
+        if (type === 'IDAT') {
+            const payload = original.slice(offset + 8, offset + 8 + length);
+            const mid = Math.floor(payload.length / 2);
+            parts.push(makeChunk('IDAT', payload.slice(0, mid)), makeChunk('IDAT', payload.slice(mid)));
+        } else {
+            parts.push(original.slice(offset, offset + 12 + length));
+        }
+        offset += 12 + length;
+    }
+    const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+    let pos = 0;
+    for (const p of parts) { out.set(p, pos); pos += p.length; }
+    return out.buffer;
+}
+
 describe('stripPngChunks', () => {
     test('leaves a PNG with no tEXt chunks unchanged', async () => {
         const original = blankPngArrayBuffer();
@@ -74,6 +118,19 @@ describe('assembleNewPng + parsePngChunks', () => {
             {keyword: 'ccv3', data: v3Data},
             {keyword: 'chara', data: v2Data}
         ]);
+    });
+
+    test('embeds each chunk exactly once, after all IDAT chunks, when image data spans multiple IDATs', async () => {
+        const source = multiIdatPngArrayBuffer();
+        expect(getChunkTypes(source).filter((t) => t === 'IDAT')).toHaveLength(2);
+
+        const assembled = await assembleNewPng(source, [
+            {keyword: 'ccv3', data: {spec: 'chara_card_v3'}},
+            {keyword: 'chara', data: {spec: 'chara_card_v2'}}
+        ]);
+
+        // IDAT chunks must stay consecutive per the PNG spec, and the card data must not be duplicated.
+        expect(getChunkTypes(assembled)).toEqual(['IHDR', 'IDAT', 'IDAT', 'tEXt', 'tEXt', 'IEND']);
     });
 
     test('resolves to null when the PNG has no matching keyword', async () => {
