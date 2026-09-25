@@ -279,7 +279,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                 }
             }
         }));
-        
+
         setExpanded((prevExpanded) =>
             prevExpanded.map((panel) => {
                 if (panel === result.source.index) return result.destination.index;

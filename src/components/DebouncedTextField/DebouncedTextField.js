@@ -33,9 +33,21 @@ const DebouncedTextField = ({label, name, onChange, value, debounceMs = 300, mul
         setLocalValue(value);
     }, [value]);
 
+    // onChange is a fresh closure on every render of the parent (it's rarely wrapped in
+    // useCallback), and card state is one big context value, so ANY field committing a change
+    // re-renders every field on every tab. Routing calls through a ref instead of putting
+    // onChange directly in the debounce/memo dependencies keeps the debounced function's
+    // identity (and its pending timer) stable across those re-renders, instead of tearing down
+    // and recreating it - which would cancel this field's own in-flight edit - on every commit
+    // anywhere else in the card.
+    const onChangeRef = useRef(onChange);
+    useEffect(() => {
+        onChangeRef.current = onChange;
+    }, [onChange]);
+
     const debouncedOnChange = useMemo(() => (
-        debounceMs > 0 ? debounce(onChange, debounceMs) : onChange
-    ), [onChange, debounceMs]);
+        debounceMs > 0 ? debounce((e) => onChangeRef.current(e), debounceMs) : (e) => onChangeRef.current(e)
+    ), [debounceMs]);
 
     useEffect(() => () => {
         if (debouncedOnChange.cancel) debouncedOnChange.cancel();
