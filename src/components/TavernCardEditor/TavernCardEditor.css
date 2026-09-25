@@ -1,0 +1,20 @@
+/* Thin, theme-agnostic scrollbars so the default OS bar doesn't clash with a custom-styled dark/light UI. */
+* {
+    scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: rgba(128, 128, 128, 0.4);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}

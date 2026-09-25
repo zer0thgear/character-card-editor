@@ -2,7 +2,6 @@ import React, { useContext } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 
-import './App.css';
 import TavernCardEditor from './components/TavernCardEditor/TavernCardEditor';
 import { ThemeContext } from './context/ThemeContext';
 import { CardProvider } from './context/CardContext';

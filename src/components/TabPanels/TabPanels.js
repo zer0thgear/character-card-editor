@@ -51,18 +51,29 @@ export function BasicFieldTabPanel ({curTab, index, arrayToIterate}) {
 
     const handleReadOnlyChange = () => {};
 
+    const renderField = (field, key) => (
+        <CardTextField
+            key={key}
+            fieldName={field.fieldName}
+            label={Object.hasOwn(field, "label") ? field.label : ""}
+            multiline={Object.hasOwn(field, "multiline") ? field.multiline : false}
+            rows={Object.hasOwn(field, "rows") ? field.rows : 1}
+            readOnly={Object.hasOwn(field, "readOnly") ? field.readOnly : false}
+            showCount={Object.hasOwn(field, "showCount") ? field.showCount : false}
+            changeCallback={field.readOnly ? handleReadOnlyChange : (field.fieldName === "tags" ? handleTagChange : handleTextFieldChange)}
+        />
+    );
+
     return(
         <div hidden={curTab !== index}>
             {arrayToIterate.map((field, index) => (
-                <CardTextField
-                    key={field.fieldName.concat(index)}
-                    fieldName={field.fieldName}
-                    label={Object.hasOwn(field, "label") ? field.label : ""}
-                    multiline={Object.hasOwn(field, "multiline") ? field.multiline : false}
-                    rows={Object.hasOwn(field, "rows") ? field.rows : 1}
-                    readOnly={Object.hasOwn(field, "readOnly") ? field.readOnly : false}
-                    changeCallback={field.readOnly ? handleReadOnlyChange : (field.fieldName === "tags" ? handleTagChange : handleTextFieldChange)}
-                />
+                // A field config may itself be an array of short, related fields (e.g.
+                // Personality/Scenario) meant to sit side by side instead of full-width stacked.
+                Array.isArray(field) ? (
+                    <Box key={`row${index}`} sx={{display: "grid", gridTemplateColumns: `repeat(${field.length}, minmax(0, 1fr))`, gap: 2}}>
+                        {field.map((subField, subIndex) => renderField(subField, subField.fieldName.concat(index, subIndex)))}
+                    </Box>
+                ) : renderField(field, field.fieldName.concat(index))
             ))}
         </div>
     );
@@ -161,6 +172,7 @@ function GreetingListPanel({curTab, index, fieldName, namePrefix, droppableId, a
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
                                             style={{display:"flex", ...provided.draggableProps.style}}
+                                            sx={{gap: 2}}
                                         >
                                             <Tooltip title="Drag to reorder">
                                                 <IconButton {...provided.dragHandleProps}><DragHandle/></IconButton>
@@ -267,7 +279,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                 }
             }
         }));
-        
+
         setExpanded((prevExpanded) =>
             prevExpanded.map((panel) => {
                 if (panel === result.source.index) return result.destination.index;
@@ -404,6 +416,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
                                                         style={{display:"flex", ...provided.draggableProps.style}}
+                                                        sx={{gap: 2}}
                                                     >
                                                         <Tooltip title="Drag to reorder">
                                                             <IconButton {...provided.dragHandleProps}><DragHandle/></IconButton>
@@ -414,7 +427,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                             </AccordionSummary>
                                                             <AccordionDetails>
                                                                 <Box style={{width:'100%'}}>
-                                                                    <Box style={{display:'flex', flexDirection:'row', alignItems:'baseline'}}>
+                                                                    <Box sx={{display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 2, alignItems: 'baseline'}}>
                                                                         <LorebookEntryString
                                                                             label={`Entry #${index+1} Name/Comment`}
                                                                             fieldName="name"
@@ -428,7 +441,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                                             changeCallback={handleEntryChange}
                                                                         />
                                                                     </Box>
-                                                                    <Box style={{display:"flex", flexDirection:'row', alignItems:'baseline'}}>
+                                                                    <Box sx={{display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 2, alignItems: 'baseline'}}>
                                                                         <LorebookEntryString
                                                                             label={`Entry #${index+1} Keys`}
                                                                             fieldName="keys"
@@ -448,7 +461,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                                             changeCallback={handleEntryKeysChange}
                                                                         />
                                                                     </Box>
-                                                                    <Box style={{display:"flex", flexDirection:'row', alignItems:'baseline', justifyContent:'space-between'}}>
+                                                                    <Box sx={{display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 2, alignItems: 'baseline'}}>
                                                                         <LorebookEntryInt
                                                                             label={`Entry #${index+1} Insertion Order`}
                                                                             fieldName="insertion_order"

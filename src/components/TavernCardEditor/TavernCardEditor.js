@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import debounce from "lodash.debounce";
 import imageCompression from 'browser-image-compression';
 
@@ -7,29 +7,63 @@ import {
     Box,
     Checkbox,
     Container,
+    Divider,
     FormControlLabel,
-    Paper,
+    Stack,
     Switch,
     Tab,
     Tabs,
-    Tooltip
+    Tooltip,
+    Typography
 } from '@mui/material'
-import { DarkMode, DarkModeOutlined, LightMode, LightModeOutlined } from '@mui/icons-material';
+import { CheckCircleOutline, DarkMode, ErrorOutline, DarkModeOutlined, LightMode, LightModeOutlined, PersonOutline } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles'
 
 import ConfirmationDialog from '../ConfirmationDialog/ConfirmationDialog';
 import default_avatar from '../../assets/default_avatar.png';
 import FileUpload from '../FileUpload/FileUpload';
-import assembleNewPng from '../../utils/assembleNewPng';
+import buildCardPng, { buildOutgoingCards, cardDataChunkBytes } from '../../utils/buildCardPng';
 import getStoredCardData from '../../utils/getStoredCardData';
+import formatBytes from '../../utils/formatBytes';
 import normalizeCardData, { normalizeLorebook } from '../../utils/normalizeCardData';
 import parsePngChunks from '../../utils/parsePngChunks';
+import PortraitCompressionDialog from '../PortraitCompressionDialog/PortraitCompressionDialog';
 import selectPreferredCardChunk, { countLorebookEntries } from '../../utils/selectPreferredCardChunk';
 import stripPngChunks from '../../utils/stripPngChunks';
 import { AltGreetingTabPanel, BasicFieldTabPanel, GroupGreetingPanel, LorebookPanel, MacrosPanel, RawJsonPanel } from '../TabPanels/TabPanels';
 import { useCard } from '../../context/CardContext';
 import { v3CardPrototype } from '../../utils/v3CardPrototype';
 import './TavernCardEditor.css';
+
+// Portraits are stored as data URLs, and a large one can exceed the ~5 MB localStorage quota. Clear
+// the stored copy in that case, rather than leave a previous card's portrait to be restored on reload.
+function storePreviewImage(dataUrl) {
+    try {
+        localStorage.setItem("previewImage", dataUrl);
+    } catch (error) {
+        localStorage.removeItem("previewImage");
+        console.warn("Portrait is too large to keep across page reloads:", error);
+    }
+}
+
+// Returns whether the save succeeded. The card's text matters more than the cached portrait, so when
+// storage is full, give up the portrait's space and retry before failing.
+function storeCardData(cardData) {
+    const serialized = JSON.stringify(cardData);
+    try {
+        localStorage.setItem("cardData", serialized);
+        return true;
+    } catch {
+        localStorage.removeItem("previewImage");
+    }
+    try {
+        localStorage.setItem("cardData", serialized);
+        return true;
+    } catch (error) {
+        console.warn("Card is too large to save in browser storage:", error);
+        return false;
+    }
+}
 
 const TavernCardEditor = ({toggleTheme}) => {
     const theme = useTheme();
@@ -58,14 +92,25 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [promoteGreeting, setPromoteGreeting] = useState(false);
     const [purgeAsterisksConfirmation, setPurgeAsterisksConfirmation] = useState(false);
     const [preview, setPreview] = useState(default_avatar);
+    // A downscaled copy of `preview` chosen in the compression dialog; `preview` itself stays the
+    // original so the user can re-pick a size (or revert) without stacking compression losses. Only
+    // the applied result is persisted, so after a reload it becomes the new original.
+    const [compressedPreview, setCompressedPreview] = useState(null);
+    const [compressDialogOpen, setCompressDialogOpen] = useState(false);
+    const [portraitBytes, setPortraitBytes] = useState(null);
+    const portrait = compressedPreview ?? preview;
+    const [lastSavedAt, setLastSavedAt] = useState(null);
+    const [saveFailed, setSaveFailed] = useState(false);
     const [tabValue, setTabValue] = useState(0);
 
     const charMetadataFields = [
         {fieldName: "name"},
-        {fieldName: "description", multiline:true, rows:10},
-        {fieldName: "personality", multiline:true},
-        {fieldName: "scenario", multiline:true},
-        {fieldName: "first_mes", label: "First Message", multiline:true, rows:10},
+        {fieldName: "description", multiline:true, rows:10, showCount:true},
+        [
+            {fieldName: "personality", multiline:true, rows:4},
+            {fieldName: "scenario", multiline:true, rows:4}
+        ],
+        {fieldName: "first_mes", label: "First Message", multiline:true, rows:10, showCount:true},
         {fieldName: "mes_example", label: "Example Messages", multiline:true, rows:10}
     ];
 
@@ -82,14 +127,6 @@ const TavernCardEditor = ({toggleTheme}) => {
         {fieldName: "system_prompt", label: "System Prompt", multiline:true, rows:5},
         {fieldName: "post_history_instructions", label: "Post History Instructions", multiline:true, rows:5}
     ]
-
-    const backfillV2Data = (inJson) => {
-        if (inJson.spec === "chara_card_v2" && inJson.spec_version === "2.0") return inJson;
-        const outJson = inJson;
-        outJson.spec = 'chara_card_v2';
-        outJson.spec_version = '2.0';
-        return outJson;
-    };
 
     const backfillLorebookNames = () => {
         const lorebookEntries = cardData.data.character_book.entries.map((entry) => {
@@ -109,18 +146,6 @@ const TavernCardEditor = ({toggleTheme}) => {
             }
         }))
         setBackfillEntriesConfirmation(false);
-    };
-
-    const populateV3Fields = (inJson) => {
-        const outJson = inJson;
-        if (inJson.spec !== "chara_card_v3" || inJson.spec_version !== "3.0"){
-            outJson.spec = 'chara_card_v3';
-            outJson.spec_version = '3.0';
-        }
-        const currTime = Math.floor(Date.now() / 1000);
-        if (!Object.hasOwn(outJson.data, "creation_date") || typeof outJson.data.creation_date === "undefined") outJson.data.creation_date = currTime;
-        outJson.data.modification_date = currTime;
-        return outJson;
     };
 
     const closeDeleteGreetingConfirmation = () => {
@@ -233,7 +258,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             return;
         }
         setCardData(result.cardData);
-        localStorage.setItem("cardData", JSON.stringify(result.cardData));
+        setSaveFailed(!storeCardData(result.cardData));
         if (typeof result.cardData.data.character_book !== "undefined" && result.cardData.data.character_book.entries.length > 0)
             scanLorebookEntryNames(result.cardData.data.character_book.entries);
     };
@@ -328,7 +353,7 @@ const TavernCardEditor = ({toggleTheme}) => {
     };
 
     const handleJsonDownload = () => {
-        const outgoingJson = populateV3Fields(cardData);
+        const outgoingJson = buildOutgoingCards(cardData).v3;
         const blob = new Blob([JSON.stringify(outgoingJson, null, 4)], { type: 'application/json' });
 
         const url = URL.createObjectURL(blob);
@@ -399,22 +424,18 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     async function handlePngDownload() {
         try {
-            const response = await fetch(preview);
+            const response = await fetch(portrait);
             if (!response.ok){
                 throw new Error("Network response was not OK");
             }
             const respBlob = await response.blob();
-            const arrayBuffer = await respBlob.arrayBuffer();
-            const strippedPng = await stripPngChunks(arrayBuffer);
-            const outgoingV3 = populateV3Fields(cardData);
-            const outgoingV2 = backfillV2Data(cardData);
-            const assembledPng = await assembleNewPng(strippedPng, [{keyword:"ccv3", data:outgoingV3}, {keyword: "chara", data:outgoingV2}]);
+            const assembledPng = await buildCardPng(await respBlob.arrayBuffer(), cardData);
             const blob = new Blob([assembledPng], { type: 'image/png' });
 
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${outgoingV3.data.name}.png`
+            a.download = `${cardData.data.name}.png`
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -442,12 +463,12 @@ const TavernCardEditor = ({toggleTheme}) => {
                 const base64String = canvas.toDataURL("image/png");
                 const pngBlob = await (await fetch(base64String)).blob();
                 // Compressing converted PNGs
-                const compressedPngBlob = await imageCompression(pngBlob, {maxSizeMb: 1, useWebWorker: true});
+                const compressedPngBlob = await imageCompression(pngBlob, {useWebWorker: true});
 
                 const comrpessedBase64Png = await imageCompression.getDataUrlFromFile(compressedPngBlob);
 
                 setPreview(comrpessedBase64Png);
-                localStorage.setItem("previewImage", comrpessedBase64Png);
+                storePreviewImage(comrpessedBase64Png);
             }
         }
         else if (file && file.type === "image/png") {
@@ -455,12 +476,12 @@ const TavernCardEditor = ({toggleTheme}) => {
                 const inputBuffer = await readToBuffer(file);
                 const arrayBuffer = await stripPngChunks(inputBuffer);
                 const pngBlob = new Blob([arrayBuffer], {type: "image/png"});
-                const compressedPngBlob = await imageCompression(pngBlob, {maxSizeMb: 1, useWebWorker: true});
+                const compressedPngBlob = await imageCompression(pngBlob, {useWebWorker: true});
 
                 const comrpessedBase64Png = await imageCompression.getDataUrlFromFile(compressedPngBlob);
 
                 setPreview(comrpessedBase64Png);
-                localStorage.setItem("previewImage", comrpessedBase64Png);
+                storePreviewImage(comrpessedBase64Png);
             } catch (error) {
                 console.error("Error stripping PNG chunks and converting to base64: ", error);
             }
@@ -516,8 +537,8 @@ const TavernCardEditor = ({toggleTheme}) => {
         setDeleteConfirmation(false);
         setPreview(default_avatar);
         setCardData(v3CardPrototype());
-        localStorage.setItem("cardData", JSON.stringify(v3CardPrototype()));
-        localStorage.setItem("previewImage", default_avatar);
+        setSaveFailed(!storeCardData(v3CardPrototype()));
+        storePreviewImage(default_avatar);
     };
 
     const readToBuffer = (infile) => {
@@ -541,7 +562,12 @@ const TavernCardEditor = ({toggleTheme}) => {
     // eslint-disable-next-line
     const debouncedSave = useCallback(
         debounce((data) => {
-            localStorage.setItem("cardData", JSON.stringify(data));
+            if (storeCardData(data)) {
+                setSaveFailed(false);
+                setLastSavedAt(new Date());
+            } else {
+                setSaveFailed(true);
+            }
         }, 5000), []
     );
 
@@ -567,9 +593,34 @@ const TavernCardEditor = ({toggleTheme}) => {
             const strippedBuffer = await stripPngChunks(inputBuffer);
             const base64String = await convertBufferToBase64(strippedBuffer)
             setPreview(base64String);
-            localStorage.setItem("previewImage", base64String)
+            storePreviewImage(base64String);
         })()
     }, [file]);
+
+    useEffect(() => {
+        setCompressedPreview(null);
+    }, [preview]);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetch(portrait)
+            .then((response) => response.arrayBuffer())
+            .then(stripPngChunks)
+            .then((stripped) => { if (!cancelled) setPortraitBytes(stripped.byteLength); })
+            .catch(() => { if (!cancelled) setPortraitBytes(null); });
+        return () => { cancelled = true; };
+    }, [portrait]);
+
+    // Re-serializing the whole card on every keystroke commit is cheap but not free with a big
+    // lorebook, so let React schedule it at low priority.
+    const deferredCardData = useDeferredValue(cardData);
+    const cardDataBytes = useMemo(() => cardDataChunkBytes(deferredCardData), [deferredCardData]);
+
+    const handleApplyCompression = (dataUrl) => {
+        setCompressedPreview(dataUrl === preview ? null : dataUrl);
+        storePreviewImage(dataUrl);
+        setCompressDialogOpen(false);
+    };
 
     useEffect(() => {
         const storedPreviewImage = localStorage.getItem("previewImage");
@@ -580,6 +631,12 @@ const TavernCardEditor = ({toggleTheme}) => {
 
     return(
         <Container maxWidth={false}>
+            <PortraitCompressionDialog
+                open={compressDialogOpen}
+                source={preview}
+                onClose={() => setCompressDialogOpen(false)}
+                onApply={handleApplyCompression}
+            />
             <ConfirmationDialog 
                 open={deleteConfirmation} 
                 handleClose={() => setDeleteConfirmation(false)} 
@@ -650,40 +707,92 @@ const TavernCardEditor = ({toggleTheme}) => {
                 dialogContent="Are you sure you want to find and replace the text you've provided? This will replace the specified text in the Description, Personality, Scenario, and ALL greetings. Note that there is no logic and is a quick and dirty find-and-replace. This action cannot be undone."
                 handleConfirm={handleFindReplace}
             />
-            <Container disableGutters maxWidth={false} style={{display:'flex', justifyContent:'space-between', alignItems:'center', overflow:"auto"}}>
-                <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={() => setDeleteConfirmation(true)}/>
-                <FormControlLabel control={<Checkbox checked={displayImage} onChange={() => setDisplayImage(!displayImage)}/>} label="Display image?" style={{whiteSpace:"nowrap"}}/>
-                {file && 
-                    <div>
-                        <input accept={".json"} hidden id="json-upload" onChange={handleOverwriteClick} onClick={(event) => {event.target.value = null}} type="file"/>
-                        <label htmlFor='json-upload'>
-                            <Tooltip title="Overwrite the contents of this card with a JSON while retaining the display picture">
-                                <Button component="span" style={{whiteSpace: "nowrap"}} variant="contained">Overwrite With JSON File</Button>
-                            </Tooltip>
-                        </label>
-                    </div>
-                }
-                <Box style={{display:'flex', alignItems:'center'}}>
-                    {theme.palette.mode === "dark" ? <LightModeOutlined/> : <LightMode/>}
-                    <Switch checked={theme.palette.mode === "dark"} onChange={toggleTheme}/>
-                    {theme.palette.mode === "dark" ? <DarkMode/> : <DarkModeOutlined/>}
-                </Box>
-            </Container>
-            <Container disableGutters maxWidth={false}> 
-                <Paper elevation={6} style={{width:"100%"}}>
-                    <Container disableGutters maxWidth={false} style={{display:"flex", height:"95vh"}}>
-                        {displayImage && <Container disableGutters style={{alignItems:"center", display:"flex", flex:2, overflow:"auto"}} sx={{ml:2}}>
-                            <img alt={file ? file.name : "No avatar loaded"} onClick={() => previewImageRef.current.click()} src={preview} style={{cursor:'pointer', objectFit:'cover', width: "100%", height: "100%"}}/>
+            <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{height: 64, px: 3, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', overflowX: 'auto'}}
+            >
+                <Stack direction="row" alignItems="center" spacing={1.5}>
+                    <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={() => setDeleteConfirmation(true)}/>
+                    {saveFailed ?
+                        <Tooltip title="Your edits are still here, but won't survive a page reload. Download the card to keep them.">
+                            <Stack direction="row" alignItems="center" spacing={0.75} sx={{color: 'error.main', whiteSpace: 'nowrap'}}>
+                                <ErrorOutline sx={{fontSize: 14}}/>
+                                <Typography variant="caption">Not saved locally: browser storage is full</Typography>
+                            </Stack>
+                        </Tooltip> :
+                        lastSavedAt &&
+                            <Stack direction="row" alignItems="center" spacing={0.75} sx={{color: 'text.secondary', whiteSpace: 'nowrap'}}>
+                                <CheckCircleOutline sx={{fontSize: 14}}/>
+                                <Typography variant="caption">Saved locally at {lastSavedAt.toLocaleTimeString()}</Typography>
+                            </Stack>
+                    }
+                </Stack>
+                <Stack direction="row" alignItems="center" spacing={3}>
+                    <FormControlLabel control={<Checkbox checked={displayImage} onChange={() => setDisplayImage(!displayImage)}/>} label="Show portrait" sx={{whiteSpace:"nowrap"}}/>
+                    {file &&
+                        <div>
+                            <input accept={".json"} hidden id="json-upload" onChange={handleOverwriteClick} onClick={(event) => {event.target.value = null}} type="file"/>
+                            <label htmlFor='json-upload'>
+                                <Tooltip title="Overwrite the contents of this card with a JSON while retaining the display picture">
+                                    <Button component="span" sx={{whiteSpace: "nowrap"}} variant="outlined">Overwrite with JSON</Button>
+                                </Tooltip>
+                            </label>
+                        </div>
+                    }
+                    <Divider orientation="vertical" flexItem sx={{my: 1.5}}/>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                        {theme.palette.mode === "dark" ? <LightModeOutlined fontSize="small"/> : <LightMode fontSize="small"/>}
+                        <Switch checked={theme.palette.mode === "dark"} onChange={toggleTheme}/>
+                        {theme.palette.mode === "dark" ? <DarkMode fontSize="small"/> : <DarkModeOutlined fontSize="small"/>}
+                    </Stack>
+                </Stack>
+            </Stack>
+            <Box sx={{
+                display: "flex",
+                height: "calc(100vh - 64px - 48px)",
+                m: 3,
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 3,
+                overflow: "hidden"
+            }}>
+                        {displayImage && <Container disableGutters style={{alignItems:"center", display:"flex", flexDirection: "column", flex:2, overflow:"auto", gap: 12}} sx={{p: 3}}>
+                            <Box
+                                onClick={() => previewImageRef.current.click()}
+                                sx={{
+                                    flex: 1,
+                                    width: "100%",
+                                    borderRadius: 2,
+                                    border: 1,
+                                    borderColor: 'divider',
+                                    overflow: "hidden",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    cursor: 'pointer',
+                                    bgcolor: theme.palette.mode === "dark" ? "#1e1f27" : "#efeef7",
+                                    backgroundImage: theme.palette.mode === "dark"
+                                        ? "linear-gradient(160deg, #23242e 0%, #1b1c24 100%)"
+                                        : "linear-gradient(160deg, #ffffff 0%, #efeef7 100%)",
+                                }}
+                            >
+                                {portrait !== default_avatar
+                                    ? <img alt={file ? file.name : "Uploaded portrait"} src={portrait} style={{objectFit:'cover', width: "100%", height: "100%"}}/>
+                                    : <PersonOutline sx={{fontSize: 96, color: theme.palette.mode === "dark" ? "#4a4c5c" : "#c3c2d4"}}/>
+                                }
+                            </Box>
                             <input
                                 accept="image/*"
                                 hidden
                                 onChange={handlePreviewUpload}
                                 ref={previewImageRef}
-                                type="file"           
+                                type="file"
                             />
                         </Container>}
-                        <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, margin:10, overflow:"auto"}}>
-                            <Tabs onChange={(event, newValue) => setTabValue(newValue)} value={tabValue} scrollButtons="auto" sx={{mb:2}} variant="scrollable">
+                        <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, overflow:"hidden"}} sx={{p: 3}}>
+                            <Tabs onChange={(event, newValue) => setTabValue(newValue)} value={tabValue} scrollButtons="auto" sx={{mb:2, flexShrink: 0}} variant="scrollable">
                                 <Tab id={0} label="v1 Spec Fields"/>
                                 <Tab id={1} label="Alt Greetings"/>
                                 <Tab id={2} label="Creator Metadata"/>
@@ -693,63 +802,75 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 <Tab id={6} label="Macros"/>
                                 <Tab id={7} label="Raw JSON"/>
                             </Tabs>
-                            <BasicFieldTabPanel
-                                curTab={tabValue}
-                                index={0}
-                                arrayToIterate={charMetadataFields}
-                            />
-                            <AltGreetingTabPanel
-                                curTab={tabValue}
-                                index={1}
-                                handleAltGreetingClick={handleAltGreetingClick}
-                                handlePromoteClick={handlePromoteClick}
-                            />
-                            <BasicFieldTabPanel
-                                curTab={tabValue}
-                                index={2}
-                                arrayToIterate={creatorMetadataFields}
-                            />
-                            <BasicFieldTabPanel
-                                curTab={tabValue}
-                                index={3}
-                                arrayToIterate={promptFields}
+                            <Box sx={{flex: 1, overflow: 'auto', pr: 1, mr: -1}}>
+                                <BasicFieldTabPanel
+                                    curTab={tabValue}
+                                    index={0}
+                                    arrayToIterate={charMetadataFields}
+                                />
+                                <AltGreetingTabPanel
+                                    curTab={tabValue}
+                                    index={1}
+                                    handleAltGreetingClick={handleAltGreetingClick}
+                                    handlePromoteClick={handlePromoteClick}
+                                />
+                                <BasicFieldTabPanel
+                                    curTab={tabValue}
+                                    index={2}
+                                    arrayToIterate={creatorMetadataFields}
+                                />
+                                <BasicFieldTabPanel
+                                    curTab={tabValue}
+                                    index={3}
+                                    arrayToIterate={promptFields}
 
-                            />
-                            <LorebookPanel
-                                curTab={tabValue}
-                                index={4}
-                                handleDeleteEntryClick={handleDeleteEntryClick}
-                                handleDeleteLorebookClick={() => setDeleteLorebookConfirmation(true)}
-                                handleLorebookDownload={handleLorebookDownload}
-                                handleImport={(event) => handleFileSelect(event, true)}
-                            />
-                            <GroupGreetingPanel
-                                curTab={tabValue}
-                                index={5}
-                                handleGroupGreetingClick={handleGroupGreetingClick}
-                            />
-                            <MacrosPanel
-                                curTab={tabValue}
-                                index={6}
-                                handlePurgeClick={() => setPurgeAsterisksConfirmation(true)}
-                                handleFindReplaceClick={(val1, val2) => handleFindReplaceClick(val1, val2)}
-                            />
-                            <RawJsonPanel
-                                curTab={tabValue}
-                                index={7}
-                                onApply={(normalizedCardData) => {
-                                    setPendingJson(normalizedCardData);
-                                    setOverwriteConfirmation(true);
-                                }}
-                            />
-                            <Container disableGutters maxWidth={false} style={{display:"flex", justifyContent:'space-between'}}>
-                                <Button onClick={handleJsonDownload} variant="contained">Download as JSON</Button>
-                                <Button onClick={handlePngDownload} variant="contained">Download as PNG</Button>
-                            </Container>
+                                />
+                                <LorebookPanel
+                                    curTab={tabValue}
+                                    index={4}
+                                    handleDeleteEntryClick={handleDeleteEntryClick}
+                                    handleDeleteLorebookClick={() => setDeleteLorebookConfirmation(true)}
+                                    handleLorebookDownload={handleLorebookDownload}
+                                    handleImport={(event) => handleFileSelect(event, true)}
+                                />
+                                <GroupGreetingPanel
+                                    curTab={tabValue}
+                                    index={5}
+                                    handleGroupGreetingClick={handleGroupGreetingClick}
+                                />
+                                <MacrosPanel
+                                    curTab={tabValue}
+                                    index={6}
+                                    handlePurgeClick={() => setPurgeAsterisksConfirmation(true)}
+                                    handleFindReplaceClick={(val1, val2) => handleFindReplaceClick(val1, val2)}
+                                />
+                                <RawJsonPanel
+                                    curTab={tabValue}
+                                    index={7}
+                                    onApply={(normalizedCardData) => {
+                                        setPendingJson(normalizedCardData);
+                                        setOverwriteConfirmation(true);
+                                    }}
+                                />
+                            </Box>
+                            <Stack direction="row" justifyContent="space-between" sx={{pt: 2, mt: 2, borderTop: 1, borderColor: 'divider', flexShrink: 0}}>
+                                <Button onClick={handleJsonDownload} variant="outlined">Download as JSON</Button>
+                                <Stack direction="row" alignItems="center" spacing={2}>
+                                    {portraitBytes !== null &&
+                                        <Tooltip title={`Portrait ${formatBytes(portraitBytes)} + card data ${formatBytes(cardDataBytes)}`}>
+                                            <Typography color="text.secondary" variant="body2" sx={{whiteSpace: 'nowrap'}}>
+                                                PNG size: {formatBytes(portraitBytes + cardDataBytes)}
+                                            </Typography>
+                                        </Tooltip>
+                                    }
+                                    {preview !== default_avatar &&
+                                        <Button onClick={() => setCompressDialogOpen(true)} sx={{whiteSpace: 'nowrap'}} variant="text">Compress portrait</Button>
+                                    }
+                                    <Button onClick={handlePngDownload} sx={{whiteSpace: 'nowrap'}} variant="contained">Download as PNG</Button>
+                                </Stack>
+                            </Stack>
                         </Container>
-                    </Container>
-                </Paper>
-            </Container>  
+            </Box>
         </Container>
     );
 }

@@ -13,15 +13,14 @@ export default async function assembleNewPng (arrayBuffer, dataJson) {
         const newChunks = [];
 
         let offset = 8; // Skipping the PNG header
-        let ihdrFound = false;
-        let idatFound = false;
+        let textInserted = false;
 
         newChunks.push(new Uint8Array(arrayBuffer.slice(0, offset))); // Copying the original header
 
         const listOfChunks = Array.isArray(dataJson) ? dataJson : [dataJson];
-        
-        
-        // Copying the rest of the PNG
+
+        // Copying the rest of the PNG, inserting the tEXt chunks once, just before IEND. Image data
+        // is usually split across many consecutive IDAT chunks, which must stay contiguous.
         while (offset < data.byteLength) {
             const length = data.getUint32(offset);
             const type = String.fromCharCode(
@@ -30,45 +29,16 @@ export default async function assembleNewPng (arrayBuffer, dataJson) {
                 data.getUint8(offset + 6),
                 data.getUint8(offset + 7)
             );
-            const chunk = new Uint8Array(arrayBuffer.slice(offset, offset + 8 + length + 4));
-            newChunks.push(chunk);
-            if (type === "IHDR") {
-                ihdrFound = true;
-            } else if (type === "IDAT" && ihdrFound){
-                idatFound = true;
+            if (type === "IEND") {
+                listOfChunks.forEach((item) => newChunks.push(buildTextChunk(item.keyword, item.data)));
+                textInserted = true;
             }
-
-            if (idatFound){
-                listOfChunks.forEach((item) => {
-                    // Creating the new tEXt chunk
-                    const textChunkData = new TextEncoder().encode(`${item.keyword}\0${Base64.encode(JSON.stringify(item.data))}`)
-                    const textChunkLength = textChunkData.length;
-
-                    const textChunk = new Uint8Array(8 + textChunkLength + 4);
-                    const view = new DataView(textChunk.buffer);
-
-                    // Writing the length of the tEXt chunk
-                    view.setUint32(0, textChunkLength);
-
-                    // Write chunk type 'tEXt'
-                    textChunk[4] = 't'.charCodeAt(0);
-                    textChunk[5] = 'E'.charCodeAt(0);
-                    textChunk[6] = 'X'.charCodeAt(0);
-                    textChunk[7] = 't'.charCodeAt(0);
-
-                    textChunk.set(textChunkData, 8);
-
-                    const crc = crc32(textChunk.subarray(4, 8 + textChunkLength));
-                    view.setUint32(8 + textChunkLength, crc);
-
-                    // Adds the tEXt chunk after the IDAT chunk
-                    newChunks.push(textChunk);
-                    
-                });
-                idatFound = false;
-            }
-            // Moving to next chunk
+            newChunks.push(new Uint8Array(arrayBuffer.slice(offset, offset + 8 + length + 4)));
             offset += 8 + length + 4
+        }
+        // A truncated PNG with no IEND still displays in browsers; don't silently export it without card data.
+        if (!textInserted) {
+            listOfChunks.forEach((item) => newChunks.push(buildTextChunk(item.keyword, item.data)));
         }
 
         const combinedLength = newChunks.reduce((acc, chunk) => acc + chunk.length, 0);
@@ -82,6 +52,24 @@ export default async function assembleNewPng (arrayBuffer, dataJson) {
 
         resolve(combinedArrayBuffer.buffer);
     });    
+}
+
+function buildTextChunk(keyword, json) {
+    const textChunkData = new TextEncoder().encode(`${keyword}\0${Base64.encode(JSON.stringify(json))}`);
+    const textChunkLength = textChunkData.length;
+
+    const textChunk = new Uint8Array(8 + textChunkLength + 4);
+    const view = new DataView(textChunk.buffer);
+
+    view.setUint32(0, textChunkLength);
+    textChunk[4] = 't'.charCodeAt(0);
+    textChunk[5] = 'E'.charCodeAt(0);
+    textChunk[6] = 'X'.charCodeAt(0);
+    textChunk[7] = 't'.charCodeAt(0);
+    textChunk.set(textChunkData, 8);
+    view.setUint32(8 + textChunkLength, crc32(textChunk.subarray(4, 8 + textChunkLength)));
+
+    return textChunk;
 }
 
 /**

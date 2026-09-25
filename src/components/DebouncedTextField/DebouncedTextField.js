@@ -23,8 +23,9 @@ import { TextField } from "@mui/material";
  * selectionStart/setSelectionRange are accessed.
  * @param {boolean} [readOnly] Renders the field as informational/non-editable (e.g. a V3 field
  * like "source" that the spec says shouldn't be user-edited), rather than disabled.
+ * @param {boolean} [showCount] Shows a live character count as helper text.
  */
-const DebouncedTextField = ({label, name, onChange, value, debounceMs = 300, multiline = false, rows, preserveCursor = true, readOnly = false, ...rest}) => {
+const DebouncedTextField = ({label, name, onChange, value, debounceMs = 300, multiline = false, rows, preserveCursor = true, readOnly = false, showCount = false, slotProps, ...rest}) => {
     const [localValue, setLocalValue] = useState(value);
     const inputRef = useRef(null);
 
@@ -32,9 +33,21 @@ const DebouncedTextField = ({label, name, onChange, value, debounceMs = 300, mul
         setLocalValue(value);
     }, [value]);
 
+    // onChange is a fresh closure on every render of the parent (it's rarely wrapped in
+    // useCallback), and card state is one big context value, so ANY field committing a change
+    // re-renders every field on every tab. Routing calls through a ref instead of putting
+    // onChange directly in the debounce/memo dependencies keeps the debounced function's
+    // identity (and its pending timer) stable across those re-renders, instead of tearing down
+    // and recreating it - which would cancel this field's own in-flight edit - on every commit
+    // anywhere else in the card.
+    const onChangeRef = useRef(onChange);
+    useEffect(() => {
+        onChangeRef.current = onChange;
+    }, [onChange]);
+
     const debouncedOnChange = useMemo(() => (
-        debounceMs > 0 ? debounce(onChange, debounceMs) : onChange
-    ), [onChange, debounceMs]);
+        debounceMs > 0 ? debounce((e) => onChangeRef.current(e), debounceMs) : (e) => onChangeRef.current(e)
+    ), [debounceMs]);
 
     useEffect(() => () => {
         if (debouncedOnChange.cancel) debouncedOnChange.cancel();
@@ -52,10 +65,34 @@ const DebouncedTextField = ({label, name, onChange, value, debounceMs = 300, mul
         }
     };
 
+    const charCount = typeof localValue === "string" ? localValue.length : 0;
+
+    const mergedSlotProps = {
+        ...slotProps,
+        htmlInput: {
+            readOnly,
+            style: multiline ? {resize: 'vertical'} : undefined,
+            ...(slotProps?.htmlInput ?? {}),
+        },
+        // Labels always sit above the field, as a static caption, rather than floating
+        // in/out of the border on focus.
+        inputLabel: {
+            shrink: true,
+            ...(slotProps?.inputLabel ?? {}),
+        },
+        ...(showCount ? {
+            formHelperText: {
+                style: {textAlign: 'right', margin: 0},
+                ...(slotProps?.formHelperText ?? {}),
+            },
+        } : {}),
+    };
+
     return(
         <TextField
             autoComplete="off"
             fullWidth
+            helperText={showCount ? `${charCount} character${charCount === 1 ? '' : 's'}` : undefined}
             inputRef={inputRef}
             label={label}
             margin="normal"
@@ -63,7 +100,7 @@ const DebouncedTextField = ({label, name, onChange, value, debounceMs = 300, mul
             name={name}
             onChange={handleChange}
             rows={multiline ? rows : undefined}
-            slotProps={{htmlInput: {readOnly, style: multiline ? {resize:'vertical'} : undefined}}}
+            slotProps={mergedSlotProps}
             value={localValue}
             {...rest}
         />

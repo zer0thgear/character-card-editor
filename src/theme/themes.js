@@ -1,39 +1,83 @@
 import { createTheme } from "@mui/material/styles";
 
+// Shared across light/dark so both stay in sync; only palette colors differ per mode.
+const typography = {
+    fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    button: {
+        textTransform: 'none',
+        fontWeight: 600,
+    },
+};
+
+const shape = { borderRadius: 8 };
+
+const components = {
+    MuiButton: {
+        defaultProps: { disableElevation: true },
+    },
+    MuiPaper: {
+        styleOverrides: {
+            // MUI's dark-mode elevation overlay tints Paper with a translucent white
+            // gradient by default, which muddies an already-custom dark background.
+            root: { backgroundImage: 'none' },
+        },
+    },
+    MuiTabs: {
+        styleOverrides: {
+            indicator: { height: 2, borderRadius: 2 },
+        },
+    },
+    MuiTab: {
+        styleOverrides: {
+            root: { minHeight: 44, fontWeight: 500 },
+        },
+    },
+    MuiAccordion: {
+        styleOverrides: {
+            root: {
+                backgroundImage: 'none',
+                '&:before': { display: 'none' },
+            },
+        },
+    },
+    MuiAccordionDetails: {
+        styleOverrides: {
+            // Default MUI padding (16px horizontal) reads noticeably tighter than the
+            // 24px used everywhere else in the layout, most visible on the last column
+            // of a multi-field row (e.g. lorebook entries) sitting close to the edge.
+            root: { padding: '8px 24px 24px' },
+        },
+    },
+};
+
 export const light = createTheme({
     palette: {
         mode: 'light',
-        primary: {
-            main: '#E31937',
-        },
-        secondary: {
-            main: '#5236AB',
-        },
-        background: {
-            default: '#f5f5f5',
-        },
-        text: {
-            primary: '#1F2937',
-        }
+        primary: { main: '#6C5CE7', light: '#8D7CFF', dark: '#5B4BC4', contrastText: '#FFFFFF' },
+        secondary: { main: '#5236AB' },
+        error: { main: '#D1383E' },
+        background: { default: '#F7F7FA', paper: '#FFFFFF' },
+        text: { primary: '#1B1C24', secondary: '#5B5D6E' },
+        divider: '#E5E4EE',
     },
     direction: 'ltr',
+    typography,
+    shape,
+    components,
 });
 
 export const dark = createTheme({
     palette: {
         mode: 'dark',
-        primary: {
-            main: '#5236AB',
-        },
-        secondary: {
-            main: '#E31937',
-        },
-        background: {
-            main: '#1F2937',
-        },
-        text: {
-            primary: '#f5f5f5',
-        }
+        primary: { main: '#6C5CE7', light: '#8D7CFF', dark: '#5B4BC4', contrastText: '#FFFFFF' },
+        secondary: { main: '#8D7CFF' },
+        error: { main: '#E5787C' },
+        background: { default: '#14151B', paper: '#1B1C24' },
+        text: { primary: '#ECEEF3', secondary: '#9698A8' },
+        divider: '#2A2C38',
     },
     direction: 'ltr',
+    typography,
+    shape,
+    components,
 });

@@ -10,9 +10,10 @@ import { useCard } from "../../context/CardContext";
  * @param {boolean} [multiline] Whether or not the TextField should be multiline
  * @param {int} [rows] If multiline, how many rows
  * @param {boolean} [readOnly] Renders the field as informational/non-editable
+ * @param {boolean} [showCount] Shows a live character count as helper text
  * @returns
  */
-const CardTextField = ({label, fieldName, changeCallback, multiline=false, rows=1, readOnly=false}) => {
+const CardTextField = ({label, fieldName, changeCallback, multiline=false, rows=1, readOnly=false, showCount=false}) => {
     const { cardData } = useCard();
     const rawValue = cardData.data[fieldName];
     // "source" is a V3 field the spec says shouldn't be user-edited, and is an array of URIs
@@ -30,6 +31,7 @@ const CardTextField = ({label, fieldName, changeCallback, multiline=false, rows=
             onChange={changeCallback}
             readOnly={readOnly}
             rows={rows}
+            showCount={showCount}
             value={value}
         />
     )
