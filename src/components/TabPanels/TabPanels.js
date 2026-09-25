@@ -172,6 +172,7 @@ function GreetingListPanel({curTab, index, fieldName, namePrefix, droppableId, a
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
                                             style={{display:"flex", ...provided.draggableProps.style}}
+                                            sx={{gap: 2}}
                                         >
                                             <Tooltip title="Drag to reorder">
                                                 <IconButton {...provided.dragHandleProps}><DragHandle/></IconButton>
@@ -415,6 +416,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
                                                         style={{display:"flex", ...provided.draggableProps.style}}
+                                                        sx={{gap: 2}}
                                                     >
                                                         <Tooltip title="Drag to reorder">
                                                             <IconButton {...provided.dragHandleProps}><DragHandle/></IconButton>
@@ -425,7 +427,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                             </AccordionSummary>
                                                             <AccordionDetails>
                                                                 <Box style={{width:'100%'}}>
-                                                                    <Box style={{display:'flex', flexDirection:'row', alignItems:'baseline'}}>
+                                                                    <Box sx={{display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 2, alignItems: 'baseline'}}>
                                                                         <LorebookEntryString
                                                                             label={`Entry #${index+1} Name/Comment`}
                                                                             fieldName="name"
@@ -439,7 +441,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                                             changeCallback={handleEntryChange}
                                                                         />
                                                                     </Box>
-                                                                    <Box style={{display:"flex", flexDirection:'row', alignItems:'baseline'}}>
+                                                                    <Box sx={{display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 2, alignItems: 'baseline'}}>
                                                                         <LorebookEntryString
                                                                             label={`Entry #${index+1} Keys`}
                                                                             fieldName="keys"
@@ -459,7 +461,7 @@ export function LorebookPanel({curTab, index, handleDeleteEntryClick, handleDele
                                                                             changeCallback={handleEntryKeysChange}
                                                                         />
                                                                     </Box>
-                                                                    <Box style={{display:"flex", flexDirection:'row', alignItems:'baseline', justifyContent:'space-between'}}>
+                                                                    <Box sx={{display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 2, alignItems: 'baseline'}}>
                                                                         <LorebookEntryInt
                                                                             label={`Entry #${index+1} Insertion Order`}
                                                                             fieldName="insertion_order"

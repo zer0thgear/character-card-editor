@@ -91,11 +91,11 @@ export function LorebookEntryBool({label="", fieldName, entryIndex, changeCallba
     return(
         <TextField
             defaultValue={undefined}
+            fullWidth
             label={label}
             name={`${fieldName}#${entryIndex}`}
             onChange={changeCallback}
             select
-            sx={{width:"32em"}}
             value={cardData.data.character_book.entries[entryIndex][fieldName]}
         >
                 <MenuItem value={undefined}>N/A</MenuItem>
