@@ -13,6 +13,7 @@ export default async function assembleNewPng (arrayBuffer, dataJson) {
         const newChunks = [];
 
         let offset = 8; // Skipping the PNG header
+        let textInserted = false;
 
         newChunks.push(new Uint8Array(arrayBuffer.slice(0, offset))); // Copying the original header
 
@@ -30,9 +31,14 @@ export default async function assembleNewPng (arrayBuffer, dataJson) {
             );
             if (type === "IEND") {
                 listOfChunks.forEach((item) => newChunks.push(buildTextChunk(item.keyword, item.data)));
+                textInserted = true;
             }
             newChunks.push(new Uint8Array(arrayBuffer.slice(offset, offset + 8 + length + 4)));
             offset += 8 + length + 4
+        }
+        // A truncated PNG with no IEND still displays in browsers; don't silently export it without card data.
+        if (!textInserted) {
+            listOfChunks.forEach((item) => newChunks.push(buildTextChunk(item.keyword, item.data)));
         }
 
         const combinedLength = newChunks.reduce((acc, chunk) => acc + chunk.length, 0);

@@ -49,9 +49,9 @@ export default async function buildCardPng(imageArrayBuffer, cardData) {
  * @returns {number}
  */
 export function cardDataChunkBytes(cardData) {
-    const encoder = new TextEncoder();
-    return textChunks(cardData).reduce((total, {keyword, data}) => {
-        const utf8Length = encoder.encode(JSON.stringify(data)).length;
-        return total + 12 + keyword.length + 1 + 4 * Math.ceil(utf8Length / 3);
-    }, 0);
+    // The V2 copy differs from V3 only in same-length spec strings ("chara_card_v2"/"2.0"), so both
+    // serialize to the same length and the card only needs stringifying once per edit.
+    const utf8Length = new TextEncoder().encode(JSON.stringify(buildOutgoingCards(cardData).v3)).length;
+    const base64Length = 4 * Math.ceil(utf8Length / 3);
+    return textChunks(cardData).reduce((total, {keyword}) => total + 12 + keyword.length + 1 + base64Length, 0);
 }

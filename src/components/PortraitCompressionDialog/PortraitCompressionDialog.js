@@ -29,7 +29,7 @@ async function describeImage(dataUrl) {
 
 /**
  * Lets the user downscale the card portrait to cut the exported PNG's size. Always compresses from
- * `source` (the portrait as originally uploaded/loaded), so picking a different size, or "Original",
+ * `source` (the portrait as uploaded/loaded this session), so picking a different size, or "Original",
  * never stacks losses from an earlier compression.
  *
  * @param {boolean} open
@@ -48,10 +48,17 @@ const PortraitCompressionDialog = ({open, source, onClose, onApply}) => {
         setMaxSide("original");
         setOriginal(null);
         setResult(null);
-        let cancelled = false;
-        describeImage(source).then((info) => { if (!cancelled) setOriginal(info); });
-        return () => { cancelled = true; };
+        setError(null);
     }, [source]);
+
+    useEffect(() => {
+        if (!open || original) return;
+        let cancelled = false;
+        describeImage(source)
+            .then((info) => { if (!cancelled) setOriginal(info); })
+            .catch(() => { if (!cancelled) setError("Couldn't read the portrait image, so it can't be compressed."); });
+        return () => { cancelled = true; };
+    }, [open, source, original]);
 
     useEffect(() => {
         if (!open || !original) return;
@@ -111,7 +118,7 @@ const PortraitCompressionDialog = ({open, source, onClose, onApply}) => {
                 <Stack alignItems="center" spacing={1.5}>
                     <Box sx={{height: 240, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", position: "relative"}}>
                         {result && <img alt="Compressed portrait preview" src={result.dataUrl} style={{maxHeight: "100%", maxWidth: "100%", objectFit: "contain", opacity: busy ? 0.4 : 1}}/>}
-                        {(busy || !result) && <CircularProgress sx={{position: "absolute"}}/>}
+                        {(busy || (!result && !error)) && <CircularProgress sx={{position: "absolute"}}/>}
                     </Box>
                     {original && result &&
                         <Typography variant="body2">

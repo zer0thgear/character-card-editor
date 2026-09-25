@@ -16,7 +16,7 @@ import {
     Tooltip,
     Typography
 } from '@mui/material'
-import { CheckCircleOutline, DarkMode, DarkModeOutlined, LightMode, LightModeOutlined, PersonOutline } from '@mui/icons-material';
+import { CheckCircleOutline, DarkMode, ErrorOutline, DarkModeOutlined, LightMode, LightModeOutlined, PersonOutline } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles'
 
 import ConfirmationDialog from '../ConfirmationDialog/ConfirmationDialog';
@@ -43,6 +43,25 @@ function storePreviewImage(dataUrl) {
     } catch (error) {
         localStorage.removeItem("previewImage");
         console.warn("Portrait is too large to keep across page reloads:", error);
+    }
+}
+
+// Returns whether the save succeeded. The card's text matters more than the cached portrait, so when
+// storage is full, give up the portrait's space and retry before failing.
+function storeCardData(cardData) {
+    const serialized = JSON.stringify(cardData);
+    try {
+        localStorage.setItem("cardData", serialized);
+        return true;
+    } catch {
+        localStorage.removeItem("previewImage");
+    }
+    try {
+        localStorage.setItem("cardData", serialized);
+        return true;
+    } catch (error) {
+        console.warn("Card is too large to save in browser storage:", error);
+        return false;
     }
 }
 
@@ -74,12 +93,14 @@ const TavernCardEditor = ({toggleTheme}) => {
     const [purgeAsterisksConfirmation, setPurgeAsterisksConfirmation] = useState(false);
     const [preview, setPreview] = useState(default_avatar);
     // A downscaled copy of `preview` chosen in the compression dialog; `preview` itself stays the
-    // original so the user can re-pick a size (or revert) without stacking compression losses.
+    // original so the user can re-pick a size (or revert) without stacking compression losses. Only
+    // the applied result is persisted, so after a reload it becomes the new original.
     const [compressedPreview, setCompressedPreview] = useState(null);
     const [compressDialogOpen, setCompressDialogOpen] = useState(false);
     const [portraitBytes, setPortraitBytes] = useState(null);
     const portrait = compressedPreview ?? preview;
     const [lastSavedAt, setLastSavedAt] = useState(null);
+    const [saveFailed, setSaveFailed] = useState(false);
     const [tabValue, setTabValue] = useState(0);
 
     const charMetadataFields = [
@@ -237,7 +258,7 @@ const TavernCardEditor = ({toggleTheme}) => {
             return;
         }
         setCardData(result.cardData);
-        localStorage.setItem("cardData", JSON.stringify(result.cardData));
+        setSaveFailed(!storeCardData(result.cardData));
         if (typeof result.cardData.data.character_book !== "undefined" && result.cardData.data.character_book.entries.length > 0)
             scanLorebookEntryNames(result.cardData.data.character_book.entries);
     };
@@ -516,7 +537,7 @@ const TavernCardEditor = ({toggleTheme}) => {
         setDeleteConfirmation(false);
         setPreview(default_avatar);
         setCardData(v3CardPrototype());
-        localStorage.setItem("cardData", JSON.stringify(v3CardPrototype()));
+        setSaveFailed(!storeCardData(v3CardPrototype()));
         storePreviewImage(default_avatar);
     };
 
@@ -541,8 +562,12 @@ const TavernCardEditor = ({toggleTheme}) => {
     // eslint-disable-next-line
     const debouncedSave = useCallback(
         debounce((data) => {
-            localStorage.setItem("cardData", JSON.stringify(data));
-            setLastSavedAt(new Date());
+            if (storeCardData(data)) {
+                setSaveFailed(false);
+                setLastSavedAt(new Date());
+            } else {
+                setSaveFailed(true);
+            }
         }, 5000), []
     );
 
@@ -690,11 +715,18 @@ const TavernCardEditor = ({toggleTheme}) => {
             >
                 <Stack direction="row" alignItems="center" spacing={1.5}>
                     <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={() => setDeleteConfirmation(true)}/>
-                    {lastSavedAt &&
-                        <Stack direction="row" alignItems="center" spacing={0.75} sx={{color: 'text.secondary', whiteSpace: 'nowrap'}}>
-                            <CheckCircleOutline sx={{fontSize: 14}}/>
-                            <Typography variant="caption">Saved locally at {lastSavedAt.toLocaleTimeString()}</Typography>
-                        </Stack>
+                    {saveFailed ?
+                        <Tooltip title="Your edits are still here, but won't survive a page reload. Download the card to keep them.">
+                            <Stack direction="row" alignItems="center" spacing={0.75} sx={{color: 'error.main', whiteSpace: 'nowrap'}}>
+                                <ErrorOutline sx={{fontSize: 14}}/>
+                                <Typography variant="caption">Not saved locally: browser storage is full</Typography>
+                            </Stack>
+                        </Tooltip> :
+                        lastSavedAt &&
+                            <Stack direction="row" alignItems="center" spacing={0.75} sx={{color: 'text.secondary', whiteSpace: 'nowrap'}}>
+                                <CheckCircleOutline sx={{fontSize: 14}}/>
+                                <Typography variant="caption">Saved locally at {lastSavedAt.toLocaleTimeString()}</Typography>
+                            </Stack>
                     }
                 </Stack>
                 <Stack direction="row" alignItems="center" spacing={3}>

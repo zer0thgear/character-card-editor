@@ -133,6 +133,15 @@ describe('assembleNewPng + parsePngChunks', () => {
         expect(getChunkTypes(assembled)).toEqual(['IHDR', 'IDAT', 'IDAT', 'tEXt', 'tEXt', 'IEND']);
     });
 
+    test('still embeds the card data when the source PNG is missing its IEND chunk', async () => {
+        const full = new Uint8Array(blankPngArrayBuffer());
+        const truncated = full.slice(0, full.length - 12).buffer; // IEND is the final 12 bytes
+
+        const assembled = await assembleNewPng(truncated, [{keyword: 'chara', data: {spec: 'chara_card_v2'}}]);
+
+        expect(getChunkTypes(assembled)).toEqual(['IHDR', 'IDAT', 'tEXt']);
+    });
+
     test('resolves to null when the PNG has no matching keyword', async () => {
         const file = new File([blankPngArrayBuffer()], 'test.png', {type: 'image/png'});
         const parsed = await parsePngChunks(file, ['ccv3', 'chara']);
