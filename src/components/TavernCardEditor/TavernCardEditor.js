@@ -660,10 +660,16 @@ const TavernCardEditor = ({toggleTheme}) => {
                 direction="row"
                 alignItems="center"
                 justifyContent="space-between"
-                sx={{height: 64, px: 3, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper'}}
+                sx={{height: 64, px: 3, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', overflowX: 'auto'}}
             >
                 <Stack direction="row" alignItems="center" spacing={1.5}>
                     <FileUpload acceptedFileTypes={".json,.png"} displayDeleteButton={true} file={file} fileChange={handleFileSelect} handleRemoveFile={() => setDeleteConfirmation(true)}/>
+                    {lastSavedAt &&
+                        <Stack direction="row" alignItems="center" spacing={0.75} sx={{color: 'text.secondary', whiteSpace: 'nowrap'}}>
+                            <CheckCircleOutline sx={{fontSize: 14}}/>
+                            <Typography variant="caption">Saved locally at {lastSavedAt.toLocaleTimeString()}</Typography>
+                        </Stack>
+                    }
                 </Stack>
                 <Stack direction="row" alignItems="center" spacing={3}>
                     <FormControlLabel control={<Checkbox checked={displayImage} onChange={() => setDisplayImage(!displayImage)}/>} label="Show portrait" sx={{whiteSpace:"nowrap"}}/>
@@ -714,8 +720,8 @@ const TavernCardEditor = ({toggleTheme}) => {
                                         : "linear-gradient(160deg, #ffffff 0%, #efeef7 100%)",
                                 }}
                             >
-                                {file
-                                    ? <img alt={file.name} src={preview} style={{objectFit:'cover', width: "100%", height: "100%"}}/>
+                                {preview !== default_avatar
+                                    ? <img alt={file ? file.name : "Uploaded portrait"} src={preview} style={{objectFit:'cover', width: "100%", height: "100%"}}/>
                                     : <PersonOutline sx={{fontSize: 96, color: theme.palette.mode === "dark" ? "#4a4c5c" : "#c3c2d4"}}/>
                                 }
                             </Box>
@@ -726,12 +732,6 @@ const TavernCardEditor = ({toggleTheme}) => {
                                 ref={previewImageRef}
                                 type="file"
                             />
-                            {lastSavedAt &&
-                                <Stack direction="row" alignItems="center" spacing={0.75} sx={{color: 'text.secondary', mt: 1.5}}>
-                                    <CheckCircleOutline sx={{fontSize: 14}}/>
-                                    <Typography variant="caption">Saved locally at {lastSavedAt.toLocaleTimeString()}</Typography>
-                                </Stack>
-                            }
                         </Container>}
                         <Container disableGutters maxWidth={false} style={{display:"flex", flexDirection:"column", flex:5, overflow:"hidden"}} sx={{p: 3}}>
                             <Tabs onChange={(event, newValue) => setTabValue(newValue)} value={tabValue} scrollButtons="auto" sx={{mb:2, flexShrink: 0}} variant="scrollable">
